@@ -196,13 +196,13 @@
 
     <!-- MAIN CONTENT -->
     <main class="md:ml-64 min-h-screen pb-20 md:pb-0 flex flex-col bg-slate-950">
-        <header class="glass-panel sticky top-0 z-[60] p-4 md:p-6 flex justify-between items-center border-b border-white/10">
+        <header class="glass-panel sticky top-0 z-[100] p-4 md:p-6 flex justify-between items-center border-b border-white/10 w-full mb-6">
             <div class="flex items-center min-w-0">
-                <h2 id="desktopTitle" class="text-xl font-black text-white uppercase tracking-tight truncate">Resumen</h2>
+                <h2 id="desktopTitle" class="text-xl font-black text-white uppercase tracking-tight truncate">Zentra</h2>
             </div>
             <div class="flex items-center gap-4 shrink-0">
-                <div id="currentDate" class="text-xs font-bold text-white uppercase tracking-wide"></div>
-                <button onclick="togglePrivacy()" class="w-11 h-11 bg-white/20 rounded-2xl text-white flex items-center justify-center border border-white/20 shadow-xl shadow-black/40">
+                <span id="currentDate" class="text-[11px] md:text-xs font-black text-white uppercase tracking-widest leading-none"></span>
+                <button onclick="togglePrivacy()" class="w-12 h-12 bg-white/10 rounded-2xl text-white flex items-center justify-center border border-white/20 hover:bg-white/20 transition-all">
                     <i data-lucide="eye" id="icon-eye" class="w-6 h-6"></i>
                     <i data-lucide="eye-off" id="icon-eye-off" class="w-6 h-6 hidden"></i>
                 </button>
