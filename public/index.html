@@ -299,10 +299,10 @@
                     <div class="flex gap-3 md:gap-4 w-full md:w-auto items-center overflow-x-auto pb-1 md:pb-0 hide-scrollbar" style="-ms-overflow-style: none; scrollbar-width: none;">
                         <style>.hide-scrollbar::-webkit-scrollbar { display: none; }</style>
                         <div class="bg-slate-100 p-1 flex rounded-xl items-center shrink-0">
-                            <button onclick="setFiltroCategoria('Todos')" id="btnCatTodos" class="px-3 py-1.5 bg-white text-slate-800 rounded-lg text-xs font-black shadow-sm transition-all outline-none">Todos</button>
-                            <button onclick="setFiltroCategoria('Préstamos')" id="btnCatPrestamos" class="px-3 py-1.5 text-slate-500 hover:text-slate-700 rounded-lg text-xs font-black transition-all outline-none">Préstamos</button>
-                            <button onclick="setFiltroCategoria('Electrodomésticos')" id="btnCatElectro" class="px-3 py-1.5 text-slate-500 hover:text-slate-700 rounded-lg text-xs font-black transition-all outline-none">Electro</button>
-                            <button onclick="setFiltroCategoria('Trámites')" id="btnCatTramites" class="px-3 py-1.5 text-slate-500 hover:text-slate-700 rounded-lg text-xs font-black transition-all outline-none">Trámites</button>
+                            <button onclick="setFiltroCategoria('Todos')" id="btnCatTodos" class="px-3 py-1.5 bg-white text-slate-800 rounded-lg text-xs font-black shadow-sm transition-all outline-none">Todos <span id="countCatTodos" class="opacity-50 ml-0.5"></span></button>
+                            <button onclick="setFiltroCategoria('Préstamos')" id="btnCatPrestamos" class="px-3 py-1.5 text-slate-500 hover:text-slate-700 rounded-lg text-xs font-black transition-all outline-none">Préstamos <span id="countCatPrestamos" class="opacity-50 ml-0.5"></span></button>
+                            <button onclick="setFiltroCategoria('Electrodomésticos')" id="btnCatElectro" class="px-3 py-1.5 text-slate-500 hover:text-slate-700 rounded-lg text-xs font-black transition-all outline-none">Electro <span id="countCatElectro" class="opacity-50 ml-0.5"></span></button>
+                            <button onclick="setFiltroCategoria('Trámites')" id="btnCatTramites" class="px-3 py-1.5 text-slate-500 hover:text-slate-700 rounded-lg text-xs font-black transition-all outline-none">Trámites <span id="countCatTramites" class="opacity-50 ml-0.5"></span></button>
                         </div>
                         <button onclick="toggleForm()" class="hidden md:block px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-black shadow-lg shadow-blue-200 whitespace-nowrap outline-none transition-all">Nuevo Cliente</button>
                     </div>
@@ -644,6 +644,8 @@
                 iconsEye.forEach(i => i?.classList.remove('hidden'));
                 iconsEyeOff.forEach(i => i?.classList.add('hidden'));
             }
+            // No llamar a lucide.createIcons aquí para evitar loops, 
+            // solo togglear clases hidden es más seguro.
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -790,7 +792,9 @@
                 document.body.classList.add('metrics-loaded');
                 
                 lucide.createIcons();
-            } catch (err) { console.error('Error cargando métricas:', err); }
+                lucide.createIcons();
+                applyPrivacy();
+            } catch (err) { console.error('Error renderizando clientes:', err); }
         }
 
         function calcularPorcentaje() {
@@ -830,8 +834,24 @@
                 const data = await res.json();
                 allClientes = data.clientes || [];
                 document.getElementById('metric-clientes').textContent = allClientes.length;
+                actualizarContadoresCategorias();
                 renderClientes();
             } catch (err) { console.error(err); }
+        }
+
+        function actualizarContadoresCategorias() {
+            if (!allClientes) return;
+            const counts = {
+                Todos: allClientes.length,
+                Préstamos: allClientes.filter(c => c.categoria === 'Préstamos').length,
+                Electro: allClientes.filter(c => c.categoria === 'Electrodomésticos').length,
+                Trámites: allClientes.filter(c => c.categoria === 'Trámites').length
+            };
+
+            if(document.getElementById('countCatTodos')) document.getElementById('countCatTodos').textContent = `(${counts.Todos})`;
+            if(document.getElementById('countCatPrestamos')) document.getElementById('countCatPrestamos').textContent = `(${counts.Préstamos})`;
+            if(document.getElementById('countCatElectro')) document.getElementById('countCatElectro').textContent = `(${counts.Electro})`;
+            if(document.getElementById('countCatTramites')) document.getElementById('countCatTramites').textContent = `(${counts.Trámites})`;
         }
 
         let filtroSoloMorosos = false;
@@ -1135,6 +1155,7 @@
                 `;
                 container.appendChild(row);
             });
+            applyPrivacy();
             lucide.createIcons();
         }
 
@@ -1224,8 +1245,10 @@
                 });
                 const resData = await res.json();
                 if (resData.ok) {
-                    toggleForm(); fetchClientes(); cargarMetricas();
-                    showToast('Éxito', editingClientId ? 'Cliente actualizado' : 'Cliente creado', 'emerald');
+                    toggleForm(); 
+                    await fetchClientes(); 
+                    cargarMetricas();
+                    showToast('¡Éxito!', editingClientId ? 'Cliente actualizado' : 'Cliente registrado', 'emerald');
                 } else {
                     showToast('Error', resData.msg || 'Fallo de validación', 'rose');
                 }
@@ -1632,8 +1655,9 @@
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('jony_token')}` }
                 });
-                if(res.ok) {
-                    fetchClientes();
+                const data = await res.json();
+                if(data.ok) {
+                    await fetchClientes();
                     fetchAgenda();
                     cargarMetricas();
                     showToast('Éxito', 'Cliente eliminado', 'emerald');
