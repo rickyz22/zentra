@@ -13,49 +13,197 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <!-- Anti-flash: aplicar tema ANTES de renderizar para evitar parpadeo -->
+    <script>
+        (function() {
+            var theme = localStorage.getItem('zentra_theme');
+            if (theme === 'light') {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+            } else {
+                // Dark es el default
+                document.documentElement.classList.add('dark');
+            }
+            // Anti-flash de privacidad
+            if (localStorage.getItem('jony_privacy') === 'true') {
+                document.documentElement.classList.add('privacy-mode');
+            }
+        })();
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        
+
+        /* ========================
+           SISTEMA DE VARIABLES CSS
+           ======================== */
         :root {
-            --midnight-bg: #020617;
-            --midnight-card: #0f172a;
-            --accent-blue: #3b82f6;
+            --accent-blue:  #3b82f6;
             --accent-green: #10b981;
-            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-orange:#f97316;
+            --transition-theme: background-color 0.25s ease, color 0.2s ease, border-color 0.2s ease;
         }
 
-        body { 
+        /* --- DARK MODE (default) --- */
+        html.dark {
+            --bg-app:        #0d1117;
+            --bg-sidebar:    #0f172a;
+            --bg-card:       #1a2236;
+            --bg-input:      #0d1117;
+            --bg-header:     rgba(13, 17, 23, 0.85);
+            --bg-table-head: #0d1117;
+            --bg-filter-bar: #1a2236;
+            --bg-cat-pill:   #0f172a;
+            --bg-cat-active: #1e293b;
+            --text-primary:  #f1f5f9;
+            --text-secondary:#94a3b8;
+            --text-muted:    #475569;
+            --border-color:  rgba(255, 255, 255, 0.08);
+            --border-input:  rgba(255, 255, 255, 0.06);
+            --shadow-card:   none;
+            --shadow-hover:  none;
+            --glass-bg:      rgba(15, 23, 42, 0.75);
+        }
+
+        /* --- LIGHT MODE --- */
+        html.light {
+            /* Fondo general: gris muy suave con temperatura fría */
+            --bg-app:        #EEF2F7;
+            /* Sidebar: siempre oscuro, tinte teal-slate tipo SaaS premium */
+            --bg-sidebar:    #1B2B3A;
+            --bg-sidebar-text: #94A3B8;
+            --bg-sidebar-text-active: #FFFFFF;
+            /* Tarjetas: blanco puro con borde definido */
+            --bg-card:       #FFFFFF;
+            --bg-input:      #F8FAFC;
+            --bg-header:     rgba(255, 255, 255, 0.98);
+            --bg-table-head: #F1F5F9;
+            --bg-filter-bar: #FFFFFF;
+            --bg-cat-pill:   #EEF2F7;
+            --bg-cat-active: #FFFFFF;
+            /* Textos */
+            --text-primary:  #0F172A;
+            --text-secondary:#475569;
+            --text-muted:    #94A3B8;
+            /* Bordes con más definición */
+            --border-color:  #E2E8F0;
+            --border-input:  #CBD5E1;
+            /* Sombras sutiles sin color */
+            --shadow-card:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-hover:  0 4px 16px rgba(0,0,0,0.08);
+            --glass-bg:      rgba(255, 255, 255, 0.98);
+        }
+
+        /* ========================
+           BASE
+           ======================== */
+        body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--midnight-bg);
-            color: #f8fafc;
+            background-color: var(--bg-app);
+            color: var(--text-primary);
             overflow-x: hidden;
             width: 100%;
             position: relative;
+            transition: var(--transition-theme);
         }
 
         * { box-sizing: border-box; }
-        
+
         main {
             overflow-x: hidden;
             width: 100%;
         }
 
-        /* Glassmorphism Classes */
+        /* ========================
+           GLASSMORPHISM
+           ======================== */
         .glass-panel {
-            background: rgba(15, 23, 42, 0.7);
+            background: var(--glass-bg) !important;
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
+            border: 1px solid var(--border-color) !important;
+            transition: var(--transition-theme);
         }
 
+        /* ========================
+           SIDEBAR LIGHT MODE
+           Siempre oscuro, tinte teal-slate
+           ======================== */
+        html.light aside {
+            background-color: #1B2B3A !important;
+            border-right: 1px solid rgba(255,255,255,0.06);
+        }
+        html.light aside .sidebar-item {
+            color: #64748B;
+        }
+        html.light aside .sidebar-item:hover {
+            background: rgba(255,255,255,0.07);
+            color: #CBD5E1;
+        }
+        html.light aside .sidebar-item.active {
+            background: linear-gradient(90deg, rgba(59,130,246,0.18) 0%, rgba(59,130,246,0) 100%);
+            border-left: 3px solid #3B82F6;
+            color: #FFFFFF;
+        }
+        /* Titulo Zentra siempre blanco sobre sidebar oscuro */
+        html.light #sidebar-title {
+            color: #FFFFFF !important;
+        }
+        /* Calculadora sidebar en light mode */
+        html.light .calc-wrapper {
+            background-color: rgba(255,255,255,0.06) !important;
+            border: 1px solid rgba(255,255,255,0.08) !important;
+        }
+        html.light .calc-wrapper h4 { color: #64748B !important; }
+        html.light .calc-wrapper input {
+            background-color: rgba(0,0,0,0.2) !important;
+            border: 1px solid rgba(255,255,255,0.08) !important;
+            color: #E2E8F0 !important;
+        }
+        html.light .calc-wrapper input::placeholder { color: #64748B !important; }
+        html.light .calc-wrapper p#res-honorarios { color: #34D399 !important; }
+
+        /* ========================
+           SIDEBAR (BASE DARK MODE)
+           ======================== */
+        aside {
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            transition: background-color 0.25s ease;
+        }
+
+        /* ========================
+           HEADER
+           ======================== */
+        header.glass-panel {
+            background: var(--bg-header) !important;
+        }
+        html.light header.glass-panel {
+            border-bottom: 1px solid #E2E8F0 !important;
+        }
+
+
+        /* ========================
+           MAIN BG
+           ======================== */
+        main {
+            background-color: var(--bg-app) !important;
+            transition: var(--transition-theme);
+        }
+
+        /* ========================
+           TABS
+           ======================== */
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-        
+
         @keyframes slideUpFade {
             from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
+        /* ========================
+           PRIVACIDAD
+           ======================== */
         .privacy-mode .sensitive-data,
         .sensitive-data.privacy-active {
             filter: blur(12px) !important;
@@ -63,80 +211,354 @@
             transition: all 0.4s ease;
         }
 
+        /* ========================
+           MÉTRICAS ANIMACIÓN
+           ======================== */
         .metrics-grid-item {
             opacity: 0;
             transform: translateY(10px);
             transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-
         .metrics-loaded .metrics-grid-item {
             opacity: 1;
             transform: translateY(0);
         }
 
-        /* Deluxe Client Cards */
+        /* ========================
+           TARJETAS DE CLIENTES
+           ======================== */
         .client-card {
-            background: #0f172a;
-            border: 1px solid var(--glass-border);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow-card);
         }
-        
         .client-card:hover {
-            transform: scale(1.01);
-            border-color: rgba(59, 130, 246, 0.4);
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+            transform: scale(1.005);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: none;
+        }
+        html.light .client-card:hover {
+            border-color: rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        /* Primer cliente también tiene borde top igual que los divisores entre cards */
+        #listaClientes > .client-card:first-child {
+            border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
+        }
+        html.light #listaClientes > .client-card:first-child {
+            border-top: 1px solid #D1D5DB !important;
         }
 
+        /* ========================
+           SIDEBAR ITEM
+           ======================== */
         .sidebar-item.active {
-            background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0) 100%);
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0) 100%);
             border-left: 3px solid var(--accent-blue);
             color: #fff;
         }
 
-        /* Skeleton Animation */
+        /* ========================
+           SKELETON
+           ======================== */
         @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
+            0%   { background-position: -200% 0; }
+            100% { background-position:  200% 0; }
         }
-        .skeleton {
+        html.dark .skeleton {
             background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
             background-size: 200% 100%;
             animation: shimmer 1.5s infinite;
         }
+        html.light .skeleton {
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
 
-        .active-nav-mobile { color: var(--accent-blue); filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4)); }
+        /* ========================
+           NAVIGATION MOBILE
+           ======================== */
+        .active-nav-mobile {
+            color: var(--accent-blue);
+            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));
+        }
 
+        /* ========================
+           SUCCESS PULSE
+           ======================== */
         @keyframes successPulse {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            0%   { box-shadow: 0 0 0  0px rgba(16, 185, 129, 0.4); }
+            70%  { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0  0px rgba(16, 185, 129, 0); }
         }
         .success-pulse { animation: successPulse 1s ease-out; }
+
+        /* ========================
+           BARRA DE FILTROS (CLIENTES)
+           ======================== */
+        .filter-bar-wrapper {
+            background-color: var(--bg-filter-bar);
+            border: 1px solid var(--border-color);
+            transition: var(--transition-theme);
+        }
+
+        /* ========================
+           PILL DE CATEGORÍAS
+           ======================== */
+        .cat-pill-container {
+            background-color: var(--bg-cat-pill);
+            transition: var(--transition-theme);
+        }
+        .cat-pill-active {
+            background-color: var(--bg-cat-active) !important;
+            color: var(--text-primary) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }
+        html.light .cat-pill-inactive {
+            color: var(--text-secondary);
+        }
+        html.dark .cat-pill-inactive {
+            color: #64748b;
+        }
+
+        /* ========================
+           TABLA DE CLIENTES
+           ======================== */
+        .table-header-row {
+            background-color: var(--bg-table-head);
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition-theme);
+        }
+        html.light .table-header-row {
+            color: var(--text-muted);
+        }
+
+        /* ========================
+           INPUTS EN LIGHT MODE
+           ======================== */
+        html.light input,
+        html.light select,
+        html.light textarea {
+            background-color: var(--bg-input) !important;
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border-input) !important;
+        }
+        html.light input::placeholder {
+            color: var(--text-muted) !important;
+        }
+        html.light select option {
+            background-color: #ffffff;
+            color: #111827;
+        }
+
+        /* ========================
+           FORMULARIO DE CLIENTES
+           ======================== */
+        html.light #formContainer {
+            background-color: var(--bg-card) !important;
+            border-color: var(--border-color) !important;
+        }
+        html.light #formContainer h4 {
+            color: var(--text-primary) !important;
+        }
+
+        /* ========================
+           BOTÓN TEMA SOL/LUNA
+           ======================== */
+        #btn-theme {
+            background: var(--bg-cat-pill);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+        #btn-theme:hover {
+            background: var(--accent-blue);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        /* ========================
+           CALCULADORA (LIGHT)
+           ======================== */
+        html.light .calc-wrapper {
+            background-color: #FFFFFF !important;
+            border: 1px solid #D1D5DB !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.07) !important;
+        }
+        html.light .calc-wrapper input {
+            background-color: #FFFFFF !important;
+            border: 1px solid #D1D5DB !important;
+            color: #111827 !important;
+        }
+        html.light .calc-wrapper h4 {
+            color: #6B7280 !important;
+        }
+
+        /* ========================
+           TARJETAS MINI AGENDA
+           ======================== */
+        html.light #mini-agenda-wrapper {
+            background-color: #1B2B3A !important;
+            border: 1px solid rgba(255,255,255,0.08) !important;
+            color: #E2E8F0 !important;
+        }
+        html.light #mini-agenda-wrapper p {
+            color: #94A3B8 !important;
+            opacity: 1 !important;
+        }
+
+        /* ========================
+           LIGHT MODE - SECCIONES CON COLOR SIDEBAR
+           Todas las secciones usan #1B2B3A igual que el sidebar
+           para crear jerarquía visual en modo claro
+           ======================== */
+
+        /* --- MÉTRICAS: bloques contenedores --- */
+        html.light #tab-metricas > div {
+            background-color: #1B2B3A !important;
+            border-color: rgba(255,255,255,0.08) !important;
+        }
+        html.light #tab-metricas h3 {
+            color: #94A3B8 !important;
+        }
+        /* Cards internas de métricas: ligeramente más claro que el contenedor */
+        html.light #tab-metricas .metrics-grid-item:not(.bg-gradient-to-br) {
+            background-color: #243447 !important;
+            border-color: rgba(255,255,255,0.08) !important;
+        }
+        html.light #tab-metricas .metrics-grid-item p {
+            color: #94A3B8 !important;
+        }
+        html.light #tab-metricas .metrics-grid-item h4 {
+            color: #F1F5F9 !important;
+        }
+        /* Historial mensual */
+        html.light #historialMensualContainer .text-center {
+            color: #64748B !important;
+        }
+
+        /* --- AGENDA: header y contenedores --- */
+        html.light #tab-agenda > div:first-child {
+            background-color: #1B2B3A !important;
+            border-color: rgba(255,255,255,0.08) !important;
+        }
+        html.light #tab-agenda h3 {
+            color: #F1F5F9 !important;
+        }
+        /* Calendario */
+        html.light #agenda-calendar-container > div {
+            background-color: #1B2B3A !important;
+            border-color: rgba(255,255,255,0.08) !important;
+            color: #F1F5F9 !important;
+        }
+        /* Items de agenda */
+        html.light #agendaItemsContainer > div {
+            background-color: #1B2B3A !important;
+            border-color: rgba(255,255,255,0.08) !important;
+        }
+
+        /* --- CLIENTES: formulario y tabla --- */
+        html.light #formContainer {
+            background-color: #1B2B3A !important;
+            border-color: rgba(255,255,255,0.08) !important;
+        }
+        html.light #formContainer h4 {
+            color: #F1F5F9 !important;
+        }
+        html.light #formContainer label,
+        html.light #formContainer p {
+            color: #94A3B8 !important;
+        }
+        /* Tabla de clientes */
+        html.light #tab-clientes > div.bg-slate-900 {
+            background-color: #1B2B3A !important;
+            border-color: rgba(255,255,255,0.08) !important;
+        }
+        html.light .table-header-row {
+            background-color: #243447 !important;
+        }
+
+        /* --- WHATSAPP: contenedor principal --- */
+        html.light #tab-whatsapp > div {
+            background-color: #1B2B3A !important;
+            border-color: rgba(255,255,255,0.08) !important;
+        }
+        html.light #tab-whatsapp h3 {
+            color: #F1F5F9 !important;
+        }
+        html.light #templateForm {
+            background-color: rgba(255,255,255,0.05) !important;
+            border-color: rgba(255,255,255,0.08) !important;
+        }
+        html.light #tplTitulo,
+        html.light #tplCuerpo {
+            background-color: rgba(0,0,0,0.2) !important;
+            border-color: rgba(255,255,255,0.08) !important;
+            color: #E2E8F0 !important;
+        }
+        html.light #tplTitulo::placeholder,
+        html.light #tplCuerpo::placeholder {
+            color: #64748B !important;
+        }
+        html.light #tab-whatsapp h4 {
+            color: #94A3B8 !important;
+        }
+
+        /* --- MODALES (Agenda y Pago) --- */
+        html.light #agendaModal > div,
+        html.light #pagoModal > div {
+            background-color: #1B2B3A !important;
+            border-color: rgba(255,255,255,0.08) !important;
+        }
+        html.light #agendaModal label,
+        html.light #pagoModal label,
+        html.light #agendaModal p,
+        html.light #pagoModal p {
+            color: #94A3B8 !important;
+        }
+        html.light #agendaModal h3,
+        html.light #pagoModal h3 {
+            color: #F1F5F9 !important;
+        }
+        html.light #agendaModal input,
+        html.light #agendaModal select,
+        html.light #pagoModal input {
+            background-color: rgba(0,0,0,0.2) !important;
+            border-color: rgba(255,255,255,0.08) !important;
+            color: #E2E8F0 !important;
+        }
+
+        /* --- TEXTO TAREAS AL DÍA (dinámico) --- */
+        /* El elemento se fuerza a tener texto visible siempre en light mode */
+        html.light #mini-agenda-wrapper p.opacity-40 {
+            opacity: 1 !important;
+            color: #94A3B8 !important;
+        }
+
+        /* Toast notification */
+        html.light #toast {
+            background-color: #1B2B3A !important;
+            color: #F1F5F9 !important;
+        }
     </style>
+
     <script>
         // Chequeo temprano de sesión
         if (!localStorage.getItem('jony_token')) {
             window.location.href = '/login.html';
         }
-        
-        // Chequeo temprano de privacidad para evitar flicker
-        (function() {
-            const isPrivacy = localStorage.getItem('jony_privacy') === 'true';
-            if (isPrivacy) {
-                document.documentElement.classList.add('privacy-mode');
-            }
-        })();
     </script>
 </head>
-<body class="text-slate-900">
+<body>
 
     <!-- SIDEBAR (DESKTOP) -->
     <aside class="hidden md:flex flex-col w-64 fixed inset-y-0 left-0 bg-slate-900 text-slate-400 z-50">
         <div class="px-6 py-8">
             <div style="display: flex; align-items: center; gap: 10px; padding: 10px;">
                 <img src="assets/logo.png" style="width: 40px; height: 40px; object-fit: contain;" alt="Zentra Logo">
-                <span style="font-size: 1.5rem; font-weight: bold; color: white;">Zentra</span>
+                <span id="sidebar-title" style="font-size: 1.5rem; font-weight: bold; color: var(--text-primary);">Zentra</span>
             </div>
         </div>
         
@@ -175,7 +597,7 @@
 
         <!-- Sidebar Calculator (SOLO DESKTOP) -->
         <div class="hidden md:block mt-auto p-4 mb-4">
-            <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 shadow-xl">
+            <div class="calc-wrapper p-4 rounded-2xl border shadow-xl" style="background: var(--bg-card); border-color: var(--border-color)">
                 <h4 class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4 text-center">Calculadora ARCA</h4>
                 <div class="space-y-3">
                     <input type="number" id="calc-monto" placeholder="Monto $" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs font-bold outline-none focus:ring-1 focus:ring-blue-500 transition-all">
@@ -200,22 +622,42 @@
         <header class="glass-panel sticky top-0 z-[100] p-4 md:px-10 md:py-6 flex justify-between items-center border-b border-white/10 mb-6">
             <!-- Grupo Izquierdo (Título + Fecha + Ojo en PC) -->
             <div class="flex items-center gap-6 min-w-0">
-                <h2 id="desktopTitle" class="text-xl font-black text-white uppercase tracking-tight truncate">Resumen</h2>
-                <div class="hidden md:flex items-center gap-4 border-l border-white/10 pl-6">
-                    <span id="currentDateDesktop" class="text-sm font-black text-slate-400 uppercase tracking-widest leading-none"></span>
-                    <button onclick="togglePrivacy()" class="w-10 h-10 bg-white/10 rounded-xl text-white flex items-center justify-center border border-white/20 hover:bg-white/20 transition-all">
+                <h2 id="desktopTitle" class="text-xl font-black uppercase tracking-tight truncate" style="color: var(--text-primary)">Resumen</h2>
+                <div class="hidden md:flex items-center gap-4 border-l pl-6" style="border-color: var(--border-color)">
+                    <span id="currentDateDesktop" class="text-sm font-black uppercase tracking-widest leading-none" style="color: var(--text-secondary)"></span>
+                    <button onclick="togglePrivacy()" id="btn-privacy-desc" class="w-10 h-10 rounded-xl flex items-center justify-center border transition-all" style="background: var(--bg-cat-pill); border-color: var(--border-color); color: var(--text-secondary)">
                         <i data-lucide="eye" id="icon-eye-desc" class="w-5 h-5"></i>
                         <i data-lucide="eye-off" id="icon-eye-off-desc" class="w-5 h-5 hidden"></i>
+                    </button>
+                    <button onclick="toggleTheme()" id="btn-theme" class="w-10 h-10 rounded-xl flex items-center justify-center border transition-all" style="background: var(--bg-cat-pill); border-color: var(--border-color); color: var(--text-secondary)">
+                        <!-- Sol: visible en Dark mode (para pasar a Light) -->
+                        <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                        </svg>
+                        <!-- Luna: visible en Light mode (para pasar a Dark) -->
+                        <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
                     </button>
                 </div>
             </div>
 
-            <!-- Grupo Derecho (Solo Celular) -->
+            <!-- Grupo Derecho (Mobile: Fecha + Ojo + Tema) -->
             <div class="flex md:hidden items-center gap-3 shrink-0">
-                <span id="currentDateMobile" class="text-[10px] font-black text-slate-400 uppercase tracking-tighter"></span>
-                <button onclick="togglePrivacy()" class="w-10 h-10 bg-white/10 rounded-xl text-white flex items-center justify-center border border-white/10">
-                    <i data-lucide="eye" id="icon-eye-mob" class="w-5 h-5"></i>
-                    <i data-lucide="eye-off" id="icon-eye-off-mob" class="w-5 h-5 hidden"></i>
+                <span id="currentDateMobile" class="text-[10px] font-black uppercase tracking-tighter" style="color: var(--text-secondary)"></span>
+                <button onclick="togglePrivacy()" class="w-9 h-9 rounded-xl flex items-center justify-center border transition-all" style="background: var(--bg-cat-pill); border-color: var(--border-color); color: var(--text-secondary)">
+                    <i data-lucide="eye" id="icon-eye-mob" class="w-4 h-4"></i>
+                    <i data-lucide="eye-off" id="icon-eye-off-mob" class="w-4 h-4 hidden"></i>
+                </button>
+                <button onclick="toggleTheme()" class="w-9 h-9 rounded-xl flex items-center justify-center border transition-all" style="background: var(--bg-cat-pill); border-color: var(--border-color); color: var(--text-secondary)">
+                    <!-- Sol: visible en Dark mode -->
+                    <svg id="icon-sun-mob" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                    <!-- Luna: visible en Light mode -->
+                    <svg id="icon-moon-mob" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
                 </button>
             </div>
         </header>
@@ -225,34 +667,39 @@
             <!-- TAB: INICIO -->
             <section id="tab-inicio" class="tab-content active space-y-8">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 rounded-[2.5rem] shadow-2xl shadow-blue-200 text-white transform hover:scale-[1.02] transition-all">
+                    <!-- Tarjeta: Clientes Activos -->
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 rounded-[2.5rem] text-white hover:scale-[1.02] transition-all">
                         <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6"><i data-lucide="users" class="w-6 h-6 text-white"></i></div>
                         <h3 id="metric-clientes" class="text-4xl font-black mb-1">0</h3>
                         <p class="text-[10px] font-bold uppercase tracking-widest opacity-70">Clientes Activos</p>
                     </div>
-                    <div class="bg-gradient-to-br from-slate-800 to-slate-950 p-8 rounded-[2.5rem] border border-white/5 shadow-sm hover:shadow-xl transition-all">
+                    <!-- Tarjeta: Trámites Mes -->
+                    <div class="bg-gradient-to-br from-slate-800 to-slate-950 p-8 rounded-[2.5rem] border border-white/5 transition-all hover:border-white/20">
                         <div class="w-12 h-12 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mb-6 border border-white/5"><i data-lucide="file-text" class="w-6 h-6"></i></div>
                         <h3 id="num-tramites" class="text-4xl font-black text-white">0</h3>
                         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Trámites Mes</p>
                     </div>
-                    <div class="bg-gradient-to-br from-slate-800 to-slate-950 p-8 rounded-[2.5rem] border border-white/5 shadow-sm hover:shadow-xl transition-all">
+                    <!-- Tarjeta: Pendientes -->
+                    <div class="bg-gradient-to-br from-slate-800 to-slate-950 p-8 rounded-[2.5rem] border border-white/5 transition-all hover:border-white/20">
                         <div class="w-12 h-12 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mb-6 border border-white/5"><i data-lucide="clock" class="w-6 h-6"></i></div>
                         <h3 id="num-pendientes" class="text-4xl font-black text-white">0</h3>
                         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pendientes</p>
                     </div>
-                    <div onclick="switchTab('metricas')" class="metrics-grid-item cursor-pointer bg-gradient-to-br from-slate-900 to-black p-8 rounded-[2.5rem] border border-emerald-500/20 shadow-lg shadow-emerald-500/5 hover:shadow-emerald-500/10 transition-all">
+                    <!-- Tarjeta: Recaudación Hoy -->
+                    <div onclick="switchTab('metricas')" class="metrics-grid-item cursor-pointer bg-gradient-to-br from-slate-900 to-slate-950 p-8 rounded-[2.5rem] border border-white/5 transition-all hover:border-emerald-500/30">
                         <div class="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-6 border border-emerald-500/20"><i data-lucide="dollar-sign" class="w-6 h-6"></i></div>
                         <h3 id="num-recaudacion-hoy" class="text-3xl font-black text-emerald-400 sensitive-data">$ 0</h3>
                         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Recaudación Hoy</p>
                     </div>
-                    <div onclick="switchTab('metricas')" class="metrics-grid-item cursor-pointer bg-gradient-to-br from-slate-900 to-black p-8 rounded-[2.5rem] border border-emerald-600/20 shadow-lg shadow-emerald-600/5 hover:shadow-emerald-600/10 transition-all">
-                        <div class="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-6 border border-emerald-600/20"><i data-lucide="trending-up" class="w-6 h-6"></i></div>
+                    <!-- Tarjeta: Ganancia Total -->
+                    <div onclick="switchTab('metricas')" class="metrics-grid-item cursor-pointer bg-gradient-to-br from-slate-900 to-slate-950 p-8 rounded-[2.5rem] border border-white/5 transition-all hover:border-emerald-500/30">
+                        <div class="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-6 border border-emerald-500/20"><i data-lucide="trending-up" class="w-6 h-6"></i></div>
                         <h3 id="num-ganancia-total" class="text-3xl font-black text-emerald-400 sensitive-data">$ 0</h3>
                         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ganancia Total</p>
                     </div>
                 </div>
 
-                <div id="mini-agenda-wrapper" class="bg-slate-900 p-8 rounded-3xl text-white shadow-xl shadow-slate-200 flex items-center space-x-6">
+                <div id="mini-agenda-wrapper" class="bg-slate-900 p-8 rounded-3xl text-white border border-white/5 flex items-center space-x-6">
                     <p class="opacity-40 text-xs font-bold uppercase">Cargando agenda de hoy...</p>
                 </div>
 
@@ -286,11 +733,11 @@
 
             <!-- TAB: CLIENTES -->
             <section id="tab-clientes" class="tab-content space-y-6 overflow-x-hidden">
-                <div class="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-white p-4 rounded-3xl border shadow-sm w-full max-w-full overflow-hidden">
+                <div class="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center filter-bar-wrapper p-4 rounded-3xl w-full max-w-full overflow-hidden">
                     <div class="flex gap-2 w-full md:w-96 shrink-0">
                         <div class="relative flex-1">
                             <i data-lucide="search" class="absolute left-4 top-3 w-4 h-4 text-slate-400"></i>
-                            <input type="text" id="searchInput" oninput="filtrarClientes()" placeholder="Ej: Juan, ARCA, TV..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="text" id="searchInput" oninput="filtrarClientes()" placeholder="Ej: Juan, ARCA, Toyota..." class="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 border" style="background: var(--bg-input); color: var(--text-primary); border-color: var(--border-input); placeholder-color: var(--text-muted);">
                         </div>
                         <button onclick="setFiltroMorosos(!filtroSoloMorosos)" id="btnFiltroMorosos" title="Filtrar Morosos" class="w-12 h-[42px] md:h-auto md:w-auto md:px-5 md:py-2.5 bg-slate-100 text-slate-500 hover:bg-rose-100 hover:text-rose-700 rounded-xl text-sm font-black outline-none transition-all flex items-center justify-center shrink-0">
                             <i data-lucide="alert-circle" class="w-5 h-5 md:mr-1"></i>
@@ -299,18 +746,18 @@
                     </div>
                     <div class="flex gap-3 md:gap-4 w-full md:w-auto items-center overflow-x-auto pb-1 md:pb-0 hide-scrollbar" style="-ms-overflow-style: none; scrollbar-width: none;">
                         <style>.hide-scrollbar::-webkit-scrollbar { display: none; }</style>
-                        <div class="bg-slate-100 p-1 flex rounded-xl items-center shrink-0">
-                            <button onclick="setFiltroCategoria('Todos')" id="btnCatTodos" class="px-3 py-1.5 bg-white text-slate-800 rounded-lg text-xs font-black shadow-sm transition-all outline-none">Todos <span id="countCatTodos" class="opacity-50 ml-0.5"></span></button>
-                            <button onclick="setFiltroCategoria('Préstamos')" id="btnCatPrestamos" class="px-3 py-1.5 text-slate-500 hover:text-slate-700 rounded-lg text-xs font-black transition-all outline-none">Préstamos <span id="countCatPrestamos" class="opacity-50 ml-0.5"></span></button>
-                            <button onclick="setFiltroCategoria('Electrodomésticos')" id="btnCatElectro" class="px-3 py-1.5 text-slate-500 hover:text-slate-700 rounded-lg text-xs font-black transition-all outline-none">Electro <span id="countCatElectro" class="opacity-50 ml-0.5"></span></button>
-                            <button onclick="setFiltroCategoria('Trámites')" id="btnCatTramites" class="px-3 py-1.5 text-slate-500 hover:text-slate-700 rounded-lg text-xs font-black transition-all outline-none">Trámites <span id="countCatTramites" class="opacity-50 ml-0.5"></span></button>
+                        <div class="cat-pill-container p-1 flex rounded-xl items-center shrink-0">
+                            <button onclick="setFiltroCategoria('Todos')" id="btnCatTodos" class="px-3 py-1.5 cat-pill-active rounded-lg text-xs font-black transition-all outline-none">Todos <span id="countCatTodos" class="opacity-50 ml-0.5"></span></button>
+                            <button onclick="setFiltroCategoria('Préstamos')" id="btnCatPrestamos" class="px-3 py-1.5 cat-pill-inactive rounded-lg text-xs font-black transition-all outline-none">Préstamos <span id="countCatPrestamos" class="opacity-50 ml-0.5"></span></button>
+                            <button onclick="setFiltroCategoria('Electrodomésticos')" id="btnCatElectro" class="px-3 py-1.5 cat-pill-inactive rounded-lg text-xs font-black transition-all outline-none">Electro <span id="countCatElectro" class="opacity-50 ml-0.5"></span></button>
+                            <button onclick="setFiltroCategoria('Trámites')" id="btnCatTramites" class="px-3 py-1.5 cat-pill-inactive rounded-lg text-xs font-black transition-all outline-none">Trámites <span id="countCatTramites" class="opacity-50 ml-0.5"></span></button>
                         </div>
-                        <button onclick="toggleForm()" class="hidden md:block px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-black shadow-lg shadow-blue-200 whitespace-nowrap outline-none transition-all">Nuevo Cliente</button>
+                        <button onclick="toggleForm()" class="hidden md:block px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-black whitespace-nowrap outline-none transition-all">Nuevo Cliente</button>
                     </div>
                 </div>
 
                 <!-- FAB Nuevo Cliente (Mobile) -->
-                <button onclick="toggleForm()" class="md:hidden fixed bottom-20 right-5 w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-500/50 z-50 transition-transform active:scale-95">
+                <button onclick="toggleForm()" class="md:hidden fixed bottom-20 right-5 w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center z-50 transition-transform active:scale-95">
                     <i data-lucide="plus" class="w-6 h-6"></i>
                 </button>
 
@@ -341,6 +788,7 @@
                                     <option value="Deducción Impuesto a las Ganancias">Deducción Impuesto a las Ganancias</option>
                                     <option value="Otro">Otro</option>
                                 </select>
+                                <input type="text" name="empresa" id="fEmpresa" placeholder="Empresa / Empleador (Ej: Toyota, Casasco)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
                                 <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="honorarios" id="fHonorarios" placeholder="Honorarios Sugeridos ($) (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
                             </div>
 
@@ -363,7 +811,7 @@
                         </div>
                         <div class="md:col-span-2 flex justify-end gap-4 mt-2">
                             <button type="button" onclick="cancelarEdicion()" class="px-6 py-3 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancelar</button>
-                            <button type="submit" id="formSubmitBtn" class="px-12 py-4 bg-orange-500 text-white font-black rounded-2xl shadow-lg shadow-orange-100 hover:bg-orange-600 active:scale-95 transition-all uppercase tracking-widest text-xs">Crear Cliente</button>
+                            <button type="submit" id="formSubmitBtn" class="px-12 py-4 bg-orange-500 text-white font-black rounded-2xl hover:bg-orange-600 active:scale-95 transition-all uppercase tracking-widest text-xs">Crear Cliente</button>
                         </div>
                     </form>
                 </div>
@@ -376,7 +824,7 @@
                         <div class="col-span-3 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Acciones</div>
                     </div>
                     <!-- Fixed Height List with Scroll -->
-                    <div id="listaClientes" class="max-h-[560px] overflow-y-auto overflow-x-hidden divide-y divide-slate-100"></div>
+                    <div id="listaClientes" class="max-h-[560px] overflow-y-auto overflow-x-hidden space-y-2 p-2"></div>
                 </div>
             </section>
 
@@ -385,7 +833,7 @@
                 <!-- Header -->
                 <div class="flex flex-col md:flex-row gap-6 justify-between items-center bg-slate-900/50 backdrop-blur-xl border border-white/5 p-6 rounded-[2.5rem] shadow-sm px-8">
                     <h3 class="text-xl font-black text-white tracking-tight">Centro de Operaciones</h3>
-                    <button onclick="openAgendaModal(null, null)" class="w-full md:w-auto bg-violet-600 text-white px-8 py-3 rounded-2xl text-xs font-black shadow-xl shadow-violet-600/20 hover:bg-violet-700 transition-all uppercase tracking-widest flex items-center justify-center">
+                    <button onclick="openAgendaModal(null, null)" class="w-full md:w-auto bg-violet-600 text-white px-8 py-3 rounded-2xl text-xs font-black hover:bg-violet-700 transition-all uppercase tracking-widest flex items-center justify-center">
                         <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Agendar Trámite
                     </button>
                 </div>
@@ -403,99 +851,129 @@
             </section>
 
             <!-- TAB: MÉTRICAS & HERRAMIENTAS -->
-            <section id="tab-metricas" class="tab-content space-y-8 pb-10">
+            <section id="tab-metricas" class="tab-content space-y-6 pb-10">
+
                 <!-- Bloque Trámites -->
-                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
-                    <h3 class="text-xl font-black text-white flex items-center mb-6"><span class="bg-indigo-900/50 text-indigo-400 p-2 rounded-xl mr-3 text-2xl">⚡</span> Trámites</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="metrics-grid-item bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-3xl shadow-xl">
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"><i data-lucide="zap" class="w-5 h-5 text-white"></i></div>
-                                <span class="text-[9px] font-black text-white/50 uppercase tracking-widest">Hoy</span>
-                            </div>
-                            <h4 id="val-tramites-hoy" class="text-3xl font-black text-white truncate sensitive-data">$ 0</h4>
+                <div class="border rounded-3xl p-6 md:p-8" style="background: var(--bg-card); border-color: var(--border-color)">
+                    <h3 class="text-xs font-black uppercase tracking-[0.2em] mb-5 flex items-center gap-2" style="color: var(--text-muted)">
+                        <span class="bg-indigo-500/10 text-indigo-400 w-7 h-7 rounded-lg flex items-center justify-center text-base">⚡</span>
+                        Trámites
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Hoy: tarjeta destacada con gradiente, SIN sombra -->
+                        <div class="metrics-grid-item bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-2xl">
+                            <p class="text-[10px] font-black text-white/50 uppercase tracking-widest mb-3">Hoy</p>
+                            <h4 id="val-tramites-hoy" class="text-3xl font-black text-white sensitive-data">$ 0</h4>
                         </div>
-                        <div class="metrics-grid-item bg-slate-800 p-6 rounded-2xl border-l-4 border-blue-500 shadow-lg flex flex-col justify-center gap-2 transition-transform hover:scale-[1.02]">
-                            <div class="flex items-center justify-between mb-2">
-                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Recaudación Mes</p>
-                                <div class="text-slate-500 opacity-50"><i data-lucide="calendar" class="w-5 h-5"></i></div>
+                        <!-- Mes -->
+                        <div class="metrics-grid-item p-6 rounded-2xl border" style="background: var(--bg-app); border-color: var(--border-color)">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-[10px] font-black uppercase tracking-widest" style="color: var(--text-muted)">Recaudación Mes</p>
+                                <div class="w-7 h-7 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="calendar" class="w-4 h-4 text-blue-400"></i>
+                                </div>
                             </div>
-                            <h4 id="val-tramites-mes" class="text-3xl font-black text-white truncate sensitive-data">$ 0</h4>
+                            <h4 id="val-tramites-mes" class="text-2xl font-black sensitive-data" style="color: var(--text-primary)">$ 0</h4>
                         </div>
-                        <div class="metrics-grid-item bg-slate-800 p-6 rounded-2xl border-l-4 border-emerald-500 shadow-lg flex flex-col justify-center gap-2 transition-transform hover:scale-[1.02]">
-                            <div class="flex items-center justify-between mb-2">
-                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Ganancia Histórica</p>
-                                <div class="text-slate-500 opacity-50"><i data-lucide="award" class="w-5 h-5"></i></div>
+                        <!-- Histórica -->
+                        <div class="metrics-grid-item p-6 rounded-2xl border" style="background: var(--bg-app); border-color: var(--border-color)">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-[10px] font-black uppercase tracking-widest" style="color: var(--text-muted)">Ganancia Histórica</p>
+                                <div class="w-7 h-7 bg-emerald-500/10 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="award" class="w-4 h-4 text-emerald-400"></i>
+                                </div>
                             </div>
-                            <h4 id="val-tramites-hist" class="text-3xl font-black text-white truncate sensitive-data">$ 0</h4>
+                            <h4 id="val-tramites-hist" class="text-2xl font-black sensitive-data" style="color: var(--text-primary)">$ 0</h4>
                         </div>
                     </div>
                 </div>
 
                 <!-- Bloque Préstamos -->
-                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
-                    <h3 class="text-xl font-black text-white flex items-center mb-6"><span class="bg-blue-900/50 text-blue-400 p-2 rounded-xl mr-3 text-2xl">💵</span> Préstamos</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="metrics-grid-item bg-slate-800 p-6 rounded-2xl border-l-4 border-amber-500 shadow-lg flex flex-col justify-center gap-2 transition-transform hover:scale-[1.02]">
-                            <div class="flex items-center justify-between mb-2">
-                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Capital en Calle</p>
-                                <div class="text-slate-500 opacity-50"><i data-lucide="building" class="w-5 h-5"></i></div>
+                <div class="border rounded-3xl p-6 md:p-8" style="background: var(--bg-card); border-color: var(--border-color)">
+                    <h3 class="text-xs font-black uppercase tracking-[0.2em] mb-5 flex items-center gap-2" style="color: var(--text-muted)">
+                        <span class="bg-emerald-600/15 text-emerald-400 w-7 h-7 rounded-lg flex items-center justify-center text-base">💵</span>
+                        Préstamos
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="metrics-grid-item p-6 rounded-2xl border" style="background: var(--bg-app); border-color: var(--border-color)">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-[10px] font-black uppercase tracking-widest" style="color: var(--text-muted)">Capital en Calle</p>
+                                <div class="w-7 h-7 bg-emerald-600/15 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="building" class="w-4 h-4 text-emerald-400"></i>
+                                </div>
                             </div>
-                            <h4 id="val-prestamos-calle" class="text-3xl font-black text-white truncate sensitive-data">$ 0</h4>
+                            <h4 id="val-prestamos-calle" class="text-2xl font-black sensitive-data" style="color: var(--text-primary)">$ 0</h4>
                         </div>
-                        <div class="metrics-grid-item bg-slate-800 p-6 rounded-2xl border-l-4 border-violet-500 shadow-lg flex flex-col justify-center gap-2 transition-transform hover:scale-[1.02]">
-                            <div class="flex items-center justify-between mb-2">
-                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Ganancia Pendiente</p>
-                                <div class="text-slate-500 opacity-50"><i data-lucide="trending-up" class="w-5 h-5"></i></div>
+                        <div class="metrics-grid-item p-6 rounded-2xl border" style="background: var(--bg-app); border-color: var(--border-color)">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-[10px] font-black uppercase tracking-widest" style="color: var(--text-muted)">Ganancia Pendiente</p>
+                                <div class="w-7 h-7 bg-emerald-600/15 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i>
+                                </div>
                             </div>
-                            <h4 id="val-prestamos-pend" class="text-3xl font-black text-white truncate sensitive-data">$ 0</h4>
+                            <h4 id="val-prestamos-pend" class="text-2xl font-black sensitive-data" style="color: var(--text-primary)">$ 0</h4>
                         </div>
-                        <div class="metrics-grid-item bg-slate-800 p-6 rounded-2xl border-l-4 border-emerald-500 shadow-lg flex flex-col justify-center gap-2 transition-transform hover:scale-[1.02]">
-                            <div class="flex items-center justify-between mb-2">
-                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Ganancia Realizada</p>
-                                <div class="text-slate-500 opacity-50"><i data-lucide="check-circle" class="w-5 h-5"></i></div>
+                        <div class="metrics-grid-item p-6 rounded-2xl border" style="background: var(--bg-app); border-color: var(--border-color)">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-[10px] font-black uppercase tracking-widest" style="color: var(--text-muted)">Ganancia Realizada</p>
+                                <div class="w-7 h-7 bg-emerald-500/10 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+                                </div>
                             </div>
-                            <h4 id="val-prestamos-real" class="text-3xl font-black text-white truncate sensitive-data">$ 0</h4>
+                            <h4 id="val-prestamos-real" class="text-2xl font-black text-emerald-400 sensitive-data">$ 0</h4>
                         </div>
                     </div>
                 </div>
 
                 <!-- Bloque Electrodomésticos -->
-                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
-                    <h3 class="text-xl font-black text-white flex items-center mb-6"><span class="bg-amber-900/50 text-amber-400 p-2 rounded-xl mr-3 text-2xl">📦</span> Electrodomésticos</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="metrics-grid-item bg-slate-800 p-6 rounded-2xl border-l-4 border-amber-500 shadow-lg flex flex-col justify-center gap-2 transition-transform hover:scale-[1.02]">
-                            <div class="flex items-center justify-between mb-2">
-                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Capital en Calle</p>
-                                <div class="text-slate-500 opacity-50"><i data-lucide="building" class="w-5 h-5"></i></div>
+                <div class="border rounded-3xl p-6 md:p-8" style="background: var(--bg-card); border-color: var(--border-color)">
+                    <h3 class="text-xs font-black uppercase tracking-[0.2em] mb-5 flex items-center gap-2" style="color: var(--text-muted)">
+                        <span class="bg-amber-500/10 text-amber-400 w-7 h-7 rounded-lg flex items-center justify-center text-base">📦</span>
+                        Electrodomésticos
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="metrics-grid-item p-6 rounded-2xl border" style="background: var(--bg-app); border-color: var(--border-color)">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-[10px] font-black uppercase tracking-widest" style="color: var(--text-muted)">Capital en Calle</p>
+                                <div class="w-7 h-7 bg-amber-500/10 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="building" class="w-4 h-4 text-amber-400"></i>
+                                </div>
                             </div>
-                            <h4 id="val-electro-calle" class="text-3xl font-black text-white truncate sensitive-data">$ 0</h4>
+                            <h4 id="val-electro-calle" class="text-2xl font-black sensitive-data" style="color: var(--text-primary)">$ 0</h4>
                         </div>
-                        <div class="metrics-grid-item bg-slate-800 p-6 rounded-2xl border-l-4 border-violet-500 shadow-lg flex flex-col justify-center gap-2 transition-transform hover:scale-[1.02]">
-                            <div class="flex items-center justify-between mb-2">
-                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Ganancia Pendiente</p>
-                                <div class="text-slate-500 opacity-50"><i data-lucide="trending-up" class="w-5 h-5"></i></div>
+                        <div class="metrics-grid-item p-6 rounded-2xl border" style="background: var(--bg-app); border-color: var(--border-color)">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-[10px] font-black uppercase tracking-widest" style="color: var(--text-muted)">Ganancia Pendiente</p>
+                                <div class="w-7 h-7 bg-violet-500/10 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="trending-up" class="w-4 h-4 text-violet-400"></i>
+                                </div>
                             </div>
-                            <h4 id="val-electro-pend" class="text-3xl font-black text-white truncate sensitive-data">$ 0</h4>
+                            <h4 id="val-electro-pend" class="text-2xl font-black sensitive-data" style="color: var(--text-primary)">$ 0</h4>
                         </div>
-                        <div class="metrics-grid-item bg-slate-800 p-6 rounded-2xl border-l-4 border-emerald-500 shadow-lg flex flex-col justify-center gap-2 transition-transform hover:scale-[1.02]">
-                            <div class="flex items-center justify-between mb-2">
-                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Ganancia Realizada</p>
-                                <div class="text-slate-500 opacity-50"><i data-lucide="check-circle" class="w-5 h-5"></i></div>
+                        <div class="metrics-grid-item p-6 rounded-2xl border" style="background: var(--bg-app); border-color: var(--border-color)">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-[10px] font-black uppercase tracking-widest" style="color: var(--text-muted)">Ganancia Realizada</p>
+                                <div class="w-7 h-7 bg-emerald-500/10 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+                                </div>
                             </div>
-                            <h4 id="val-electro-real" class="text-3xl font-black text-white truncate sensitive-data">$ 0</h4>
+                            <h4 id="val-electro-real" class="text-2xl font-black text-emerald-400 sensitive-data">$ 0</h4>
                         </div>
                     </div>
                 </div>
 
                 <!-- Bloque Historial Mensual -->
-                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl mt-8">
-                    <h3 class="text-xl font-black text-white flex items-center mb-6"><span class="bg-emerald-900/50 text-emerald-400 p-2 rounded-xl mr-3 text-2xl">📈</span> Historial de Ganancias Mensuales</h3>
-                    <div id="historialMensualContainer" class="space-y-4">
-                        <div class="text-center text-slate-500 font-bold py-4">Cargando historial...</div>
+                <div class="border rounded-3xl p-6 md:p-8" style="background: var(--bg-card); border-color: var(--border-color)">
+                    <h3 class="text-xs font-black uppercase tracking-[0.2em] mb-5 flex items-center gap-2" style="color: var(--text-muted)">
+                        <span class="bg-emerald-500/10 text-emerald-400 w-7 h-7 rounded-lg flex items-center justify-center text-base">📈</span>
+                        Historial de Ganancias Mensuales
+                    </h3>
+                    <div id="historialMensualContainer" class="space-y-3">
+                        <div class="text-center font-bold py-4" style="color: var(--text-muted)">Cargando historial...</div>
                     </div>
                 </div>
             </section>
+
 
             <!-- TAB: WHATSAPP -->
             <section id="tab-whatsapp" class="tab-content space-y-6">
@@ -521,7 +999,7 @@
                         </div>
                         <div class="flex justify-end gap-4">
                             <button type="button" onclick="resetTemplateForm()" class="px-6 py-4 font-bold text-slate-500 hover:text-white">Cancelar</button>
-                            <button type="submit" class="px-10 py-4 bg-emerald-500 text-white font-black rounded-2xl shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 uppercase tracking-widest text-xs transition-all flex items-center">
+                            <button type="submit" class="px-10 py-4 bg-emerald-500 text-white font-black rounded-2xl hover:bg-emerald-600 uppercase tracking-widest text-xs transition-all flex items-center">
                                 <i data-lucide="save" class="w-4 h-4 mr-2"></i> Guardar
                             </button>
                         </div>
@@ -555,7 +1033,7 @@
                     </div>
                     <div class="flex gap-4 pt-4">
                         <button type="button" onclick="closeAgendaModal()" class="flex-1 font-bold text-slate-500">Cancelar</button>
-                        <button type="submit" class="flex-[2] py-4 bg-blue-600 text-white font-black rounded-2xl shadow-xl hover:bg-blue-700 transition-all shadow-blue-500/20">AGENDAR</button>
+                        <button type="submit" class="flex-[2] py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all">AGENDAR</button>
                     </div>
                 </form>
             </div>
@@ -579,7 +1057,7 @@
                     <p class="text-xs text-slate-500 italic block -mt-2">Se sumará al total pagado y renovará el vencimiento por 30 días.</p>
                     <div class="flex gap-4 pt-4">
                         <button type="button" onclick="closePagoModal()" class="flex-1 font-bold text-slate-500">Cancelar</button>
-                        <button type="submit" class="flex-[2] py-4 bg-emerald-500 text-white font-black rounded-2xl shadow-xl hover:bg-emerald-600 transition-all shadow-emerald-500/20">CONFIRMAR PAGO</button>
+                        <button type="submit" class="flex-[2] py-4 bg-emerald-500 text-white font-black rounded-2xl hover:bg-emerald-600 transition-all">CONFIRMAR PAGO</button>
                     </div>
                 </form>
             </div>
@@ -645,12 +1123,39 @@
                 iconsEye.forEach(i => i?.classList.remove('hidden'));
                 iconsEyeOff.forEach(i => i?.classList.add('hidden'));
             }
-            // No llamar a lucide.createIcons aquí para evitar loops, 
-            // solo togglear clases hidden es más seguro.
+        }
+
+        // ========================
+        // SISTEMA LIGHT / DARK MODE
+        // ========================
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isDark) {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+                localStorage.setItem('zentra_theme', 'light');
+            } else {
+                document.documentElement.classList.remove('light');
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('zentra_theme', 'dark');
+            }
+            applyThemeIcons();
+            lucide.createIcons();
+        }
+
+        function applyThemeIcons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            // Desktop icons
+            document.getElementById('icon-sun')?.classList.toggle('hidden', !isDark);
+            document.getElementById('icon-moon')?.classList.toggle('hidden', isDark);
+            // Mobile icons
+            document.getElementById('icon-sun-mob')?.classList.toggle('hidden', !isDark);
+            document.getElementById('icon-moon-mob')?.classList.toggle('hidden', isDark);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             applyPrivacy();
+            applyThemeIcons();
             lucide.createIcons();
             fetchClientes();
             fetchAgenda();
@@ -893,27 +1398,40 @@
                 'Trámites': 'btnCatTramites'
             };
             
+            // Resetear todas las pills a inactivo
             Object.values(btns).forEach(id => {
                 const btn = document.getElementById(id);
                 if(btn) {
-                    btn.classList.remove('bg-white', 'text-slate-800', 'shadow-sm');
-                    btn.classList.add('text-slate-500', 'hover:text-slate-700');
+                    btn.classList.remove('cat-pill-active');
+                    btn.classList.add('cat-pill-inactive');
                 }
             });
 
+            // Activar la pill seleccionada
             const btnActivo = document.getElementById(btns[cat]);
             if(btnActivo) {
-                btnActivo.classList.remove('text-slate-500', 'hover:text-slate-700');
-                btnActivo.classList.add('bg-white', 'text-slate-800', 'shadow-sm');
+                btnActivo.classList.remove('cat-pill-inactive');
+                btnActivo.classList.add('cat-pill-active');
             }
             
             filtrarClientes();
         }
 
         function filtrarClientes() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            
             let filtered = allClientes.filter(c => {
-                const searchStr = [c.nombre, c.categoria, c.subTipoTramite, c.tramite, c.producto].filter(Boolean).join(' ').toLowerCase();
+                // Nomalizacion: Unimos todos los campos buscables, incluyendo el nuevo campo 'empresa'
+                const camposBuscables = [
+                    c.nombre, 
+                    c.categoria, 
+                    c.subTipoTramite, 
+                    c.tramite, 
+                    c.producto, 
+                    c.empresa
+                ];
+                
+                const searchStr = camposBuscables.filter(Boolean).join(' ').toLowerCase();
                 return searchStr.includes(query);
             });
             
@@ -957,19 +1475,32 @@
                 const isEven = idx % 2 === 0;
                 
                 let borderColor = 'border-white/5';
-                if (moroso) borderColor = 'border-rose-500/50';
+                if (moroso) borderColor = 'border-rose-500/60';
                 else if (c.estado === 'Cerrado') borderColor = 'border-slate-800';
+                else if (c.categoria === 'Préstamos') borderColor = 'border-emerald-600/50';
+                else if (c.categoria === 'Electrodomésticos') borderColor = 'border-amber-500/40';
+                else if (c.categoria === 'Trámites') borderColor = 'border-violet-500/40';
 
-                row.className = `client-card mb-3 md:mb-0 rounded-2xl md:rounded-none border-b md:border-b-0 border ${borderColor} border-l-4 transition-all`;
+                row.className = `client-card mb-0 rounded-xl border ${borderColor} border-l-4 transition-all`;
                 row.style.animationDelay = `${idx * 0.05}s`;
                 
-                let icono = '⚡';
-                if (c.categoria === 'Préstamos') icono = '💵';
-                else if (c.categoria === 'Electrodomésticos') icono = '📦';
+                // Avatar: inicial + color por categoría
+                let avatarBg = 'bg-slate-700 text-slate-300';
+                let avatarBorder = 'border-slate-600';
+                if (c.categoria === 'Préstamos')             { avatarBg = 'bg-emerald-600/20 text-emerald-300'; avatarBorder = 'border-emerald-600/40'; }
+                else if (c.categoria === 'Electrodomésticos') { avatarBg = 'bg-amber-500/20 text-amber-300'; avatarBorder = 'border-amber-500/30'; }
+                else if (c.categoria === 'Trámites')     { avatarBg = 'bg-violet-500/20 text-violet-300'; avatarBorder = 'border-violet-500/30'; }
+                if (moroso)                               { avatarBg = 'bg-rose-500/20 text-rose-300';   avatarBorder = 'border-rose-500/30'; }
+                const inicial = (c.nombre || '?')[0].toUpperCase();
+                const avatarHtml = `<div class="w-9 h-9 ${avatarBg} border ${avatarBorder} rounded-full flex items-center justify-center font-black text-sm shrink-0">${inicial}</div>`;
 
                 let subtitulo = c.subTipoTramite || c.tramite || c.categoria;
                 if (c.categoria === 'Electrodomésticos' && c.producto) {
                     subtitulo = `Producto: ${c.producto}`;
+                }
+                // Mostrar empresa si existe (Trámites)
+                if (c.categoria === 'Trámites' && c.empresa) {
+                    subtitulo += ` · ${c.empresa}`;
                 }
 
                 if (c.categoria !== 'Trámites' && c.proximoCobro && c.estado !== 'Cerrado') {
@@ -1079,7 +1610,7 @@
                 let botonPagoHtml = '';
                 if (c.categoria !== 'Trámites' && c.estado !== 'Cerrado') {
                     botonPagoHtml = `
-                        <button onclick="openPagoModal('${c._id}', '${c.nombre}')" class="flex items-center justify-center space-x-2 flex-1 md:flex-none py-2 px-4 bg-emerald-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-100">
+                        <button onclick="openPagoModal('${c._id}', '${c.nombre}')" class="flex items-center justify-center space-x-2 flex-1 md:flex-none py-2 px-4 bg-emerald-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all">
                             <i data-lucide="dollar-sign" class="w-3.5 h-3.5"></i>
                             <span>Registrar Pago</span>
                         </button>
@@ -1087,16 +1618,14 @@
                 }
 
                 row.innerHTML = `
-                    <div onclick="toggleClienteDetalle('${c._id}')" class="flex flex-col md:grid md:grid-cols-12 gap-4 px-5 py-5 md:px-8 cursor-pointer items-start md:items-center hover:bg-blue-50/50 transition-colors relative">
+                    <div onclick="toggleClienteDetalle('${c._id}')" class="flex flex-col md:grid md:grid-cols-12 gap-4 px-5 py-4 md:px-8 cursor-pointer items-start md:items-center" style="transition: background 0.15s; border-radius: inherit;" onmouseenter="this.style.background='rgba(255,255,255,0.04)'" onmouseleave="this.style.background=''">
                         <!-- Info Principal -->
                         <div class="w-full md:col-span-5 flex items-center justify-between">
-                            <div class="flex items-center space-x-4">
-                                <div class="w-9 h-9 bg-blue-100 text-blue-600 border-blue-200 rounded-full flex items-center justify-center font-black text-xs border uppercase shrink-0">
-                                    ${icono}
-                                </div>
+                            <div class="flex items-center space-x-3">
+                                ${avatarHtml}
                                 <div class="min-w-0 flex-1">
-                                    <p class="text-sm font-black text-white truncate leading-tight">${c.nombre}</p>
-                                    <p class="text-[9px] font-bold ${moroso ? 'text-rose-400' : 'text-slate-500'} uppercase tracking-widest truncate">${subtitulo}</p>
+                                    <p class="text-sm font-black truncate leading-tight" style="color: var(--text-primary)">${c.nombre}</p>
+                                    <p class="text-[9px] font-bold uppercase tracking-widest truncate mt-0.5 ${moroso ? 'text-rose-400' : ''}" style="${moroso ? '' : 'color: var(--text-muted)'}">${subtitulo}</p>
                                 </div>
                             </div>
                             <!-- Acciones Rápida Mobile (Apiladas Verticalmente) -->
@@ -1133,7 +1662,7 @@
                                         <i data-lucide="message-circle" class="w-4 h-4"></i>
                                         <span>Libre</span>
                                     </a>
-                                    <select onchange="sendTemplateWA(this, '${c._id}')" class="flex-[2] text-[10px] uppercase font-black tracking-widest bg-emerald-500 text-white rounded-xl px-2 py-3 outline-none border-none hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-100 cursor-pointer">
+                                    <select onchange="sendTemplateWA(this, '${c._id}')" class="flex-[2] text-[10px] uppercase font-black tracking-widest bg-emerald-500 text-white rounded-xl px-2 py-3 outline-none border-none hover:bg-emerald-600 transition-all cursor-pointer">
                                         ${optionsTpl}
                                     </select>
                                 </div>
@@ -1144,7 +1673,7 @@
                                     ${historialHtml}
                                 </div>
                                 <div class="pt-6 flex flex-wrap gap-3">
-                                    <button onclick="openAgendaModal('${c._id}', '${c.nombre}')" class="flex items-center justify-center space-x-2 flex-1 md:flex-none px-4 py-2 bg-violet-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-violet-700 shadow-lg shadow-violet-100 transition-all">
+                                    <button onclick="openAgendaModal('${c._id}', '${c.nombre}')" class="flex items-center justify-center space-x-2 flex-1 md:flex-none px-4 py-2 bg-violet-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-violet-700 transition-all">
                                         <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
                                         <span>Nueva Tarea/Cita</span>
                                     </button>
@@ -1194,6 +1723,7 @@
             
             if (f.categoria.value === 'Trámites') {
                 f.subTipoTramite.value = c.subTipoTramite || c.tramite || '';
+                document.getElementById('fEmpresa').value = c.empresa || '';
                 f.honorarios.value = c.honorarios || '';
             } else if (f.categoria.value === 'Préstamos') {
                 f.montoPrestado.value = c.montoPrestado || '';
@@ -1229,11 +1759,11 @@
             } else if (data.categoria === 'Préstamos') {
                 if (data.montoPrestado) data.montoPrestado = unmaskCurrency(data.montoPrestado);
                 if (data.montoDevolver) data.montoDevolver = unmaskCurrency(data.montoDevolver);
-                delete data.subTipoTramite; delete data.honorarios; delete data.costoCompra; delete data.precioVenta; delete data.producto;
+                delete data.subTipoTramite; delete data.honorarios; delete data.costoCompra; delete data.precioVenta; delete data.producto; delete data.empresa;
             } else if (data.categoria === 'Electrodomésticos') {
                 if (data.costoCompra) data.costoCompra = unmaskCurrency(data.costoCompra);
                 if (data.precioVenta) data.precioVenta = unmaskCurrency(data.precioVenta);
-                delete data.subTipoTramite; delete data.honorarios; delete data.montoPrestado; delete data.montoDevolver;
+                delete data.subTipoTramite; delete data.honorarios; delete data.montoPrestado; delete data.montoDevolver; delete data.empresa;
             }
 
             const method = editingClientId ? 'PUT' : 'POST';
@@ -1496,7 +2026,7 @@
                     ${isToday ? 'bg-violet-600 text-white shadow-lg shadow-violet-100' : 'bg-slate-50 text-slate-700'}`;
                 
                 let iconsHtml = '';
-                let hoverHtml = '<div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max max-w-[200px] bg-slate-800 text-white text-left p-3 rounded-xl shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50 text-[10px] space-y-2">';
+                let hoverHtml = '<div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max max-w-[200px] bg-slate-800 text-white text-left p-3 rounded-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50 text-[10px] space-y-2">';
 
                 if (hasManual) {
                     iconsHtml += `<span class="w-1.5 h-1.5 bg-violet-400 rounded-full inline-block shrink-0"></span>`;
@@ -1558,10 +2088,12 @@
                 });
 
                 if (recsHoy.length === 0) {
-                    wrapper.className = "bg-slate-900 p-8 rounded-3xl text-white shadow-xl shadow-slate-200 flex items-center justify-center";
+                    wrapper.className = "border p-8 rounded-3xl flex items-center justify-center";
+                    wrapper.style.cssText = "background: var(--bg-card); border-color: var(--border-color); color: var(--text-primary)";
                     wrapper.innerHTML = `<p class="opacity-40 text-xs font-bold uppercase tracking-widest text-center w-full">✅ Tareas al día. No hay pendientes urgentes.</p>`;
                 } else {
-                    wrapper.className = "bg-slate-900 p-6 rounded-3xl text-white shadow-xl shadow-slate-200 flex flex-col space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar";
+                    wrapper.className = "border p-6 rounded-3xl flex flex-col space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar";
+                    wrapper.style.cssText = "background: var(--bg-card); border-color: var(--border-color); color: var(--text-primary)";
                     let listHtml = '';
                     recsHoy.forEach(next => {
                         let icon = '⚡';

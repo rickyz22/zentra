@@ -13,6 +13,11 @@ const clienteSchema = new mongoose.Schema({
         type: String,
         required: false
     },
+    empresa: {
+        type: String,
+        required: false
+    },
+
     estado: {
         type: String,
         enum: {
