@@ -12,6 +12,7 @@
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
@@ -1681,44 +1682,64 @@
 
         async function descargarExcel() {
             try {
-                console.log('Iniciando Backup...');
-                showToast('Generando Backup', 'Obteniendo datos frescos de la nube...', 'blue');
-                
-                // Cache-busting: agrega un timestamp único a la URL para forzar la sincronización
-                const url_download = `/api/clientes/export?t=${Date.now()}`;
+                console.log('🚀 Iniciando Generación de Backup en Caliente...');
+                showToast('Preparando Backup', 'Obteniendo datos frescos de MongoDB...', 'blue');
                 
                 const token = localStorage.getItem('jony_token');
-                const res = await fetch(url_download, {
+                const res = await fetch('/api/clientes', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
-                if (!res.ok) {
-                    const text = await res.text();
-                    throw new Error('No se pudo descargar: ' + text);
+                if (!res.ok) throw new Error('Error al obtener datos frescos del servidor');
+                
+                const data = await res.json();
+                const clientes = data.clientes || [];
+                
+                // Verificación solicitada por Jony
+                console.log('📊 Cantidad de clientes en backup:', clientes.length);
+                
+                if (clientes.length === 0) {
+                    showToast('Info', 'No hay clientes para exportar', 'blue');
+                    return;
                 }
 
-                const blob = await res.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
+                // Procesar datos para Excel
+                const dataParaExcel = clientes.map(c => {
+                    const totalAdeudado = Number(c.montoDevolver) || Number(c.precioVenta) || 0;
+                    const pagado = Number(c.montoPagado) || 0;
+                    return {
+                        'Nombre': c.nombre || '',
+                        'WhatsApp': c.telefono || '',
+                        'Categoría': c.categoria || 'Trámites',
+                        'Trámite Específico': c.tramite || 'N/A',
+                        'Monto Original': Number(c.montoPrestado) || Number(c.costoCompra) || 0,
+                        'Total a Devolver': totalAdeudado,
+                        'Saldo Pendiente': Math.max(0, totalAdeudado - pagado),
+                        'Monto Pagado': pagado,
+                        'Estado': c.estado || 'Activo',
+                        'Próximo Cobro': c.proximoCobro ? new Date(c.proximoCobro).toLocaleDateString('es-AR') : 'N/A',
+                        'Fecha de Alta': c.createdAt ? new Date(c.createdAt).toLocaleDateString('es-AR') : 'N/A'
+                    };
+                });
 
-                // Nombre dinámico exacto
+                // Crear libro y hoja con SheetJS
+                const worksheet = XLSX.utils.json_to_sheet(dataParaExcel);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Clientes Zentra");
+
+                // Generar nombre dinámico
                 const now = new Date();
                 const dStr = now.toLocaleDateString('es-AR').replace(/\//g, '-');
                 const tStr = now.getHours().toString().padStart(2, '0') + '-' + now.getMinutes().toString().padStart(2, '0');
-                a.download = `backup_zentra_${dStr}_${tStr}.xlsx`;
-                document.body.appendChild(a);
-                a.click();
-                
-                setTimeout(() => {
-                    a.remove();
-                    window.URL.revokeObjectURL(url);
-                }, 100);
-                
+                const fileName = `backup_zentra_${dStr}_${tStr}.xlsx`;
+
+                // Descargar
+                XLSX.writeFile(workbook, fileName);
+
                 showToast('¡Éxito!', 'Backup sincronizado descargado.', 'emerald');
             } catch (err) {
-                console.error(err);
-                showToast('Error', 'Hubo un error al generar el backup.', 'rose');
+                console.error('❌ Error en backup:', err);
+                showToast('Error', 'Fallo al generar el backup.', 'rose');
             }
         }
         
