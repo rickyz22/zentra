@@ -1159,7 +1159,7 @@
             }
 
             const method = editingClientId ? 'PUT' : 'POST';
-            const url = editingClientId ? `http://localhost:3000/api/clientes/${editingClientId}` : 'http://localhost:3000/api/clientes';
+            const url = editingClientId ? `/api/clientes/${editingClientId}` : '/api/clientes';
             
             try {
                 const res = await fetch(url, {
@@ -1200,7 +1200,7 @@
             const montoLimpio = unmaskCurrency(montoStr);
             
             try {
-                const res = await fetch(`http://localhost:3000/api/clientes/${clienteId}/pago`, {
+                const res = await fetch(`/api/clientes/${clienteId}/pago`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('jony_token')}` },
                     body: JSON.stringify({ monto: montoLimpio, metodo })
@@ -1304,7 +1304,7 @@
         async function registrarPagoBackend(id, monto, metodo) {
             try {
                 const token = localStorage.getItem('jony_token');
-                const res = await fetch(`http://localhost:3000/api/clientes/${id}/pago`, {
+                const res = await fetch(`/api/clientes/${id}/pago`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ monto, metodo })
@@ -1323,7 +1323,7 @@
             if (!confirm('⚠️ ¿Seguro quieres eliminar este pago? Eso recalculará el saldo restante y las ganancias.')) return;
             try {
                 const token = localStorage.getItem('jony_token');
-                const res = await fetch(`http://localhost:3000/api/clientes/${clienteId}/pago/${pagoId}`, {
+                const res = await fetch(`/api/clientes/${clienteId}/pago/${pagoId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -1346,7 +1346,7 @@
             if (!confirm('⚠️ ¿Seguro quieres borrar este recordatorio?')) return;
             try {
                 const token = localStorage.getItem('jony_token');
-                const res = await fetch(`http://localhost:3000/api/agenda/${id}`, {
+                const res = await fetch(`/api/agenda/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -1573,7 +1573,7 @@
             const nombre = c ? c.nombre : 'este cliente';
             if (!confirm(`⚠️ ¿Estás seguro?\n\nSe borrará a "${nombre}" y TODOS sus trámites agendados.\n\nEsta acción no se puede deshacer.`)) return;
             try {
-                const res = await fetch(`http://localhost:3000/api/clientes/${id}`, {
+                const res = await fetch(`/api/clientes/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('jony_token')}` }
                 });
@@ -1677,7 +1677,7 @@
             
             const payload = { titulo, cuerpo };
             const method = id ? 'PUT' : 'POST';
-            const url = id ? `http://localhost:3000/api/templates/${id}` : `http://localhost:3000/api/templates`;
+            const url = id ? `/api/templates/${id}` : `/api/templates`;
             
             try {
                 const token = localStorage.getItem('jony_token');
@@ -1719,7 +1719,7 @@
             if(!confirm('¿Borrar esta plantilla?')) return;
             try {
                 const token = localStorage.getItem('jony_token');
-                const res = await fetch(`http://localhost:3000/api/templates/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch(`/api/templates/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
                 const data = await res.json();
                 if(data.ok) await fetchTemplates();
             } catch(e) { console.error(e); }
