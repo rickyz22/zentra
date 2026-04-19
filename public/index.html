@@ -1037,10 +1037,10 @@
                                     <p class="text-[9px] font-bold ${moroso ? 'text-rose-500' : 'text-slate-400'} uppercase tracking-widest truncate">${subtitulo}</p>
                                 </div>
                             </div>
-                            <!-- Acciones Rápida Mobile -->
-                            <div class="md:hidden flex space-x-1 shrink-0 ml-2">
-                                <button onclick="event.stopPropagation(); prepararEdicion('${c._id}')" class="p-2.5 bg-slate-100 text-slate-500 hover:text-blue-600 rounded-xl transition-all shadow-sm"><i data-lucide="edit-3" class="w-4.5 h-4.5"></i></button>
-                                <button onclick="event.stopPropagation(); borrarCliente('${c._id}')" class="p-2.5 bg-rose-50 text-rose-400 hover:text-rose-600 rounded-xl transition-all shadow-sm"><i data-lucide="trash-2" class="w-4.5 h-4.5"></i></button>
+                            <!-- Acciones Rápida Mobile (Apiladas Verticalmente) -->
+                            <div class="md:hidden flex flex-col space-y-2 shrink-0 ml-4">
+                                <button onclick="event.stopPropagation(); prepararEdicion('${c._id}')" class="p-2 bg-slate-100 text-slate-500 hover:text-blue-600 rounded-xl transition-all shadow-sm"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                <button onclick="event.stopPropagation(); borrarCliente('${c._id}')" class="p-2 bg-rose-50 text-rose-400 hover:text-rose-600 rounded-xl transition-all shadow-sm"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                         </div>
                         
