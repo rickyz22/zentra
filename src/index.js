@@ -20,6 +20,9 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use('/assets', express.static('assets'));
 
+// Servir favicon directamente para evitar error 404 en navegadores
+app.get('/favicon.ico', (req, res) => res.sendFile(path.join(__dirname, '../assets/logo.png')));
+
 // Conexión a MongoDB (Usando variable de entorno para seguridad en producción)
 const mongoURI = process.env.MONGODB_URI || "mongodb://admin_jony:jony1234@ac-ur15yb9-shard-00-00.rke4rvj.mongodb.net:27017,ac-ur15yb9-shard-00-01.rke4rvj.mongodb.net:27017,ac-ur15yb9-shard-00-02.rke4rvj.mongodb.net:27017/crm_jony?ssl=true&replicaSet=atlas-tocu41-shard-0&authSource=admin&retryWrites=true&w=majority";
 
