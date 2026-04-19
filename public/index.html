@@ -198,11 +198,13 @@
     <main class="md:ml-64 min-h-screen pb-20 md:pb-0 flex flex-col bg-slate-950">
         <header class="glass-panel sticky top-0 z-40 p-4 md:p-6 flex justify-between items-center border-b border-white/5">
             <div class="flex items-center gap-4">
-                <h2 id="desktopTitle" class="text-xl font-black text-white uppercase tracking-tight">Resumen de Actividad</h2>
+                <h2 id="desktopTitle" class="text-lg md:text-xl font-black text-white uppercase tracking-tight truncate">Resumen</h2>
             </div>
-            <div class="flex items-center gap-4">
-                <button onclick="togglePrivacy()" class="p-3 md:p-2 bg-white/5 md:bg-transparent rounded-full md:rounded-none text-slate-400 hover:text-white outline-none transition-colors"><i data-lucide="eye" id="privacyIcon" class="w-6 h-6 md:w-5 md:h-5"></i></button>
-                <div id="currentDate" class="text-xs font-bold text-slate-500 uppercase hidden sm:block"></div>
+            <div class="flex items-center gap-2 md:gap-4">
+                <div id="currentDate" class="text-[10px] md:text-xs font-bold text-slate-400 uppercase"></div>
+                <button onclick="togglePrivacy()" class="p-3 bg-white/10 rounded-2xl text-white hover:bg-white/20 outline-none transition-all flex items-center justify-center shadow-lg shadow-black/20">
+                    <i data-lucide="eye" id="privacyIcon" class="w-5 h-5"></i>
+                </button>
             </div>
         </header>
 
