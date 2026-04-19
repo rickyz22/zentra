@@ -197,14 +197,24 @@
     <!-- MAIN CONTENT -->
     <main class="md:ml-64 min-h-screen pb-20 md:pb-0 flex flex-col bg-slate-950">
         <header class="glass-panel sticky top-0 z-[100] p-4 md:px-10 md:py-6 flex justify-between items-center border-b border-white/10 mb-6">
-            <div class="flex items-center min-w-0">
+            <!-- Grupo Izquierdo (Título + Fecha + Ojo en PC) -->
+            <div class="flex items-center gap-6 min-w-0">
                 <h2 id="desktopTitle" class="text-xl font-black text-white uppercase tracking-tight truncate">Resumen</h2>
+                <div class="hidden md:flex items-center gap-4 border-l border-white/10 pl-6">
+                    <span id="currentDateDesktop" class="text-sm font-black text-slate-400 uppercase tracking-widest leading-none"></span>
+                    <button onclick="togglePrivacy()" class="w-10 h-10 bg-white/10 rounded-xl text-white flex items-center justify-center border border-white/20 hover:bg-white/20 transition-all">
+                        <i data-lucide="eye" id="icon-eye-desc" class="w-5 h-5"></i>
+                        <i data-lucide="eye-off" id="icon-eye-off-desc" class="w-5 h-5 hidden"></i>
+                    </button>
+                </div>
             </div>
-            <div class="flex items-center gap-4 shrink-0">
-                <span id="currentDate" class="text-[11px] md:text-sm font-black text-white uppercase tracking-widest leading-none"></span>
-                <button onclick="togglePrivacy()" class="w-12 h-12 bg-white/10 rounded-2xl text-white flex items-center justify-center border border-white/20 hover:bg-white/20 transition-all">
-                    <i data-lucide="eye" id="icon-eye" class="w-6 h-6"></i>
-                    <i data-lucide="eye-off" id="icon-eye-off" class="w-6 h-6 hidden"></i>
+
+            <!-- Grupo Derecho (Solo Celular) -->
+            <div class="flex md:hidden items-center gap-3 shrink-0">
+                <span id="currentDateMobile" class="text-[10px] font-black text-slate-400 uppercase tracking-tighter"></span>
+                <button onclick="togglePrivacy()" class="w-10 h-10 bg-white/10 rounded-xl text-white flex items-center justify-center border border-white/10">
+                    <i data-lucide="eye" id="icon-eye-mob" class="w-5 h-5"></i>
+                    <i data-lucide="eye-off" id="icon-eye-off-mob" class="w-5 h-5 hidden"></i>
                 </button>
             </div>
         </header>
@@ -622,17 +632,17 @@
         }
 
         function applyPrivacy() {
-            const eye = document.getElementById('icon-eye');
-            const eyeOff = document.getElementById('icon-eye-off');
+            const iconsEye = [document.getElementById('icon-eye-desc'), document.getElementById('icon-eye-mob')];
+            const iconsEyeOff = [document.getElementById('icon-eye-off-desc'), document.getElementById('icon-eye-off-mob')];
             
             if (isPrivacyMode) {
                 document.body.classList.add('privacy-mode');
-                if(eye) eye.classList.add('hidden');
-                if(eyeOff) eyeOff.classList.remove('hidden');
+                iconsEye.forEach(i => i?.classList.add('hidden'));
+                iconsEyeOff.forEach(i => i?.classList.remove('hidden'));
             } else {
                 document.body.classList.remove('privacy-mode');
-                if(eye) eye.classList.remove('hidden');
-                if(eyeOff) eyeOff.classList.add('hidden');
+                iconsEye.forEach(i => i?.classList.remove('hidden'));
+                iconsEyeOff.forEach(i => i?.classList.add('hidden'));
             }
         }
 
@@ -1636,7 +1646,13 @@
             }
         }
 
-        function updateDate() { const d = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }); if(document.getElementById('currentDate')) document.getElementById('currentDate').textContent = d; }
+        function updateDate() { 
+            const d = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }); 
+            const dShort = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+            
+            if(document.getElementById('currentDateDesktop')) document.getElementById('currentDateDesktop').textContent = d; 
+            if(document.getElementById('currentDateMobile')) document.getElementById('currentDateMobile').textContent = dShort; 
+        }
         function logout() { localStorage.clear(); window.location.href = '/login.html'; }
 
         async function descargarExcel() {
