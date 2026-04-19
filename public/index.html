@@ -15,76 +15,103 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
+        :root {
+            --midnight-bg: #020617;
+            --midnight-card: #0f172a;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
         body { 
             font-family: 'Inter', sans-serif;
-            background-color: #f1f5f9; /* bg-slate-100 */
+            background-color: var(--midnight-bg);
+            color: #f8fafc;
             overflow-x: hidden;
             width: 100%;
             position: relative;
         }
 
-        /* Prevent any element from causing horizontal scroll */
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
         
         main {
             overflow-x: hidden;
             width: 100%;
         }
 
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+        }
+
         .tab-content { display: none; }
-        .tab-content.active { display: block; animation: slideIn 0.2s ease-out; }
+        .tab-content.active { display: block; animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(10px); }
-            to { opacity: 1; transform: translateX(0); }
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .privacy-mode .sensitive-data,
         .sensitive-data.privacy-active {
-            filter: blur(10px) !important;
-            opacity: 0.8;
-            pointer-events: none;
-            user-select: none;
-            transition: filter 0.3s ease, opacity 0.3s ease;
+            filter: blur(12px) !important;
+            opacity: 0.5;
+            transition: all 0.4s ease;
         }
 
         .metrics-grid-item {
             opacity: 0;
-            transition: opacity 0.5s ease;
+            transform: translateY(10px);
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .metrics-loaded .metrics-grid-item {
             opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Deluxe Client Cards */
+        .client-card {
+            background: #0f172a;
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+        
+        .client-card:hover {
+            transform: scale(1.01);
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
         }
 
         .sidebar-item.active {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-right: 4px solid #3b82f6;
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0) 100%);
+            border-left: 3px solid var(--accent-blue);
             color: #fff;
         }
 
-        .client-card {
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        /* Skeleton Animation */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
         }
-        .client-card:hover {
-            transform: translateY(-4px);
-            border-color: #3b82f6;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        .skeleton {
+            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
         }
 
-        .active-nav-mobile { color: #3b82f6; }
+        .active-nav-mobile { color: var(--accent-blue); filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4)); }
 
-        @keyframes statFlash {
-            0%   { transform: scale(1);    filter: brightness(1); }
-            40%  { transform: scale(1.12); filter: brightness(1.4); }
-            100% { transform: scale(1);    filter: brightness(1); }
+        @keyframes successPulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
-        .stat-updated {
-            animation: statFlash 0.5s ease-out;
-        }
+        .success-pulse { animation: successPulse 1s ease-out; }
     </style>
     <script>
         // Chequeo temprano de sesión
@@ -168,14 +195,14 @@
     </aside>
 
     <!-- MAIN CONTENT -->
-    <main class="md:ml-64 min-h-screen pb-20 md:pb-0 flex flex-col">
-        <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b p-4 md:p-6 flex justify-between items-center">
+    <main class="md:ml-64 min-h-screen pb-20 md:pb-0 flex flex-col bg-slate-950">
+        <header class="glass-panel sticky top-0 z-40 p-4 md:p-6 flex justify-between items-center border-b border-white/5">
             <div class="flex items-center gap-4">
-                <h2 id="desktopTitle" class="text-xl font-black text-slate-800 uppercase tracking-tight">Resumen de Actividad</h2>
+                <h2 id="desktopTitle" class="text-xl font-black text-white uppercase tracking-tight">Resumen de Actividad</h2>
             </div>
             <div class="flex items-center gap-4">
-                <button onclick="togglePrivacy()" class="p-3 md:p-2 bg-slate-100 md:bg-transparent rounded-full md:rounded-none text-slate-500 hover:text-slate-700 outline-none transition-colors"><i data-lucide="eye" id="privacyIcon" class="w-6 h-6 md:w-5 md:h-5"></i></button>
-                <div id="currentDate" class="text-xs font-bold text-slate-400 uppercase hidden sm:block"></div>
+                <button onclick="togglePrivacy()" class="p-3 md:p-2 bg-white/5 md:bg-transparent rounded-full md:rounded-none text-slate-400 hover:text-white outline-none transition-colors"><i data-lucide="eye" id="privacyIcon" class="w-6 h-6 md:w-5 md:h-5"></i></button>
+                <div id="currentDate" class="text-xs font-bold text-slate-500 uppercase hidden sm:block"></div>
             </div>
         </header>
 
@@ -189,25 +216,25 @@
                         <h3 id="metric-clientes" class="text-4xl font-black mb-1">0</h3>
                         <p class="text-[10px] font-bold uppercase tracking-widest opacity-70">Clientes Activos</p>
                     </div>
-                    <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all">
-                        <div class="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mb-6"><i data-lucide="file-text" class="w-6 h-6"></i></div>
-                        <h3 id="num-tramites" class="text-4xl font-black text-slate-800">0</h3>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Trámites Mes</p>
+                    <div class="bg-gradient-to-br from-slate-800 to-slate-950 p-8 rounded-[2.5rem] border border-white/5 shadow-sm hover:shadow-xl transition-all">
+                        <div class="w-12 h-12 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mb-6 border border-white/5"><i data-lucide="file-text" class="w-6 h-6"></i></div>
+                        <h3 id="num-tramites" class="text-4xl font-black text-white">0</h3>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Trámites Mes</p>
                     </div>
-                    <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all">
-                        <div class="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mb-6"><i data-lucide="clock" class="w-6 h-6"></i></div>
-                        <h3 id="num-pendientes" class="text-4xl font-black text-slate-800">0</h3>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pendientes</p>
+                    <div class="bg-gradient-to-br from-slate-800 to-slate-950 p-8 rounded-[2.5rem] border border-white/5 shadow-sm hover:shadow-xl transition-all">
+                        <div class="w-12 h-12 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mb-6 border border-white/5"><i data-lucide="clock" class="w-6 h-6"></i></div>
+                        <h3 id="num-pendientes" class="text-4xl font-black text-white">0</h3>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pendientes</p>
                     </div>
-                    <div onclick="switchTab('metricas')" class="metrics-grid-item cursor-pointer bg-white p-8 rounded-[2.5rem] border border-slate-300 shadow-md hover:shadow-xl transition-all border-l-8 border-l-emerald-500">
-                        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-6"><i data-lucide="dollar-sign" class="w-6 h-6"></i></div>
-                        <h3 id="num-recaudacion-hoy" class="text-3xl font-black text-emerald-600 sensitive-data">$ 0</h3>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recaudación Hoy</p>
+                    <div onclick="switchTab('metricas')" class="metrics-grid-item cursor-pointer bg-gradient-to-br from-slate-900 to-black p-8 rounded-[2.5rem] border border-emerald-500/20 shadow-lg shadow-emerald-500/5 hover:shadow-emerald-500/10 transition-all">
+                        <div class="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-6 border border-emerald-500/20"><i data-lucide="dollar-sign" class="w-6 h-6"></i></div>
+                        <h3 id="num-recaudacion-hoy" class="text-3xl font-black text-emerald-400 sensitive-data">$ 0</h3>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Recaudación Hoy</p>
                     </div>
-                    <div onclick="switchTab('metricas')" class="metrics-grid-item cursor-pointer bg-white p-8 rounded-[2.5rem] border border-slate-300 shadow-md hover:shadow-xl transition-all border-l-8 border-l-emerald-600">
-                        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-6"><i data-lucide="trending-up" class="w-6 h-6"></i></div>
-                        <h3 id="num-ganancia-total" class="text-3xl font-black text-emerald-600 sensitive-data">$ 0</h3>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ganancia Total</p>
+                    <div onclick="switchTab('metricas')" class="metrics-grid-item cursor-pointer bg-gradient-to-br from-slate-900 to-black p-8 rounded-[2.5rem] border border-emerald-600/20 shadow-lg shadow-emerald-600/5 hover:shadow-emerald-600/10 transition-all">
+                        <div class="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-6 border border-emerald-600/20"><i data-lucide="trending-up" class="w-6 h-6"></i></div>
+                        <h3 id="num-ganancia-total" class="text-3xl font-black text-emerald-400 sensitive-data">$ 0</h3>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ganancia Total</p>
                     </div>
                 </div>
 
@@ -273,17 +300,17 @@
                     <i data-lucide="plus" class="w-6 h-6"></i>
                 </button>
 
-                <div id="formContainer" class="hidden bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-2xl">
-                    <h4 id="formTitle" class="text-xl font-black text-slate-800 mb-8 flex items-center"><i data-lucide="user-plus" class="w-6 h-6 mr-3 text-orange-500"></i>Ingresar Datos del Cliente</h4>
+                <div id="formContainer" class="hidden bg-slate-900 p-10 rounded-[2.5rem] border border-white/10 shadow-2xl shadow-black">
+                    <h4 id="formTitle" class="text-xl font-black text-white mb-8 flex items-center"><i data-lucide="user-plus" class="w-6 h-6 mr-3 text-orange-500"></i>Ingresar Datos del Cliente</h4>
                     <form id="clienteForm" class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="space-y-6">
-                            <input type="text" name="nombre" required placeholder="Nombre Completo" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+                            <input type="text" name="nombre" required placeholder="Nombre Completo" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
                             <input type="tel" name="telefono" required 
                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');"
-                                   placeholder="WhatsApp (Solo números)" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+                                   placeholder="WhatsApp (Solo números)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
                             
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 mt-6">Tipo de Negocio</p>
-                            <select name="categoria" id="categoriaSelect" onchange="toggleCategoriaFields()" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-black text-slate-700 outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mt-6">Tipo de Negocio</p>
+                            <select name="categoria" id="categoriaSelect" onchange="toggleCategoriaFields()" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-black text-slate-300 outline-none focus:ring-2 focus:ring-orange-500 transition-all">
                                 <option value="Trámites">⚡ Trámites</option>
                                 <option value="Préstamos">💵 Préstamos</option>
                                 <option value="Electrodomésticos">📦 Electrodomésticos</option>
@@ -292,7 +319,7 @@
                         <div class="space-y-6">
                             <!-- Trámites -->
                             <div id="fieldsTramites" class="hidden space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <select name="subTipoTramite" id="fSubTipoTramite" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all text-slate-700">
+                                <select name="subTipoTramite" id="fSubTipoTramite" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all text-white">
                                     <option value="" disabled selected>Seleccione el Tipo de Trámite</option>
                                     <option value="ARCA / AFIP">ARCA / AFIP</option>
                                     <option value="Monotributo">Monotributo</option>
@@ -300,24 +327,24 @@
                                     <option value="Deducción Impuesto a las Ganancias">Deducción Impuesto a las Ganancias</option>
                                     <option value="Otro">Otro</option>
                                 </select>
-                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="honorarios" id="fHonorarios" placeholder="Honorarios Sugeridos ($) (Opcional)" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="honorarios" id="fHonorarios" placeholder="Honorarios Sugeridos ($) (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
                             </div>
 
                             <!-- Préstamos -->
                             <div id="fieldsPrestamos" class="hidden grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="montoPrestado" id="fMontoPrestado" placeholder="Monto Prestado ($)" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all">
-                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="montoDevolver" id="fMontoDevolver" placeholder="Monto a Devolver ($)" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="montoPrestado" id="fMontoPrestado" placeholder="Monto Prestado ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="montoDevolver" id="fMontoDevolver" placeholder="Monto a Devolver ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
                             </div>
 
                             <!-- Electrodomésticos -->
                             <div id="fieldsElectro" class="hidden grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <input type="text" name="producto" id="productoElectro" placeholder="Producto/Modelo (Ej: Heladera Patrick)" class="w-full col-span-2 p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all">
-                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="costoCompra" id="fCostoCompra" placeholder="Costo de Compra ($)" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all">
-                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="precioVenta" id="fPrecioVenta" placeholder="Precio de Venta ($)" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+                                <input type="text" name="producto" id="productoElectro" placeholder="Producto/Modelo (Ej: Heladera Patrick)" class="w-full col-span-2 p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="costoCompra" id="fCostoCompra" placeholder="Costo de Compra ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="precioVenta" id="fPrecioVenta" placeholder="Precio de Venta ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
                             </div>
 
                             <div id="fieldsCuotas" class="space-y-6 hidden">
-                                <input type="number" name="cuotasTotales" id="fCuotas" placeholder="Cantidad de Cuotas" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+                                <input type="number" name="cuotasTotales" id="fCuotas" placeholder="Cantidad de Cuotas" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
                             </div>
                         </div>
                         <div class="md:col-span-2 flex justify-end gap-4 mt-2">
@@ -327,12 +354,12 @@
                     </form>
                 </div>
 
-                <div class="bg-white rounded-3xl border border-slate-300 shadow-xl overflow-hidden">
+                <div class="bg-slate-900 rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
                     <!-- Table Header -->
-                    <div class="grid grid-cols-12 gap-4 px-8 py-4 bg-slate-100 border-b border-slate-300">
-                        <div class="col-span-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Cliente / Trámite</div>
-                        <div class="col-span-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Estado</div>
-                        <div class="col-span-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Acciones</div>
+                    <div class="grid grid-cols-12 gap-4 px-8 py-4 bg-slate-950 border-b border-white/5">
+                        <div class="col-span-5 text-[10px] font-black text-slate-500 uppercase tracking-widest">Cliente / Trámite</div>
+                        <div class="col-span-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Estado</div>
+                        <div class="col-span-3 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Acciones</div>
                     </div>
                     <!-- Fixed Height List with Scroll -->
                     <div id="listaClientes" class="max-h-[560px] overflow-y-auto overflow-x-hidden divide-y divide-slate-100"></div>
@@ -342,9 +369,9 @@
             <!-- TAB: AGENDA -->
             <section id="tab-agenda" class="tab-content space-y-6">
                 <!-- Header -->
-                <div class="flex flex-col md:flex-row gap-6 justify-between items-center bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm px-8">
-                    <h3 class="text-xl font-black text-slate-800 tracking-tight">Centro de Operaciones</h3>
-                    <button onclick="openAgendaModal(null, null)" class="w-full md:w-auto bg-violet-600 text-white px-8 py-3 rounded-2xl text-xs font-black shadow-xl shadow-violet-100 hover:bg-violet-700 transition-all uppercase tracking-widest flex items-center justify-center">
+                <div class="flex flex-col md:flex-row gap-6 justify-between items-center bg-slate-900/50 backdrop-blur-xl border border-white/5 p-6 rounded-[2.5rem] shadow-sm px-8">
+                    <h3 class="text-xl font-black text-white tracking-tight">Centro de Operaciones</h3>
+                    <button onclick="openAgendaModal(null, null)" class="w-full md:w-auto bg-violet-600 text-white px-8 py-3 rounded-2xl text-xs font-black shadow-xl shadow-violet-600/20 hover:bg-violet-700 transition-all uppercase tracking-widest flex items-center justify-center">
                         <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Agendar Trámite
                     </button>
                 </div>
@@ -458,29 +485,29 @@
 
             <!-- TAB: WHATSAPP -->
             <section id="tab-whatsapp" class="tab-content space-y-6">
-                <div class="bg-white p-6 md:p-10 rounded-[2.5rem] border border-slate-100 shadow-2xl">
-                    <h3 class="text-xl font-black text-slate-800 flex items-center mb-6">
-                        <i data-lucide="message-square" class="w-6 h-6 mr-3 text-emerald-500"></i> Gestor de Plantillas
+                <div class="bg-slate-900 border border-white/10 p-6 md:p-10 rounded-[2.5rem] shadow-2xl">
+                    <h3 class="text-xl font-black text-white flex items-center mb-6">
+                        <i data-lucide="message-square" class="w-6 h-6 mr-3 text-emerald-400"></i> Gestor de Plantillas
                     </h3>
                     
-                    <form id="templateForm" class="space-y-6 mb-10 bg-slate-50 p-6 rounded-3xl border border-slate-200">
+                    <form id="templateForm" class="space-y-6 mb-10 bg-slate-950/50 p-6 rounded-3xl border border-white/5">
                         <input type="hidden" id="formTemplateId">
                         <div>
-                            <input type="text" id="tplTitulo" required placeholder="Título (ej: Recordatorio Monotributo)" class="w-full p-4 bg-white border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500">
+                            <input type="text" id="tplTitulo" required placeholder="Título (ej: Recordatorio Monotributo)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-slate-600">
                         </div>
                         <div>
-                            <textarea id="tplCuerpo" required rows="4" placeholder="Escribí el mensaje acá..." class="w-full p-4 bg-white border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
-                            <div class="mt-2 text-[10px] font-bold text-slate-400 flex flex-wrap gap-2 uppercase tracking-widest leading-loose">
+                            <textarea id="tplCuerpo" required rows="4" placeholder="Escribí el mensaje acá..." class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-slate-600"></textarea>
+                            <div class="mt-2 text-[10px] font-bold text-slate-500 flex flex-wrap gap-2 uppercase tracking-widest leading-loose">
                                 <span>Etiquetas válidas:</span>
-                                <span class="bg-slate-200 text-slate-700 px-2 py-1 rounded cursor-pointer hover:bg-slate-300 transition-colors" onclick="insertTplTag('{{nombre}}')">{{nombre}}</span>
-                                <span class="bg-slate-200 text-slate-700 px-2 py-1 rounded cursor-pointer hover:bg-slate-300 transition-colors" onclick="insertTplTag('{{monto}}')">{{monto}}</span>
-                                <span class="bg-slate-200 text-slate-700 px-2 py-1 rounded cursor-pointer hover:bg-slate-300 transition-colors" onclick="insertTplTag('{{vencimiento}}')">{{vencimiento}}</span>
-                                <span class="bg-slate-200 text-slate-700 px-2 py-1 rounded cursor-pointer hover:bg-slate-300 transition-colors" onclick="insertTplTag('{{tramite}}')">{{tramite}}</span>
+                                <span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded cursor-pointer hover:bg-emerald-500/20 transition-colors" onclick="insertTplTag('{{nombre}}')">{{nombre}}</span>
+                                <span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded cursor-pointer hover:bg-emerald-500/20 transition-colors" onclick="insertTplTag('{{monto}}')">{{monto}}</span>
+                                <span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded cursor-pointer hover:bg-emerald-500/20 transition-colors" onclick="insertTplTag('{{vencimiento}}')">{{vencimiento}}</span>
+                                <span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded cursor-pointer hover:bg-emerald-500/20 transition-colors" onclick="insertTplTag('{{tramite}}')">{{tramite}}</span>
                             </div>
                         </div>
                         <div class="flex justify-end gap-4">
-                            <button type="button" onclick="resetTemplateForm()" class="px-6 py-4 font-bold text-slate-400">Cancelar</button>
-                            <button type="submit" class="px-10 py-4 bg-emerald-500 text-white font-black rounded-2xl shadow-xl hover:bg-emerald-600 uppercase tracking-widest text-xs transition-all flex items-center">
+                            <button type="button" onclick="resetTemplateForm()" class="px-6 py-4 font-bold text-slate-500 hover:text-white">Cancelar</button>
+                            <button type="submit" class="px-10 py-4 bg-emerald-500 text-white font-black rounded-2xl shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 uppercase tracking-widest text-xs transition-all flex items-center">
                                 <i data-lucide="save" class="w-4 h-4 mr-2"></i> Guardar
                             </button>
                         </div>
@@ -494,51 +521,51 @@
             </section>
         </div>
 
-        <div id="modalAgenda" class="hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl">
-                <h4 class="text-2xl font-black text-slate-800 mb-2">Agendar Vencimiento</h4>
-                <p id="modalClientName" class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-8">Seleccionar Cliente</p>
+        <div id="modalAgenda" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+            <div class="bg-slate-900 w-full max-w-md rounded-[2.5rem] p-10 border border-white/10 shadow-2xl">
+                <h4 class="text-2xl font-black text-white mb-2">Agendar Vencimiento</h4>
+                <p id="modalClientName" class="text-xs text-slate-500 font-bold uppercase tracking-widest mb-8">Seleccionar Cliente</p>
                 <form id="agendaForm" class="space-y-6">
                     <input type="hidden" name="clienteId" id="agenda-clienteId">
                     <div id="clientSelectContainer">
-                        <select id="agenda-client-select" name="clienteIdSelect" class="w-full p-4 bg-slate-50 border rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500"></select>
+                        <select id="agenda-client-select" name="clienteIdSelect" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500"></select>
                     </div>
                     <div>
-                        <input type="text" name="titulo" required placeholder="Título del trámite" class="w-full p-4 bg-slate-50 border rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" name="titulo" required placeholder="Título del trámite" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-600">
                     </div>
                     <div>
-                        <input type="date" name="fechaVencimiento" required class="w-full p-4 bg-slate-50 border rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="date" name="fechaVencimiento" required class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
-                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="honorarios" placeholder="Honorarios a Cobrar ($)" class="w-full p-4 bg-slate-50 border rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="honorarios" placeholder="Honorarios a Cobrar ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-600">
                     </div>
-                    <div class="flex gap-4">
-                        <button type="button" onclick="closeAgendaModal()" class="flex-1 font-bold text-slate-400">Cancelar</button>
-                        <button type="submit" class="flex-[2] py-4 bg-blue-600 text-white font-black rounded-2xl shadow-xl hover:bg-blue-700 transition-all">AGENDAR</button>
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" onclick="closeAgendaModal()" class="flex-1 font-bold text-slate-500">Cancelar</button>
+                        <button type="submit" class="flex-[2] py-4 bg-blue-600 text-white font-black rounded-2xl shadow-xl hover:bg-blue-700 transition-all shadow-blue-500/20">AGENDAR</button>
                     </div>
                 </form>
             </div>
         </div>
 
         <!-- MODAL REGISTRAR PAGO -->
-        <div id="modalPago" class="hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl">
-                <h4 class="text-2xl font-black text-slate-800 mb-2">Registrar Pago</h4>
-                <p id="modalPagoName" class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-8">Nombre Cliente</p>
+        <div id="modalPago" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+            <div class="bg-slate-900 w-full max-w-md rounded-[2.5rem] p-10 border border-white/10 shadow-2xl">
+                <h4 class="text-2xl font-black text-white mb-2">Registrar Pago</h4>
+                <p id="modalPagoName" class="text-xs text-slate-500 font-bold uppercase tracking-widest mb-8">Nombre Cliente</p>
                 <form id="pagoForm" class="space-y-6">
                     <input type="hidden" name="clienteId" id="pago-clienteId">
                     <div>
-                        <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Monto a Abonar</h4>
-                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="monto" id="pago-monto" required placeholder="Ej: 50000" class="w-full p-4 bg-slate-50 border rounded-2xl text-lg font-black text-emerald-600 outline-none focus:ring-2 focus:ring-emerald-500">
+                        <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Monto a Abonar</h4>
+                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="monto" id="pago-monto" required placeholder="Ej: 50000" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-2xl font-black text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-slate-700">
                     </div>
                     <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Método de Pago / Detalle</label>
-                        <input type="text" name="metodo" id="pago-metodo" required placeholder="Ej: MercadoPago, Efectivo..." class="w-full p-4 bg-slate-50 border rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Método de Pago / Detalle</label>
+                        <input type="text" name="metodo" id="pago-metodo" required placeholder="Ej: MercadoPago, Efectivo..." class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-slate-600">
                     </div>
                     <p class="text-xs text-slate-500 italic block -mt-2">Se sumará al total pagado y renovará el vencimiento por 30 días.</p>
-                    <div class="flex gap-4">
-                        <button type="button" onclick="closePagoModal()" class="flex-1 font-bold text-slate-400">Cancelar</button>
-                        <button type="submit" class="flex-[2] py-4 bg-emerald-500 text-white font-black rounded-2xl shadow-xl hover:bg-emerald-600 transition-all">CONFIRMAR PAGO</button>
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" onclick="closePagoModal()" class="flex-1 font-bold text-slate-500">Cancelar</button>
+                        <button type="submit" class="flex-[2] py-4 bg-emerald-500 text-white font-black rounded-2xl shadow-xl hover:bg-emerald-600 transition-all shadow-emerald-500/20">CONFIRMAR PAGO</button>
                     </div>
                 </form>
             </div>
@@ -548,28 +575,28 @@
         <div id="toast" class="hidden fixed bottom-24 right-6 bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl z-[100] font-bold text-sm"></div>
 
         <!-- MOBILE NAV -->
-        <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t flex justify-around p-3 z-50">
+        <nav class="md:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-white/5 flex justify-around p-3 z-50">
             <button onclick="switchTab('inicio')" id="mobile-nav-inicio" class="flex flex-col items-center space-y-1 active-nav-mobile">
                 <i data-lucide="home" class="w-5 h-5"></i>
                 <span class="text-[9px] font-bold">Inicio</span>
             </button>
-            <button onclick="switchTab('clientes')" id="mobile-nav-clientes" class="flex flex-col items-center space-y-1 text-slate-400">
+            <button onclick="switchTab('clientes')" id="mobile-nav-clientes" class="flex flex-col items-center space-y-1 text-slate-500">
                 <i data-lucide="users" class="w-5 h-5"></i>
                 <span class="text-[9px] font-bold">Clientes</span>
             </button>
-            <button onclick="switchTab('agenda')" id="mobile-nav-agenda" class="flex flex-col items-center space-y-1 text-slate-400">
+            <button onclick="switchTab('agenda')" id="mobile-nav-agenda" class="flex flex-col items-center space-y-1 text-slate-500">
                 <i data-lucide="calendar" class="w-5 h-5"></i>
                 <span class="text-[9px] font-bold">Agenda</span>
             </button>
-            <button onclick="switchTab('inicio'); setTimeout(()=>{document.getElementById('calc-movil').scrollIntoView({behavior:'smooth'})}, 100)" class="flex flex-col items-center space-y-1 text-slate-400">
+            <button onclick="switchTab('inicio'); setTimeout(()=>{document.getElementById('calc-movil').scrollIntoView({behavior:'smooth'})}, 100)" class="flex flex-col items-center space-y-1 text-slate-500">
                 <i data-lucide="calculator" class="w-5 h-5"></i>
                 <span class="text-[9px] font-bold">Calc</span>
             </button>
-            <button onclick="switchTab('metricas')" id="mobile-nav-metricas" class="flex flex-col items-center space-y-1 text-slate-400">
+            <button onclick="switchTab('metricas')" id="mobile-nav-metricas" class="flex flex-col items-center space-y-1 text-slate-500">
                 <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
                 <span class="text-[9px] font-bold">Métricas</span>
             </button>
-            <button onclick="switchTab('whatsapp')" id="mobile-nav-whatsapp" class="flex flex-col items-center space-y-1 text-slate-400">
+            <button onclick="switchTab('whatsapp')" id="mobile-nav-whatsapp" class="flex flex-col items-center space-y-1 text-slate-500">
                 <i data-lucide="message-square" class="w-5 h-5"></i>
                 <span class="text-[9px] font-bold">WApp</span>
             </button>
@@ -891,15 +918,12 @@
                 const moroso = isMoroso(c);
                 const isEven = idx % 2 === 0;
                 
-                let borderColor = 'border-transparent';
-                if (moroso) borderColor = 'border-rose-500';
-                else if (c.estado === 'Cerrado') borderColor = 'border-slate-300';
-                else borderColor = 'hover:border-blue-500';
+                let borderColor = 'border-white/5';
+                if (moroso) borderColor = 'border-rose-500/50';
+                else if (c.estado === 'Cerrado') borderColor = 'border-slate-800';
 
-                let bgClass = isEven ? 'bg-white' : 'bg-slate-50/50';
-                if (moroso) bgClass = isEven ? 'bg-rose-50/30' : 'bg-rose-50/60';
-
-                row.className = `mb-3 md:mb-0 rounded-2xl md:rounded-none border-b md:border-b-0 border ${borderColor} border-l-4 ${bgClass} transition-all shadow-sm md:shadow-none bg-white md:bg-transparent`;
+                row.className = `client-card mb-3 md:mb-0 rounded-2xl md:rounded-none border-b md:border-b-0 border ${borderColor} border-l-4 transition-all`;
+                row.style.animationDelay = `${idx * 0.05}s`;
                 
                 let icono = '⚡';
                 if (c.categoria === 'Préstamos') icono = '💵';
@@ -917,10 +941,10 @@
                 }
 
                 let badgeHtml = c.estado === 'Cerrado' 
-                    ? `<span class="px-3 py-1 bg-slate-100 text-slate-400 text-[9px] font-black rounded-full uppercase tracking-widest border border-slate-200">CERRADO</span>`
+                    ? `<span class="px-3 py-1 bg-slate-800/50 text-slate-500 text-[9px] font-black rounded-full uppercase tracking-widest border border-slate-700">CERRADO</span>`
                     : (moroso
-                        ? `<span class="px-3 py-1 bg-rose-100 text-rose-600 text-[9px] font-black rounded-full uppercase tracking-widest border border-rose-200">MOROSO</span>`
-                        : `<span class="px-3 py-1 bg-emerald-100 text-emerald-600 text-[9px] font-black rounded-full uppercase tracking-widest border border-emerald-200">ACTIVO</span>`);
+                        ? `<span class="px-3 py-1 bg-rose-500/10 text-rose-500 text-[9px] font-black rounded-full uppercase tracking-widest border border-rose-500/20">MOROSO</span>`
+                        : `<span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[9px] font-black rounded-full uppercase tracking-widest border border-emerald-500/20">ACTIVO</span>`);
 
                 // Template Options
                 let optionsTpl = '<option value="">Plantilla...</option>';
@@ -941,18 +965,18 @@
                     const saldoRestante = totalDevolver - (c.montoPagado || 0);
 
                     pagosInfoHtml = `
-                        <div class="mt-4 bg-slate-50 border border-slate-100 rounded-2xl p-4 grid grid-cols-3 gap-2 text-center shadow-sm">
+                        <div class="mt-4 bg-slate-900/40 border border-white/5 rounded-2xl p-4 grid grid-cols-3 gap-2 text-center">
                             <div>
-                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-tight">Capital<br>Original</p>
-                                <p class="text-xs font-black text-slate-600">${formatCurrency(capital)}</p>
+                                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 leading-tight">Capital<br>Original</p>
+                                <p class="text-xs font-black text-slate-300">${formatCurrency(capital)}</p>
                             </div>
-                            <div class="border-x border-slate-200">
-                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-tight">Total a<br>Devolver</p>
-                                <p class="text-xs font-black text-slate-700">${formatCurrency(totalDevolver)}</p>
+                            <div class="border-x border-white/5">
+                                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 leading-tight">Total a<br>Devolver</p>
+                                <p class="text-xs font-black text-slate-200">${formatCurrency(totalDevolver)}</p>
                             </div>
                             <div>
-                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-tight">Saldo<br>Restante</p>
-                                <p class="text-xs md:text-sm font-black text-emerald-600 bg-emerald-100 rounded-lg py-0.5">${formatCurrency(saldoRestante)}</p>
+                                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 leading-tight">Saldo<br>Restante</p>
+                                <p class="text-xs md:text-sm font-black text-emerald-400 bg-emerald-500/10 rounded-lg py-0.5">${formatCurrency(saldoRestante)}</p>
                             </div>
                         </div>
 
@@ -1033,14 +1057,14 @@
                                     ${icono}
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    <p class="text-sm font-black text-slate-900 truncate leading-tight">${c.nombre}</p>
-                                    <p class="text-[9px] font-bold ${moroso ? 'text-rose-500' : 'text-slate-400'} uppercase tracking-widest truncate">${subtitulo}</p>
+                                    <p class="text-sm font-black text-white truncate leading-tight">${c.nombre}</p>
+                                    <p class="text-[9px] font-bold ${moroso ? 'text-rose-400' : 'text-slate-500'} uppercase tracking-widest truncate">${subtitulo}</p>
                                 </div>
                             </div>
                             <!-- Acciones Rápida Mobile (Apiladas Verticalmente) -->
                             <div class="md:hidden flex flex-col space-y-2 shrink-0 ml-4">
-                                <button onclick="event.stopPropagation(); prepararEdicion('${c._id}')" class="p-2 bg-slate-100 text-slate-500 hover:text-blue-600 rounded-xl transition-all shadow-sm"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                                <button onclick="event.stopPropagation(); borrarCliente('${c._id}')" class="p-2 bg-rose-50 text-rose-400 hover:text-rose-600 rounded-xl transition-all shadow-sm"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                <button onclick="event.stopPropagation(); prepararEdicion('${c._id}')" class="p-2 bg-white/5 text-slate-400 hover:text-blue-400 rounded-xl transition-all border border-white/5 shadow-sm"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                <button onclick="event.stopPropagation(); borrarCliente('${c._id}')" class="p-2 bg-rose-500/10 text-rose-400 hover:text-rose-500 rounded-xl transition-all border border-rose-500/10 shadow-sm"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                         </div>
                         
@@ -1052,13 +1076,13 @@
                         
                         <!-- Acciones Rápidas Desktop -->
                         <div class="hidden md:flex col-span-3 justify-end items-center space-x-2">
-                            <button onclick="event.stopPropagation(); prepararEdicion('${c._id}')" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                            <button onclick="event.stopPropagation(); borrarCliente('${c._id}')" class="p-2 text-rose-300 hover:text-rose-600 hover:bg-white rounded-xl transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            <button onclick="event.stopPropagation(); prepararEdicion('${c._id}')" class="p-2 text-slate-500 hover:text-blue-400 hover:bg-white/5 rounded-xl transition-all"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="event.stopPropagation(); borrarCliente('${c._id}')" class="p-2 text-rose-400/50 hover:text-rose-500 hover:bg-white/5 rounded-xl transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
                     </div>
                     
                     <!-- Detalle Expandible (Acordeon) -->
-                    <div id="detail-${c._id}" class="hidden px-8 py-6 bg-white border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div id="detail-${c._id}" class="hidden px-8 py-6 bg-slate-900/50 border-t border-white/5 animate-in fade-in slide-in-from-top-2 duration-200">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                             <div class="space-y-4">
                                 <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Contacto Directo</p>
@@ -1386,18 +1410,18 @@
             const month = calendarView.getMonth();
             const monthName = new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(calendarView);
 
-            // Estructura del Calendario mas compacta
+            // Estructura del Calendario Midnight
             container.innerHTML = `
-                <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                <div class="bg-slate-900 p-6 rounded-[2.5rem] border border-white/5 shadow-2xl">
                     <div class="flex justify-between items-center mb-6">
-                        <h4 class="text-lg font-black text-slate-800 capitalize">${monthName} ${year}</h4>
+                        <h4 class="text-lg font-black text-white capitalize">${monthName} ${year}</h4>
                         <div class="flex gap-1">
-                            <button onclick="changeMonth(-1)" class="p-1.5 hover:bg-slate-50 rounded-xl transition-all text-slate-400"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-                            <button onclick="changeMonth(1)" class="p-1.5 hover:bg-slate-50 rounded-xl transition-all text-slate-400"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                            <button onclick="changeMonth(-1)" class="p-1.5 hover:bg-white/5 rounded-xl transition-all text-slate-500 hover:text-white"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                            <button onclick="changeMonth(1)" class="p-1.5 hover:bg-white/5 rounded-xl transition-all text-slate-500 hover:text-white"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
                         </div>
                     </div>
-                    <div class="grid grid-cols-7 gap-1 mb-2 text-center">
-                        ${['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'].map(d => `<span class="text-[9px] font-black text-slate-300 uppercase">${d}</span>`).join('')}
+                    <div class="grid grid-cols-7 gap-1 mb-2 text-center border-b border-white/5 pb-2">
+                        ${['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'].map(d => `<span class="text-[9px] font-black text-slate-600 uppercase">${d}</span>`).join('')}
                     </div>
                     <div class="grid grid-cols-7 gap-1" id="calendarDays"></div>
                 </div>
@@ -1484,7 +1508,6 @@
             if (document.getElementById('num-tramites')) document.getElementById('num-tramites').textContent = total;
             if (document.getElementById('num-pendientes')) document.getElementById('num-pendientes').textContent = pendientes;
 
-            // Actualizar Mini Lista de hoy
             const wrapper = document.getElementById('mini-agenda-wrapper');
             if (wrapper) {
                 const todayStr = new Date().toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', year:'numeric' });
