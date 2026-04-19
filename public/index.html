@@ -322,7 +322,7 @@
                         <div class="col-span-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Acciones</div>
                     </div>
                     <!-- Fixed Height List with Scroll -->
-                    <div id="listaClientes" class="max-h-[560px] overflow-y-auto divide-y divide-slate-100"></div>
+                    <div id="listaClientes" class="max-h-[560px] overflow-y-auto overflow-x-hidden divide-y divide-slate-100"></div>
                 </div>
             </section>
 
@@ -1016,18 +1016,18 @@
                         <!-- Info Principal -->
                         <div class="w-full md:col-span-5 flex items-center justify-between">
                             <div class="flex items-center space-x-4">
-                                <div class="w-10 h-10 md:w-10 md:h-10 ${moroso ? 'bg-rose-100 text-rose-600 border-rose-200' : 'bg-blue-100 text-blue-600 border-blue-200'} rounded-full flex items-center justify-center font-black text-sm border uppercase shrink-0">
+                                <div class="w-9 h-9 bg-blue-100 text-blue-600 border-blue-200 rounded-full flex items-center justify-center font-black text-xs border uppercase shrink-0">
                                     ${icono}
                                 </div>
-                                <div class="truncate">
-                                    <p class="text-sm md:text-sm font-black text-slate-900 truncate">${c.nombre}</p>
-                                    <p class="text-[9px] md:text-[9px] font-bold ${moroso ? 'text-rose-500' : 'text-slate-400'} uppercase tracking-widest truncate">${subtitulo}</p>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-sm font-black text-slate-900 truncate leading-tight">${c.nombre}</p>
+                                    <p class="text-[9px] font-bold ${moroso ? 'text-rose-500' : 'text-slate-400'} uppercase tracking-widest truncate">${subtitulo}</p>
                                 </div>
                             </div>
                             <!-- Acciones Rápida Mobile -->
-                            <div class="md:hidden flex space-x-1 shrink-0">
-                                <button onclick="event.stopPropagation(); prepararEdicion('${c._id}')" class="p-3 bg-slate-100 text-slate-500 hover:text-blue-600 rounded-xl transition-all"><i data-lucide="edit-3" class="w-5 h-5"></i></button>
-                                <button onclick="event.stopPropagation(); borrarCliente('${c._id}')" class="p-3 bg-rose-50 text-rose-400 hover:text-rose-600 rounded-xl transition-all"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                            <div class="md:hidden flex space-x-1 shrink-0 ml-2">
+                                <button onclick="event.stopPropagation(); prepararEdicion('${c._id}')" class="p-2.5 bg-slate-100 text-slate-500 hover:text-blue-600 rounded-xl transition-all shadow-sm"><i data-lucide="edit-3" class="w-4.5 h-4.5"></i></button>
+                                <button onclick="event.stopPropagation(); borrarCliente('${c._id}')" class="p-2.5 bg-rose-50 text-rose-400 hover:text-rose-600 rounded-xl transition-all shadow-sm"><i data-lucide="trash-2" class="w-4.5 h-4.5"></i></button>
                             </div>
                         </div>
                         
