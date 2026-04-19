@@ -21,7 +21,7 @@ router.post('/login', async (req, res) => {
 
         const token = jwt.sign(
             { id: user._id, username: user.username },
-            process.env.JWT_SECRET,
+            process.env.JWT_SECRET || 'zentra_secret_fallback_2026',
             { expiresIn: '24h' }
         );
 
