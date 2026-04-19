@@ -196,14 +196,15 @@
 
     <!-- MAIN CONTENT -->
     <main class="md:ml-64 min-h-screen pb-20 md:pb-0 flex flex-col bg-slate-950">
-        <header class="glass-panel sticky top-0 z-40 p-4 md:p-6 flex justify-between items-center border-b border-white/5">
-            <div class="flex items-center gap-4">
-                <h2 id="desktopTitle" class="text-lg md:text-xl font-black text-white uppercase tracking-tight truncate">Resumen</h2>
+        <header class="glass-panel sticky top-0 z-40 p-4 md:p-6 flex justify-between items-center border-b border-white/10">
+            <div class="flex items-center min-w-0">
+                <h2 id="desktopTitle" class="text-lg font-black text-white uppercase tracking-tight truncate">Resumen</h2>
             </div>
-            <div class="flex items-center gap-2 md:gap-4">
-                <div id="currentDate" class="text-[10px] md:text-xs font-bold text-slate-400 uppercase"></div>
-                <button onclick="togglePrivacy()" class="p-3 bg-white/10 rounded-2xl text-white hover:bg-white/20 outline-none transition-all flex items-center justify-center shadow-lg shadow-black/20">
-                    <i data-lucide="eye" id="privacyIcon" class="w-5 h-5"></i>
+            <div class="flex items-center gap-3 shrink-0">
+                <div id="currentDate" class="text-[9px] font-black text-slate-500 uppercase tracking-tighter"></div>
+                <button onclick="togglePrivacy()" class="w-10 h-10 bg-white/10 rounded-xl text-white flex items-center justify-center border border-white/10">
+                    <i data-lucide="eye" id="icon-eye" class="w-5 h-5"></i>
+                    <i data-lucide="eye-off" id="icon-eye-off" class="w-5 h-5 hidden"></i>
                 </button>
             </div>
         </header>
@@ -621,14 +622,18 @@
         }
 
         function applyPrivacy() {
+            const eye = document.getElementById('icon-eye');
+            const eyeOff = document.getElementById('icon-eye-off');
+            
             if (isPrivacyMode) {
                 document.body.classList.add('privacy-mode');
-                document.getElementById('privacyIcon').setAttribute('data-lucide', 'eye-off');
+                if(eye) eye.classList.add('hidden');
+                if(eyeOff) eyeOff.classList.remove('hidden');
             } else {
                 document.body.classList.remove('privacy-mode');
-                document.getElementById('privacyIcon').setAttribute('data-lucide', 'eye');
+                if(eye) eye.classList.remove('hidden');
+                if(eyeOff) eyeOff.classList.add('hidden');
             }
-            lucide.createIcons();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
