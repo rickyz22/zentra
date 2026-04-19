@@ -585,7 +585,18 @@ exports.exportarDatos = async (req, res) => {
 
         const buffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
 
-        res.setHeader('Content-Disposition', `attachment; filename="Zentra_Backup_${new Date().toLocaleDateString('es-AR').replace(/\//g, '-')}.xlsx"`);
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('es-AR').replace(/\//g, '-');
+        const timeStr = now.getHours().toString().padStart(2, '0') + '-' + now.getMinutes().toString().padStart(2, '0');
+        const fileName = `backup_zentra_${dateStr}_${timeStr}.xlsx`;
+
+        // Headers para evitar cualquier tipo de caché (browser, proxy, cloud)
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        res.setHeader('Surrogate-Control', 'no-store');
+
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.status(200).send(buffer);
 

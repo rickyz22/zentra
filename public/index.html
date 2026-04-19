@@ -1682,9 +1682,13 @@
         async function descargarExcel() {
             try {
                 console.log('Iniciando Backup...');
-                showToast('Generando Backup', 'Por favor esperá unos segundos...', 'blue');
+                showToast('Generando Backup', 'Obteniendo datos frescos de la nube...', 'blue');
+                
+                // Cache-busting: agrega un timestamp único a la URL para forzar la sincronización
+                const url_download = `/api/clientes/export?t=${Date.now()}`;
+                
                 const token = localStorage.getItem('jony_token');
-                const res = await fetch('/api/clientes/export', {
+                const res = await fetch(url_download, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
@@ -1697,16 +1701,21 @@
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                
-                const disposition = res.headers.get('content-disposition');
-                let filename = `Zentra_Backup_${new Date().toLocaleDateString('es-AR').replace(/\//g, '-')}.xlsx`;
-                
-                a.download = filename;
+
+                // Nombre dinámico exacto
+                const now = new Date();
+                const dStr = now.toLocaleDateString('es-AR').replace(/\//g, '-');
+                const tStr = now.getHours().toString().padStart(2, '0') + '-' + now.getMinutes().toString().padStart(2, '0');
+                a.download = `backup_zentra_${dStr}_${tStr}.xlsx`;
                 document.body.appendChild(a);
                 a.click();
-                a.remove();
-                window.URL.revokeObjectURL(url);
-                showToast('Backup Finalizado', 'Tu archivo Excel se ha descargado.', 'emerald');
+                
+                setTimeout(() => {
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                }, 100);
+                
+                showToast('¡Éxito!', 'Backup sincronizado descargado.', 'emerald');
             } catch (err) {
                 console.error(err);
                 showToast('Error', 'Hubo un error al generar el backup.', 'rose');
