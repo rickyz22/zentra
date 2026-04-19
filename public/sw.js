@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v1';
+const CACHE_NAME = 'zentra-v1.1';
 const ASSETS = [
   '/',
   '/index.html',
