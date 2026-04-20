@@ -1,18 +1,34 @@
 const mongoose = require('mongoose');
-const Cliente = require('../src/models/Cliente');
 require('dotenv').config();
 
-const mongoURI = "mongodb://admin_jony:jony1234@ac-ur15yb9-shard-00-00.rke4rvj.mongodb.net:27017,ac-ur15yb9-shard-00-01.rke4rvj.mongodb.net:27017,ac-ur15yb9-shard-00-02.rke4rvj.mongodb.net:27017/crm_jony?ssl=true&replicaSet=atlas-tocu41-shard-0&authSource=admin&retryWrites=true&w=majority";
+const clienteSchema = new mongoose.Schema({
+    nombre: String,
+    categoria: String,
+    fechaIngreso: Date,
+    proximoCobro: Date,
+    historialPagos: Array
+}, { strict: false });
 
-mongoose.connect(mongoURI)
-    .then(async () => {
-        const docs = await Cliente.find();
-        console.log('--- CLIENTES EN BD ---');
-        docs.forEach(d => console.log(`${d._id} - ${d.nombre}`));
-        console.log('----------------------');
+const Cliente = mongoose.model('Cliente', clienteSchema);
+
+async function check() {
+    try {
+        await mongoose.connect(process.env.MONGODB_URI);
+        const clientes = await Cliente.find().sort({ _id: -1 }).limit(5);
+        console.log('--- ÚLTIMOS 5 CLIENTES ---');
+        clientes.forEach(c => {
+            console.log(`ID: ${c._id}`);
+            console.log(`Nombre: ${c.nombre}`);
+            console.log(`Categoría: ${c.categoria}`);
+            console.log(`FechaIngreso: ${c.fechaIngreso}`);
+            console.log(`ProximoCobro: ${c.proximoCobro}`);
+            console.log('---');
+        });
         process.exit();
-    })
-    .catch(err => {
+    } catch (err) {
         console.error(err);
         process.exit(1);
-    });
+    }
+}
+
+check();

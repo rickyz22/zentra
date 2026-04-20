@@ -5,10 +5,10 @@ const xlsx = require('xlsx');
 // Guardar un nuevo cliente
 exports.crearCliente = async (req, res) => {
     try {
-        if (req.body.categoria === 'Préstamos' || req.body.categoria === 'Electrodomésticos') {
-            req.body.proximoCobro = new Date(Date.now() + 31 * 24 * 60 * 60 * 1000); // +31 días
-        }
-        
+        // Normalización y cálculo explícito solicitado por Jony
+        const fechaIngresoInput = req.body.fechaIngreso || req.body.fecha_ingreso || new Date();
+        const fechaObjeto = new Date(fechaIngresoInput);
+
         // Sanitize numbers
         ['honorarios', 'montoPrestado', 'montoDevolver', 'costoCompra', 'precioVenta', 'montoPagado'].forEach(field => {
             if (req.body[field] !== undefined) {
@@ -18,14 +18,18 @@ exports.crearCliente = async (req, res) => {
             }
         });
 
-        // Sanitize fechaIngreso — si viene vacío, dejar que el schema use el default (hoy)
-        if (req.body.fechaIngreso) {
-            req.body.fechaIngreso = new Date(req.body.fechaIngreso);
-        } else {
-            delete req.body.fechaIngreso;
-        }
+        // Crear cliente asegurando que la fechaIngreso se incluya desde el constructor
+        const nuevoCliente = new Cliente({
+            ...req.body,
+            fechaIngreso: fechaObjeto,
+            fecha: fechaObjeto
+        });
 
-        const nuevoCliente = new Cliente(req.body);
+        // Cálculo de vencimiento solicitado: 31 días después del inicio
+        if (req.body.categoria === 'Préstamos' || req.body.categoria === 'Electrodomésticos') {
+            nuevoCliente.proximoCobro = new Date(fechaObjeto.getTime() + (31 * 24 * 60 * 60 * 1000));
+        }
+        
         const clienteGuardado = await nuevoCliente.save();
 
         res.status(201).json({
@@ -106,11 +110,16 @@ exports.actualizarCliente = async (req, res) => {
             }
         });
 
-        // Sanitize fechaIngreso
-        if (req.body.fechaIngreso) {
-            req.body.fechaIngreso = new Date(req.body.fechaIngreso);
-        } else {
-            delete req.body.fechaIngreso;
+        // Normalización y recálculo explícito solicitado por Jony
+        if (req.body.fechaIngreso || req.body.fecha_ingreso) {
+            const fechaInput = req.body.fechaIngreso || req.body.fecha_ingreso;
+            const fechaObjeto = new Date(fechaInput);
+            req.body.fechaIngreso = fechaObjeto;
+            req.body.fecha = fechaObjeto;
+
+            if (req.body.categoria === 'Préstamos' || req.body.categoria === 'Electrodomésticos') {
+                req.body.proximoCobro = new Date(fechaObjeto.getTime() + (31 * 24 * 60 * 60 * 1000));
+            }
         }
 
         const clienteActualizado = await Cliente.findByIdAndUpdate(
