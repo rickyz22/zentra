@@ -561,7 +561,7 @@
 <body>
 
     <!-- SIDEBAR (DESKTOP) -->
-    <aside class="hidden md:flex flex-col w-64 fixed inset-y-0 left-0 bg-slate-900 text-slate-400 z-50">
+    <aside class="hidden md:flex flex-col w-64 fixed inset-y-0 left-0 bg-slate-900 text-slate-400 z-[150]">
         <div class="px-6 py-8">
             <div style="display: flex; align-items: center; gap: 10px; padding: 10px;">
                 <img src="assets/logo.png" style="width: 40px; height: 40px; object-fit: contain;" alt="Zentra Logo">
@@ -2273,20 +2273,16 @@
                 return new Date(clean + 'T00:00:00');
             };
 
-            // 1. Trámites Personales (Todos los que no tengan cliente, incluyendo futuros)
+            // 1. Agenda y Cobros (SOLO HOY) - Prioridad Alta
+            const recsClientesHoy = recs.filter(r => {
+                const rStr = parseLocal(r.fecha).toLocaleDateString('en-CA', { timeZone: tz });
+                return r.tipo !== 'personal' && rStr === hoyStr;
+            });
+
+            // 2. Trámites Personales (TODOS, como antes) - Abajo
             const recsPersonales = recs.filter(r => r.tipo === 'personal').sort((a,b) => parseLocal(a.fecha) - parseLocal(b.fecha));
 
-            // 2. Pendientes de Cobro (Clientes: Hoy + Atrasados < 10 días)
-            const recsPendientes = recs.filter(r => {
-                if (r.tipo === 'personal') return false;
-                const fechaR = parseLocal(r.fecha);
-                const rStr = fechaR.toLocaleDateString('en-CA', { timeZone: tz });
-                const diffTime = hoyDate.getTime() - fechaR.getTime();
-                const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
-                return rStr <= hoyStr && diffDays < 10;
-            }).sort((a,b) => parseLocal(a.fecha) - parseLocal(b.fecha));
-
-            // 3. Morosos (>= 10 días)
+            // 3. Morosos (>= 10 días de atraso)
             const recsMorosos = recs.filter(r => {
                 if (r.tipo !== 'Cobro Virtual') return false;
                 const fechaR = parseLocal(r.fecha);
@@ -2302,12 +2298,11 @@
                 const renderItem = (item) => {
                     let icon = '⚡';
                     let categoryText = item.categoria || 'Agenda';
-                    let isAtrasado = false;
                     const fechaR = parseLocal(item.fecha);
                     const rStr = fechaR.toLocaleDateString('en-CA', { timeZone: tz });
                     const fDisplay = fechaR.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
                     
-                    if (rStr < hoyStr) isAtrasado = true;
+                    const isAtrasado = rStr < hoyStr;
                     
                     let dateLabel = `<span class="text-[9px] font-black text-slate-400 bg-white/5 px-2 py-0.5 rounded-lg border border-white/5">📅 ${fDisplay}</span>`;
                     if (rStr === hoyStr) dateLabel = `<span class="text-[9px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">📅 HOY</span>`;
@@ -2348,14 +2343,39 @@
                     `;
                 };
 
-                // --- SECCIÓN TRÁMITES PERSONALES ACORDEÓN ---
+                // --- SECCIÓN 1: TAREAS CON CLIENTES (HOY) ---
+                if (recsClientesHoy.length > 0) {
+                    html += `
+                        <div class="p-6 space-y-3">
+                            <h4 class="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-3 flex items-center gap-2 px-1">
+                                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                                Tareas con Clientes (Hoy)
+                            </h4>
+                            ${recsClientesHoy.map(r => renderItem(r)).join('')}
+                        </div>
+                    `;
+                }
+
+                // Fallback si no hay nada PARA HOY (Clientes)
+                if (recsClientesHoy.length === 0) {
+                    html += `
+                        <div class="p-12 flex flex-col items-center justify-center space-y-4 opacity-60 border-b border-white/5">
+                            <div class="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center border border-white/5 text-slate-500">
+                                <i data-lucide="sparkles" class="w-8 h-8 text-amber-400/50 animate-pulse"></i>
+                            </div>
+                            <p class="text-[10px] font-black uppercase tracking-[0.4em] text-center w-full text-slate-500">Sin tareas con clientes para hoy</p>
+                        </div>
+                    `;
+                }
+
+                // --- SECCIÓN 2: TRÁMITES PERSONALES ACORDEÓN (TODOS) ---
                 if (recsPersonales.length > 0) {
                     html += `
-                        <div class="bg-slate-950/20 border-b border-white/5">
-                            <button onclick="togglePersonalesDashboard()" class="w-full p-6 flex items-center justify-between group transition-all hover:bg-white/5">
+                        <div class="bg-slate-950/20 border-t border-white/5">
+                            <button onclick="togglePersonalesDashboard()" class="w-full p-6 flex items-center justify-between group transition-all hover:bg-white/5 text-slate-400">
                                 <div class="flex items-center space-x-3">
                                     <div class="w-1.5 h-1.5 rounded-full bg-violet-600 shadow-[0_0_10px_rgba(139,92,246,0.5)]"></div>
-                                    <span class="text-[10px] font-black text-violet-400 uppercase tracking-[0.2em]">Mis Trámites Personales (${recsPersonales.length})</span>
+                                    <span class="text-[10px] font-black uppercase tracking-[0.2em] group-hover:text-violet-400 transition-colors">Mis Trámites Personales (${recsPersonales.length})</span>
                                 </div>
                                 <div class="w-6 h-6 rounded-lg bg-violet-500/10 text-violet-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                                     <i data-lucide="${personalesExpanded ? 'minus' : 'plus'}" class="w-4 h-4"></i>
@@ -2364,29 +2384,6 @@
                             ${personalesExpanded ? `<div class="px-6 pb-6 space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar animate-in slide-in-from-top-2 duration-300">
                                 ${recsPersonales.map(r => renderItem(r)).join('')}
                             </div>` : ''}
-                        </div>
-                    `;
-                }
-
-                // --- SECCIÓN PENDIENTES DE COBRO ---
-                if (recsPendientes.length > 0) {
-                    html += `
-                        <div class="p-6 space-y-3 border-t border-white/5">
-                            <h4 class="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-3 flex items-center gap-2 px-1">
-                                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-                                Cobros de Clientes
-                            </h4>
-                            ${recsPendientes.map(r => renderItem(r)).join('')}
-                        </div>
-                    `;
-                }
-
-                // Fallback si no hay nada
-                if (recsPersonales.length === 0 && recsPendientes.length === 0) {
-                    html += `
-                        <div class="p-10 flex flex-col items-center justify-center space-y-3 opacity-60">
-                            <i data-lucide="sun" class="w-8 h-8 text-amber-400"></i>
-                            <p class="text-[10px] font-black uppercase tracking-[0.3em] text-center w-full">Sin tareas para hoy</p>
                         </div>
                     `;
                 }
