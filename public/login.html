@@ -47,7 +47,10 @@
                     <div class="relative group">
                         <i data-lucide="lock" class="absolute left-5 top-4 w-5 h-5 text-slate-600 group-focus-within:text-blue-500 transition-colors"></i>
                         <input type="password" id="password" required placeholder="••••••••" 
-                            class="w-full bg-slate-950/50 border border-white/5 rounded-2xl py-4 pl-14 pr-4 text-white placeholder:text-slate-700 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all">
+                            class="w-full bg-slate-950/50 border border-white/5 rounded-2xl py-4 pl-14 pr-14 text-white placeholder:text-slate-700 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all">
+                        <button type="button" onclick="togglePassword()" class="absolute right-5 top-4 text-slate-600 hover:text-slate-400 transition-colors outline-none" tabindex="-1" id="togglePasswordBtn">
+                            <i data-lucide="eye" id="eyeIcon" class="w-5 h-5"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -69,6 +72,19 @@
 
     <script>
         lucide.createIcons();
+
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon  = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons(); // re-renderiza el ícono actualizado
+        }
 
         // Si ya tiene sesión, mandarlo al dashboard
         if (localStorage.getItem('jony_token')) {
