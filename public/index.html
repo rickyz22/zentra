@@ -1363,7 +1363,7 @@
                 allClientes = data.clientes || [];
                 document.getElementById('metric-clientes').textContent = allClientes.length;
                 actualizarContadoresCategorias();
-                renderClientes();
+                filtrarClientes();
             } catch (err) { console.error(err); }
         }
 
@@ -1599,6 +1599,7 @@
                             const saldoActual = formatCurrency((c.montoDevolver || c.precioVenta || 0) - (c.montoPagado || 0));
                             const diaRecorte = dStr.split(' - ')[0]; 
                             const horaRecorte = dStr.split(' - ')[1].replace(' hs', ''); 
+                            const msj = `Hola ${c.nombre}! Confirmo que recibí tu pago de ${mntStr} el día ${diaRecorte} a las ${horaRecorte} hs. Tu saldo pendiente es ${saldoActual}. ¡Muchas gracias!`;
                             const waLink = generarLinkWhatsApp(c.telefono, msj);
 
                             itemsHtml += `
