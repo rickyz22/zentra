@@ -292,11 +292,11 @@ exports.obtenerEstadisticas = async (req, res) => {
             {
                 $facet: {
                     hoy: [
-                        { $match: { fechaVencimiento: { $gte: todayStart, $lt: todayEnd }, honorarios: { $gt: 0 } } },
+                        { $match: { fecha: { $gte: todayStart, $lt: todayEnd }, honorarios: { $gt: 0 } } },
                         { $group: { _id: '$clienteId', total: { $sum: '$honorarios' } } }
                     ],
                     mes: [
-                        { $match: { fechaVencimiento: { $gte: monthStart }, honorarios: { $gt: 0 } } },
+                        { $match: { fecha: { $gte: monthStart }, honorarios: { $gt: 0 } } },
                         { $group: { _id: '$clienteId', total: { $sum: '$honorarios' } } }
                     ]
                 }
@@ -455,7 +455,7 @@ exports.obtenerEstadisticas = async (req, res) => {
         const agendaIds = new Set();
         todaAgenda.forEach(a => {
             if (a.clienteId) agendaIds.add(a.clienteId.toString());
-            const mk = getMonthKey(a.fechaVencimiento);
+            const mk = getMonthKey(a.fecha);
             if (mk) { initMonth(mk); historialMap[mk].tramites += (Number(a.honorarios) || 0); }
         });
 
@@ -591,7 +591,7 @@ exports.exportarDatos = async (req, res) => {
             tramitesData.push({
                 'Nombre del Trámite / Cliente': a.titulo || '',
                 'Trámite': a.tipo || 'Agenda Manual',
-                'Fecha Alta': a.fechaVencimiento ? new Date(a.fechaVencimiento).toLocaleDateString('es-AR') : 'N/A',
+                'Fecha Alta': a.fecha ? new Date(a.fecha).toLocaleDateString('es-AR') : 'N/A',
                 'A Cobrar': Number(a.honorarios) || 0,
                 'Estado': 'Pendiente'
             });

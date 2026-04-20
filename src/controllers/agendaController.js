@@ -3,7 +3,7 @@ const Agenda = require('../models/Agenda');
 // Obtener todos los recordatorios con datos del cliente
 exports.obtenerAgenda = async (req, res) => {
     try {
-        const recordatorios = await Agenda.find().populate('clienteId').sort({ fechaVencimiento: 1 });
+        const recordatorios = await Agenda.find().populate('clienteId').sort({ fecha: 1 });
         res.status(200).json({
             ok: true,
             count: recordatorios.length,
@@ -21,18 +21,26 @@ exports.obtenerAgenda = async (req, res) => {
 // Crear un nuevo recordatorio
 exports.crearAgenda = async (req, res) => {
     try {
-        const nuevoRecordatorio = new Agenda(req.body);
+        const data = { ...req.body };
+        
+        // Saneamiento definitivo: Si es personal, vencimiento o no viene cliente, forzamos null para Mongoose
+        if (data.tipo === 'personal' || data.tipo === 'vencimiento' || !data.clienteId || data.clienteId === 'null' || data.clienteId === '') {
+            data.clienteId = null;
+        }
+
+        const nuevoRecordatorio = new Agenda(data);
         const recordatorioGuardado = await nuevoRecordatorio.save();
+        
         res.status(201).json({
             ok: true,
             msg: 'Recordatorio creado correctamente',
             recordatorio: recordatorioGuardado
         });
     } catch (error) {
+        console.error('❌ ERROR CREAR AGENDA:', error);
         res.status(400).json({
             ok: false,
-            msg: 'Error al crear el recordatorio',
-            error: error.message
+            error: error.message // Respuesta de error específica solicitada por Jony
         });
     }
 };
@@ -48,27 +56,22 @@ exports.eliminarAgenda = async (req, res) => {
     }
 };
 
-// Limpiar trámites huérfanos (clienteId que ya no existe en Clientes)
+// Limpiar trámites huérfanos (SOLO aquellos donde el cliente fue borrado, pero manteniendo los personales)
 exports.limpiarHuerfanos = async (req, res) => {
     try {
         const Cliente = require('../models/Cliente');
-        // Obtener todos los IDs de clientes existentes
         const clientesExistentes = await Cliente.find({}, '_id');
         const idsValidos = clientesExistentes.map(c => c._id);
 
-        // Borrar items donde clienteId es null o no está en la lista de IDs válidos
+        // Borrar items donde clienteId existe pero el cliente ya no está en la DB
         const result = await Agenda.deleteMany({
-            $or: [
-                { clienteId: null },
-                { clienteId: { $exists: false } },
-                { clienteId: { $nin: idsValidos } }
-            ]
+            clienteId: { $exists: true, $ne: null, $nin: idsValidos }
         });
 
-        console.log(`🧹 Trámites huérfanos eliminados: ${result.deletedCount}`);
+        console.log(`🧹 Trámites de clientes eliminados limpiados: ${result.deletedCount}`);
         res.status(200).json({
             ok: true,
-            msg: `${result.deletedCount} trámite(s) huérfano(s) eliminados.`,
+            msg: `${result.deletedCount} trámite(s) de clientes inexistentes eliminados.`,
             deleted: result.deletedCount
         });
     } catch (error) {

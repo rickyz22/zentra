@@ -5,14 +5,14 @@ const agendaSchema = new mongoose.Schema({
         type: String,
         required: [true, 'El título del trámite es obligatorio']
     },
-    fechaVencimiento: {
+    fecha: {
         type: Date,
         required: [true, 'La fecha de vencimiento es obligatoria']
     },
     clienteId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Cliente',
-        required: [true, 'Debe seleccionar un cliente para este vencimiento']
+        required: false
     },
     mensajePredefinido: {
         type: String,
@@ -24,7 +24,7 @@ const agendaSchema = new mongoose.Schema({
     },
     tipo: {
         type: String,
-        enum: ['Trámite', 'Cobro'],
+        enum: ['Trámite', 'Cobro', 'personal', 'vencimiento'],
         default: 'Trámite'
     }
 }, {

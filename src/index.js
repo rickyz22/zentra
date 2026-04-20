@@ -77,5 +77,8 @@ console.log('📡 Rutas registradas.');
 
 // Iniciar servidor
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+    console.log('-------------------------------------------');
+    console.log('🚀 ZENTRA CRM V1.9.5 - MIGRACIÓN COMPLETADA');
+    console.log(`📡 Servidor corriendo en http://localhost:${PORT}`);
+    console.log('-------------------------------------------');
 });
