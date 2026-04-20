@@ -699,8 +699,8 @@
                     </div>
                 </div>
 
-                <div id="mini-agenda-wrapper" class="bg-slate-900 p-8 rounded-3xl text-white border border-white/5 flex items-center space-x-6">
-                    <p class="opacity-40 text-xs font-bold uppercase">Cargando agenda de hoy...</p>
+                <div id="mini-agenda-wrapper" class="bg-slate-900 border border-white/5 rounded-3xl overflow-hidden flex flex-col">
+                    <div class="p-8"><p class="opacity-40 text-xs font-bold uppercase">Cargando agenda de hoy...</p></div>
                 </div>
 
                 <!-- Calculadora ARCA MOVIL (solo visible en celular) -->
@@ -1175,11 +1175,14 @@
             document.getElementById('icon-moon-mob')?.classList.toggle('hidden', isDark);
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             applyPrivacy();
             applyThemeIcons();
             lucide.createIcons();
-            fetchClientes();
+            
+            // Esperar a que los clientes carguen antes de procesar la agenda/dashboard
+            await fetchClientes();
+            
             fetchAgenda();
             fetchTemplates();
             cargarMetricas();
@@ -1395,13 +1398,22 @@
             filtrarClientes();
         }
 
+        let morososExpanded = false;
+
         function isMoroso(c) {
-            if (c.estado === 'Cerrado') return false;
+            if (c.estado === 'Cerrado' || c.estado === 'Pagado') return false;
             if (c.categoria !== 'Préstamos' && c.categoria !== 'Electrodomésticos') return false;
+            if (!c.proximoCobro) return false;
             
-            const fechaReferencia = c.ultimoPago ? new Date(c.ultimoPago) : new Date(c.createdAt || c.fecha);
-            const diasPasados = (new Date().getTime() - fechaReferencia.getTime()) / (1000 * 3600 * 24);
-            return diasPasados > 32;
+            const tz = 'America/Argentina/Buenos_Aires';
+            const hoy = new Date();
+            const fechaCobro = new Date(c.proximoCobro);
+            
+            // Calculamos la antigüedad en días
+            const diffTime = hoy.getTime() - fechaCobro.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
+            
+            return diffDays >= 10; // Moroso a partir de los 10 días de atraso
         }
 
         function setFiltroCategoria(cat) {
@@ -1883,10 +1895,12 @@
                     .map(c => {
                         return {
                             _id: 'virtual_' + c._id,
-                            titulo: `Próximo cobro: ${c.nombre}`,
+                            titulo: `Cobro: ${c.nombre} - ${c.categoria}`,
                             fechaVencimiento: c.proximoCobro,
                             tipo: 'Cobro Virtual',
                             clienteId: c,
+                            categoria: c.categoria,
+                            telefono: c.telefono,
                             montoCuota: (c.montoDevolver || c.precioVenta || 0) / (c.cuotasTotales || 1)
                         };
                     });
@@ -2105,60 +2119,155 @@
             renderCalendar();
         }
 
-        function openAgendaWithDate(dateStr) {
-            openAgendaModal(null, null);
-            document.querySelector('#agendaForm input[name="fechaVencimiento"]').value = dateStr;
-        }
-
         function updateInicioMini(recs) {
-            // Recargar métricas financieras para asegurar que el Dashboard esté al día
             cargarMetricas();
+            const tz = 'America/Argentina/Buenos_Aires';
+            const hoyStr = new Date().toLocaleDateString('en-CA', { timeZone: tz });
+            const hoyDate = new Date();
 
-            // Actualizar Métricas Superiores de cantidad
-            const total = recs.length;
-            const hoy = new Date().setHours(0,0,0,0);
-            const pendientes = recs.filter(r => new Date(r.fechaVencimiento).setHours(0,0,0,0) >= hoy).length;
+            // 1. Pendientes de Cobro (Hoy + Atrasados < 10 días)
+            const recsPendientes = recs.filter(r => {
+                const fechaR = new Date(r.fechaVencimiento);
+                const rStr = fechaR.toLocaleDateString('en-CA', { timeZone: tz });
+                const diffTime = hoyDate.getTime() - fechaR.getTime();
+                const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
+                return rStr <= hoyStr && diffDays < 10;
+            });
 
-            if (document.getElementById('num-tramites')) document.getElementById('num-tramites').textContent = total;
-            if (document.getElementById('num-pendientes')) document.getElementById('num-pendientes').textContent = pendientes;
+            // 2. Morosos (>= 10 días)
+            const recsMorosos = recs.filter(r => {
+                if (r.tipo !== 'Cobro Virtual') return false;
+                const fechaR = new Date(r.fechaVencimiento);
+                const diffTime = hoyDate.getTime() - fechaR.getTime();
+                const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
+                return diffDays >= 10;
+            });
 
             const wrapper = document.getElementById('mini-agenda-wrapper');
             if (wrapper) {
-                const todayStr = new Date().toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', year:'numeric' });
-                const recsHoy = recs.filter(r => {
-                    const rDate = new Date(r.fechaVencimiento).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', year:'numeric' });
-                    return rDate === todayStr;
-                });
+                let html = '';
 
-                if (recsHoy.length === 0) {
-                    wrapper.className = "border p-8 rounded-3xl flex items-center justify-center";
-                    wrapper.style.cssText = "background: var(--bg-card); border-color: var(--border-color); color: var(--text-primary)";
-                    wrapper.innerHTML = `<p class="opacity-40 text-xs font-bold uppercase tracking-widest text-center w-full">✅ Tareas al día. No hay pendientes urgentes.</p>`;
+                // --- SECCIÓN PENDIENTES DE COBRO ---
+                if (recsPendientes.length === 0) {
+                    html += `
+                        <div class="p-10 flex flex-col items-center justify-center space-y-3">
+                            <div class="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center animate-pulse">
+                                <i data-lucide="check-circle-2" class="w-8 h-8"></i>
+                            </div>
+                            <p class="opacity-40 text-[10px] font-black uppercase tracking-[0.3em] text-center w-full">Tareas al día</p>
+                        </div>
+                    `;
                 } else {
-                    wrapper.className = "border p-6 rounded-3xl flex flex-col space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar";
-                    wrapper.style.cssText = "background: var(--bg-card); border-color: var(--border-color); color: var(--text-primary)";
-                    let listHtml = '';
-                    recsHoy.forEach(next => {
+                    let taskItems = '';
+                    recsPendientes.forEach(next => {
                         let icon = '⚡';
+                        let categoryText = next.categoria || 'Agenda';
+                        let isAtrasado = false;
+                        
+                        const fechaR = new Date(next.fechaVencimiento);
+                        const rStr = fechaR.toLocaleDateString('en-CA', { timeZone: tz });
+                        if (rStr < hoyStr) isAtrasado = true;
+
                         if (next.tipo === 'Cobro Virtual') {
-                            icon = next.clienteId?.categoria === 'Préstamos' ? '💰' : '🔌';
+                            icon = next.categoria === 'Préstamos' ? '💰' : '🔌';
                         }
-                        listHtml += `
-                            <div class="flex items-center space-x-5 w-full p-4 bg-slate-800/50 rounded-2xl border border-white/5 hover:bg-slate-800 transition-colors cursor-pointer" onclick="switchTab('agenda')">
-                                <div class="w-12 h-12 bg-white/10 rounded-2xl flex flex-col items-center justify-center border border-white/10 shrink-0">
-                                    <span class="text-xl font-black">${new Date(next.fechaVencimiento).getDate()}</span>
+
+                        const msj = `Hola ${next.clienteId?.nombre}! Te escribo del CRM de Zentra para recordarte que tenés pendiente tu cuota de ${categoryText} por un monto de ${formatCurrency(next.montoCuota)}. ¡Saludos!`;
+                        const waLink = generarLinkWhatsApp(next.telefono || '', msj);
+
+                        taskItems += `
+                            <div class="flex items-center space-x-4 w-full p-4 bg-slate-800/40 rounded-2xl border border-white/5 hover:bg-slate-800 transition-all group">
+                                <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center border border-white/10 shrink-0">
+                                    <span class="text-lg">${icon}</span>
                                 </div>
-                                <div class="flex-1 min-w-0">
-                                    <h5 class="text-sm font-black truncate text-white">${icon} ${next.titulo}</h5>
-                                    <p class="text-[10px] text-blue-200 opacity-80 font-bold tracking-widest truncate mt-0.5">${next.clienteId?.nombre || 'General'}</p>
+                                <div class="flex-1 min-w-0 cursor-pointer" onclick="window.open('${waLink}', '_blank')">
+                                    <div class="flex items-center gap-2">
+                                        <h5 class="text-xs font-black truncate text-white group-hover:text-emerald-400 transition-colors uppercase tracking-wider">${next.titulo}</h5>
+                                        ${isAtrasado ? `
+                                            <span class="bg-amber-500/10 text-amber-500 text-[8px] font-black px-1.5 py-0.5 rounded-md border border-amber-500/20 animate-pulse">ATRASADO</span>
+                                        ` : ''}
+                                    </div>
+                                    <p class="text-[9px] text-slate-500 font-bold tracking-widest truncate mt-0.5 uppercase">Categoría: ${next.clienteId?.nombre ? next.categoria : 'General'}</p>
                                 </div>
+                                ${next.clienteId?._id ? `
+                                    <button onclick="irACliente('${next.clienteId._id}')" class="p-2 text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all" title="Ver ficha">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </button>
+                                ` : ''}
                             </div>
                         `;
                     });
-                    wrapper.innerHTML = `<h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-white/10 pb-2">Recordatorios de Hoy</h4>${listHtml}`;
+                    html += `<div class="p-6 space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar">
+                        <h4 class="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-3 flex items-center gap-2 px-1">
+                            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                            Pendientes de Cobro
+                        </h4>
+                        ${taskItems}
+                    </div>`;
                 }
+
+                // --- SECCIÓN MOROSOS ACCORDION ---
+                if (recsMorosos.length > 0) {
+                    let morososList = '';
+                    if (morososExpanded) {
+                        recsMorosos.forEach(m => {
+                            const msjM = `Hola ${m.clienteId.nombre}, te contactamos de Zentra CRM por la morosidad crítica en tu cuota de ${m.categoria}. Por favor contactanos a la brevedad.`;
+                            const waLinkM = generarLinkWhatsApp(m.telefono, msjM);
+                            morososList += `
+                                <div class="flex items-center justify-between p-3 bg-rose-500/5 hover:bg-rose-500/10 rounded-xl transition-all border border-rose-500/10 mb-2">
+                                    <div class="flex-1 min-w-0 cursor-pointer" onclick="window.open('${waLinkM}', '_blank')">
+                                        <p class="text-xs font-bold text-rose-300 truncate tracking-tight uppercase">${m.clienteId.nombre}</p>
+                                        <p class="text-[8px] text-rose-500/60 font-black uppercase tracking-widest">Moroso (+30d): ${m.categoria}</p>
+                                    </div>
+                                    <button onclick="irACliente('${m.clienteId._id}')" class="p-2 text-rose-500/50 hover:text-rose-400 hover:bg-rose-400/10 rounded-lg transition-all" title="Ver ficha">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    html += `
+                        <div class="border-t border-white/5 bg-slate-950/30">
+                            <button onclick="toggleMorososDashboard()" class="w-full p-5 flex items-center justify-between group transition-all hover:bg-white/5">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-2 h-2 rounded-full bg-rose-600 shadow-[0_0_10px_rgba(225,29,72,0.5)]"></div>
+                                    <span class="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em]">Morosos (+10 días) (${recsMorosos.length})</span>
+                                </div>
+                                <div class="w-6 h-6 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <i data-lucide="${morososExpanded ? 'minus' : 'plus'}" class="w-4 h-4"></i>
+                                </div>
+                            </button>
+                            ${morososExpanded ? `<div class="px-5 pb-5 max-h-[200px] overflow-y-auto custom-scrollbar animate-in slide-in-from-top-2 duration-300">${morososList}</div>` : ''}
+                        </div>
+                    `;
+                }
+
+                wrapper.innerHTML = html;
+                lucide.createIcons();
             }
-            lucide.createIcons();
+        }
+
+        function toggleMorososDashboard() {
+            morososExpanded = !morososExpanded;
+            fetchAgenda(); // Refrescar para pintar el estado abierto/cerrado
+        }
+
+        function irACliente(id) {
+            switchTab('clientes');
+            // Intentar abrir el detalle si ya está cargado
+            setTimeout(() => {
+                const target = document.getElementById(`detail-${id}`);
+                if (target) {
+                    toggleClienteDetalle(id);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    // Si no está, lo buscamos limpiando filtros
+                    document.getElementById('buscarCliente').value = id; // El buscador acepta IDs parciales por defecto
+                    filtrarClientes();
+                    setTimeout(() => toggleClienteDetalle(id), 500);
+                }
+            }, 300);
         }
 
         function openAgendaModal(id, nombre) {

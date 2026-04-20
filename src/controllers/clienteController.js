@@ -27,7 +27,10 @@ exports.crearCliente = async (req, res) => {
 
         // Cálculo de vencimiento solicitado: 31 días después del inicio
         if (req.body.categoria === 'Préstamos' || req.body.categoria === 'Electrodomésticos') {
-            nuevoCliente.proximoCobro = new Date(fechaObjeto.getTime() + (31 * 24 * 60 * 60 * 1000));
+            const dateCobro = new Date(fechaObjeto);
+            dateCobro.setDate(dateCobro.getDate() + 31);
+            dateCobro.setHours(12, 0, 0, 0); // Forzar mediodía para evitar saltos de día por zona horaria
+            nuevoCliente.proximoCobro = dateCobro;
         }
         
         const clienteGuardado = await nuevoCliente.save();
@@ -118,7 +121,10 @@ exports.actualizarCliente = async (req, res) => {
             req.body.fecha = fechaObjeto;
 
             if (req.body.categoria === 'Préstamos' || req.body.categoria === 'Electrodomésticos') {
-                req.body.proximoCobro = new Date(fechaObjeto.getTime() + (31 * 24 * 60 * 60 * 1000));
+                const dateCobro = new Date(fechaObjeto);
+                dateCobro.setDate(dateCobro.getDate() + 31);
+                dateCobro.setHours(12, 0, 0, 0);
+                req.body.proximoCobro = dateCobro;
             }
         }
 
