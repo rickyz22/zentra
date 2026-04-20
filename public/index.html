@@ -1180,14 +1180,44 @@
             applyThemeIcons();
             lucide.createIcons();
             
-            // Esperar a que los clientes carguen antes de procesar la agenda/dashboard
-            await fetchClientes();
+            // Carga inicial completa
+            await refrescarTodo();
             
-            fetchAgenda();
             fetchTemplates();
-            cargarMetricas();
             updateDate();
         });
+
+        // Función maestra solicitada por Jony para reactividad total
+        async function refrescarTodo() {
+            try {
+                console.log('🔄 Refrescando sistema...');
+                
+                // Indicador visual de carga en las métricas
+                const recHoy = document.getElementById('num-recaudacion-hoy');
+                if (recHoy) recHoy.classList.add('animate-pulse', 'text-amber-400');
+
+                // 1. Obtener datos frescos del servidor
+                await fetchClientes();
+                
+                // 2. Actualizar Agenda y Dashboard (con su limpieza interna)
+                await fetchAgenda();
+                
+                // 3. Actualizar Lista General de Clientes
+                renderClientes();
+                
+                // 4. Actualizar Métricas Financieras
+                await cargarMetricas();
+
+                // Quitar indicador visual tras éxito
+                if (recHoy) {
+                    recHoy.classList.remove('animate-pulse', 'text-amber-400');
+                    showToast('Sincronizado', 'Datos actualizados', 'blue');
+                }
+            } catch (err) {
+                console.error('Error en refrescarTodo:', err);
+                showToast('Error', 'No se pudo sincronizar el dashboard', 'rose');
+            }
+        }
 
         function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
@@ -1832,8 +1862,7 @@
                 const resData = await res.json();
                 if (resData.ok) {
                     toggleForm(); 
-                    await fetchClientes(); 
-                    cargarMetricas();
+                    await refrescarTodo();
                     showToast('¡Éxito!', editingClientId ? 'Cliente actualizado' : 'Cliente registrado', 'emerald');
                 } else {
                     showToast('Error', resData.msg || 'Fallo de validación', 'rose');
@@ -1870,12 +1899,13 @@
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('jony_token')}` },
                     body: JSON.stringify({ monto: montoLimpio, metodo })
                 });
-                if (res.ok) {
+                const resData = await res.json();
+                if (resData.ok) {
                     closePagoModal();
-                    fetchClientes();
-                    cargarMetricas();
+                    await refrescarTodo();
+                    showToast('Pago Registrado', 'El Dashboard se ha actualizado.', 'emerald');
                 } else {
-                    alert('Error al registrar el pago');
+                    showToast('Error', resData.msg || 'Error al registrar el pago', 'rose');
                 }
             } catch(err) {
                 console.error(err);
@@ -1918,12 +1948,41 @@
             const container = document.getElementById('agendaItemsContainer');
             if (container) {
                 container.innerHTML = '';
-                if (recs.length === 0) {
-                    container.innerHTML = '<div class="col-span-full py-10 text-center text-slate-400 font-bold uppercase tracking-widest bg-white rounded-[2.5rem] border border-slate-100">Sin recordatorios para este periodo</div>';
+                
+                const tz = 'America/Argentina/Buenos_Aires';
+                const hoyDate = new Date();
+                const hoyStr = hoyDate.toLocaleDateString('en-CA', { timeZone: tz });
+                
+                // Fecha límite: Hoy + 7 días (al final del día)
+                const limiteDate = new Date();
+                limiteDate.setDate(limiteDate.getDate() + 7);
+                limiteDate.setHours(23, 59, 59, 999);
+
+                // Filtrar por relevancia: Solo próximos 7 días (sin incluir hoy ni atrasados)
+                const recsFiltrados = recs.filter(r => {
+                    const fechaR = new Date(r.fechaVencimiento);
+                    const rStr = fechaR.toLocaleDateString('en-CA', { timeZone: tz });
+                    
+                    // Solo fechas estrictamente posteriores a hoy y dentro de la ventana de 7 días
+                    return rStr > hoyStr && fechaR <= limiteDate;
+                });
+
+                // Ordenar cronológicamente (más cercano primero)
+                recsFiltrados.sort((a, b) => new Date(a.fechaVencimiento) - new Date(b.fechaVencimiento));
+
+                if (recsFiltrados.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full py-20 flex flex-col items-center justify-center bg-white/5 border border-dashed border-slate-700 rounded-[2.5rem] space-y-4">
+                            <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center text-slate-500">
+                                <i data-lucide="calendar-check" class="w-6 h-6"></i>
+                            </div>
+                            <p class="text-slate-400 font-bold text-sm uppercase tracking-widest text-center px-6">No hay vencimientos cercanos para esta semana</p>
+                        </div>`;
+                    lucide.createIcons();
                     return;
                 }
 
-                recs.forEach(item => {
+                recsFiltrados.forEach(item => {
                     const date = new Date(item.fechaVencimiento);
                     const div = document.createElement('div');
                     
@@ -1968,23 +2027,6 @@
             lucide.createIcons();
         }
 
-        async function registrarPagoBackend(id, monto, metodo) {
-            try {
-                const token = localStorage.getItem('jony_token');
-                const res = await fetch(`/api/clientes/${id}/pago`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ monto, metodo })
-                });
-                const data = await res.json();
-                if (data.ok) {
-                    closePagoModal();
-                    fetchClientes();
-                    cargarMetricas();
-                    fetchAgenda();
-                } else { alert(data.msg); }
-            } catch (err) { console.error(err); }
-        }
 
         async function borrarPago(clienteId, pagoId) {
             if (!confirm('⚠️ ¿Seguro quieres eliminar este pago? Eso recalculará el saldo restante y las ganancias.')) return;
@@ -1996,9 +2038,7 @@
                 });
                 const data = await res.json();
                 if (data.ok) {
-                    fetchClientes();
-                    cargarMetricas();
-                    fetchAgenda();
+                    await refrescarTodo();
                     showToast('Éxito', 'Pago eliminado correctamente', 'emerald');
                 } else {
                     showToast('Error', data.msg || 'No se pudo eliminar', 'rose');
@@ -2018,8 +2058,7 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (res.ok) {
-                    fetchAgenda();
-                    cargarMetricas();
+                    await refrescarTodo();
                     showToast('Éxito', 'Recordatorio eliminado', 'emerald');
                 } else {
                     showToast('Error', 'Ocurrió un error al borrar el recordatorio.', 'rose');
