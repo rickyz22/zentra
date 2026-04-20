@@ -64,6 +64,10 @@ const clienteSchema = new mongoose.Schema({
         fecha: { type: Date, default: Date.now },
         metodo: String
     }],
+    fechaIngreso: {
+        type: Date,
+        default: Date.now
+    },
     fecha: {
         type: Date,
         default: Date.now

@@ -18,6 +18,13 @@ exports.crearCliente = async (req, res) => {
             }
         });
 
+        // Sanitize fechaIngreso — si viene vacío, dejar que el schema use el default (hoy)
+        if (req.body.fechaIngreso) {
+            req.body.fechaIngreso = new Date(req.body.fechaIngreso);
+        } else {
+            delete req.body.fechaIngreso;
+        }
+
         const nuevoCliente = new Cliente(req.body);
         const clienteGuardado = await nuevoCliente.save();
 
@@ -98,6 +105,13 @@ exports.actualizarCliente = async (req, res) => {
                 req.body[field] = Math.round(val * 100) / 100;
             }
         });
+
+        // Sanitize fechaIngreso
+        if (req.body.fechaIngreso) {
+            req.body.fechaIngreso = new Date(req.body.fechaIngreso);
+        } else {
+            delete req.body.fechaIngreso;
+        }
 
         const clienteActualizado = await Cliente.findByIdAndUpdate(
             clienteId, 
