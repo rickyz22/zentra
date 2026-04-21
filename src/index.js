@@ -72,11 +72,6 @@ async function seedUser() {
     }
 }
 
-// Ruta de prueba inicial
-app.get('/', (req, res) => {
-    res.send('Servidor de Jony funcionando');
-});
-
 // Rutas de la API (prefijo /api)
 console.log('📡 Registrando rutas...');
 app.use('/api/auth', authRoutes);
