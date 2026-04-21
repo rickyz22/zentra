@@ -11,9 +11,13 @@ const authRoutes = require('./routes/authRoutes');
 const agendaRoutes = require('./routes/agendaRoutes');
 const templateRoutes = require('./routes/templateRoutes');
 const path = require('path');
-
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Middlewares de Parseo (¡CRÍTICO PARA LOGIN!)
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
 // Middleware de Cache-Control para forzar actualizaciones (Cache Busting)
 app.use((req, res, next) => {
@@ -89,7 +93,8 @@ app.get('/', (req, res) => {
 // Iniciar servidor
 app.listen(PORT, () => {
     console.log('-------------------------------------------');
-    console.log('🚀 ZENTRA CRM V1.9.5 - MIGRACIÓN COMPLETADA');
+    console.log('🚀 ZENTRA CRM V1.1.0 - DEPLOY VERIFIED');
     console.log(`📡 Servidor corriendo en http://localhost:${PORT}`);
+    console.log('📡 Middlewares JSON y URLENCODED: OK');
     console.log('-------------------------------------------');
 });
