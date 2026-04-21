@@ -85,8 +85,11 @@ app.use('/api/agenda', auth, agendaRoutes);
 app.use('/api/templates', auth, templateRoutes);
 console.log('📡 Rutas registradas.');
 
-// Ruta final para asegurar que se sirva el Dashboard (index.html)
+// Ruta final para asegurar que se sirva el Dashboard (index.html) sin caché
 app.get('/', (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
     res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
