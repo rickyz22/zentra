@@ -1,5 +1,5 @@
 require('dotenv').config();
-// Update v1.9.11 - Forzado de Redespliegue y Dashboard Fix
+// Update v1.9.12 - FINAL DEPLOY FIX - NO DEBUG ROUTES
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');

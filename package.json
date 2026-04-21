@@ -1,8 +1,8 @@
 {
   "name": "app-jony",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "1.1.0",
+  "description": "Zentra CRM - Secure Branch",
+  "main": "server.js",
   "scripts": {
     "start": "node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
