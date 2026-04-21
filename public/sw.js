@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v1.9.12'; // Incrementar esto junto con APP_VERSION
+const CACHE_NAME = 'zentra-v1.9.13'; // Incrementar esto junto con APP_VERSION
 const ASSETS = [
   '/',
   '/index.html',

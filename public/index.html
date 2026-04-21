@@ -15,7 +15,7 @@
         // Cambiá este número cada vez que subas un fix
         // para que Jony vea los cambios al instante.
         // ==========================================
-        const APP_VERSION = '1.9.12'; 
+        const APP_VERSION = '1.9.13'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -780,7 +780,7 @@
             color: #fff;
             padding: 12px 20px;
             border-radius: 12px;
-            display: flex;
+            display: none; /* Oculto por defecto */
             align-items: center;
             gap: 15px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
@@ -790,6 +790,7 @@
             max-width: 400px;
         }
         #update-banner.show {
+            display: flex; /* Mostrar solo cuando hay actualización */
             transform: translateX(-50%) translateY(0);
         }
         #update-banner button {
@@ -805,7 +806,7 @@
     </style>
 
     <script>
-        console.log('Zentra CRM: Versión V1.9.12 cargada');
+        console.log('Zentra CRM: Versión V1.9.13 cargada');
         // Chequeo temprano de sesión
         if (!localStorage.getItem('jony_token')) {
             window.location.href = '/login.html';
@@ -3151,6 +3152,7 @@
             const btn = document.getElementById('update-btn');
             banner.classList.add('show');
             btn.addEventListener('click', () => {
+                banner.style.display = 'none'; // Ocultar instantáneamente
                 worker.postMessage('SKIP_WAITING');
                 banner.classList.remove('show');
             });
