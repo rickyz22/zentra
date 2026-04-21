@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v1.1';
+const CACHE_NAME = 'zentra-v1.9.10'; // Incrementar esto junto con APP_VERSION
 const ASSETS = [
   '/',
   '/index.html',
@@ -7,9 +7,27 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
+  // Forzar que el nuevo SW tome el control de inmediato
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
+    })
+  );
+});
+
+// Limpieza de caches antiguos al activar el nuevo SW
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('Zentra: Borrando caché antigua:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
     })
   );
 });

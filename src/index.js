@@ -14,9 +14,19 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Middleware de Cache-Control para forzar actualizaciones (Cache Busting)
+app.use((req, res, next) => {
+    const url = req.url;
+    // Forzar validación siempre para los archivos HTML principals
+    if (url === '/' || url.endsWith('.html')) {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    } else {
+        // Otros activos (images, scripts versionados) se verifican siempre
+        res.set('Cache-Control', 'public, max-age=0');
+    }
+    next();
+});
+
 app.use(express.static('public'));
 app.use('/assets', express.static('assets'));
 

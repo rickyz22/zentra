@@ -8,7 +8,16 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="/manifest.json?v=1.9.10">
+    <script>
+        // ==========================================
+        // VERSIÓN DE LA APLICACIÓN (Cache Busting)
+        // Cambiá este número cada vez que subas un fix
+        // para que Jony vea los cambios al instante.
+        // ==========================================
+        const APP_VERSION = '1.9.10'; 
+        // ==========================================
+    </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -24,9 +33,10 @@
                 // Dark es el default
                 document.documentElement.classList.add('dark');
             }
-            // Anti-flash de privacidad
+            // Anti-flash de privacidad (Indestructible)
             if (localStorage.getItem('jony_privacy') === 'true') {
                 document.documentElement.classList.add('privacy-mode');
+                document.body?.setAttribute('data-privacy-hidden', 'true');
             }
         })();
     </script>
@@ -111,6 +121,7 @@
         main {
             overflow-x: hidden;
             width: 100%;
+            padding-bottom: 7rem; /* Espacio para la nueva Bottom Nav */
         }
 
         /* ========================
@@ -211,11 +222,18 @@
         /* ========================
            PRIVACIDAD
            ======================== */
-        .privacy-mode .sensitive-data,
-        .sensitive-data.privacy-active {
-            filter: blur(12px) !important;
-            opacity: 0.5;
-            transition: all 0.4s ease;
+        /* --- MODO PRIVACIDAD (BLOQUEO TOTAL) --- */
+        [data-privacy-hidden="true"] .sensitive-data,
+        body[data-privacy-hidden="true"] .sensitive-data {
+            filter: blur(10px) !important;
+            user-select: none !important;
+            pointer-events: none !important;
+            transition: filter 0.3s ease !important;
+        }
+
+        [data-privacy-hidden="true"] .sensitive-data:hover,
+        body[data-privacy-hidden="true"] .sensitive-data:hover {
+            filter: blur(2px) !important;
         }
 
         /* ========================
@@ -435,11 +453,124 @@
             background-color: #243447 !important;
             border-color: rgba(255,255,255,0.08) !important;
         }
-        html.light #tab-metricas .metrics-grid-item p {
+        html.light #tab-metricas .metrics-grid-item h4 {
             color: #94A3B8 !important;
         }
-        html.light #tab-metricas .metrics-grid-item h4 {
+
+        /* ========================
+           BOTTOM NAV PRO & CLIENT FAB
+           ======================== */
+        nav.md\:hidden {
+            height: 5rem;
+            background: rgba(10, 15, 30, 0.98) !important;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(59, 130, 246, 0.4);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .active-nav-mobile {
+            color: #3b82f6 !important;
+            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+
+        .active-nav-mobile span {
+            color: #3b82f6 !important;
+            font-weight: 900 !important;
+        }
+
+        /* FAB Simple para Clientes */
+        #fab-clientes {
+            position: fixed;
+            bottom: 6.5rem;
+            right: 1.5rem;
+            width: 3.5rem;
+            height: 3.5rem;
+            background: #2563eb;
+            color: white;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+            border: 4px solid #0d1117;
+            z-index: 60;
+            transition: all 0.2s;
+        }
+        
+        #fab-clientes:active { transform: scale(0.9); }
+
+        /* ========================
+           RESTAURACIÓN: FLEXBOX CARDS
+           ======================== */
+        .client-card-row {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            width: 100% !important;
+            gap: 12px !important;
+        }
+
+        .text-container-flex {
+            flex-grow: 1 !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+        }
+
+        .actions-container-fixed {
+            flex-shrink: 0 !important;
+            width: 80px !important;
+            display: flex !important;
+            justify-content: flex-end !important;
+            gap: 8px !important;
+        }
+
+        html.light .client-card h3 {
             color: #F1F5F9 !important;
+        }
+
+        /* ========================
+           SEPARACIÓN ESTRICTA PC/MÓVIL
+           ======================== */
+        
+        /* --- VISTA DESKTOP (> 768px) --- */
+        @media (min-width: 769px) {
+            nav.md\:hidden {
+                display: none !important;
+            }
+            aside {
+                display: flex !important;
+            }
+            main {
+                padding-bottom: 2rem !important; /* Espacio mínimo en PC */
+            }
+            /* FAB solo visible en móvil (si Jony prefiere) */
+            #fab-clientes {
+                display: none !important;
+            }
+        }
+
+        /* --- VISTA MOBILE (<= 768px) --- */
+        @media (max-width: 768px) {
+            aside {
+                display: none !important;
+            }
+            nav.md\:hidden {
+                display: flex !important;
+                z-index: 100 !important;
+            }
+            main {
+                padding-bottom: 7rem !important; /* Espacio para Bottom Nav */
+            }
+            #fab-clientes {
+                display: flex !important;
+            }
         }
         /* Historial mensual */
         html.light #historialMensualContainer .text-center {
@@ -632,7 +763,7 @@
                 <h2 id="desktopTitle" class="text-xl font-black uppercase tracking-tight truncate" style="color: var(--text-primary)">Resumen</h2>
                 <div class="hidden md:flex items-center gap-4 border-l pl-6" style="border-color: var(--border-color)">
                     <span id="currentDateDesktop" class="text-sm font-black uppercase tracking-widest leading-none" style="color: var(--text-secondary)"></span>
-                    <button onclick="togglePrivacy()" id="btn-privacy-desc" class="w-10 h-10 rounded-xl flex items-center justify-center border transition-all" style="background: var(--bg-cat-pill); border-color: var(--border-color); color: var(--text-secondary)">
+                    <button id="btn-privacy-desc" class="btn-privacy-toggle w-10 h-10 rounded-xl flex items-center justify-center border transition-all" style="background: var(--bg-cat-pill); border-color: var(--border-color); color: var(--text-secondary)">
                         <i data-lucide="eye" id="icon-eye-desc" class="w-5 h-5"></i>
                         <i data-lucide="eye-off" id="icon-eye-off-desc" class="w-5 h-5 hidden"></i>
                     </button>
@@ -652,7 +783,7 @@
             <!-- Grupo Derecho (Mobile: Fecha + Ojo + Tema) -->
             <div class="flex md:hidden items-center gap-3 shrink-0">
                 <span id="currentDateMobile" class="text-[10px] font-black uppercase tracking-tighter" style="color: var(--text-secondary)"></span>
-                <button onclick="togglePrivacy()" class="w-9 h-9 rounded-xl flex items-center justify-center border transition-all" style="background: var(--bg-cat-pill); border-color: var(--border-color); color: var(--text-secondary)">
+                <button class="btn-privacy-toggle w-9 h-9 rounded-xl flex items-center justify-center border transition-all" style="background: var(--bg-cat-pill); border-color: var(--border-color); color: var(--text-secondary)">
                     <i data-lucide="eye" id="icon-eye-mob" class="w-4 h-4"></i>
                     <i data-lucide="eye-off" id="icon-eye-off-mob" class="w-4 h-4 hidden"></i>
                 </button>
@@ -671,38 +802,39 @@
 
         <div class="max-w-7xl w-full mx-auto p-4 md:p-8 flex-1">
             
-            <!-- TAB: INICIO -->
-            <section id="tab-inicio" class="tab-content active space-y-8">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+             <!-- TAB: INICIO -->
+            <section id="tab-inicio" class="tab-content active space-y-6">
+                <!-- Grilla de Métricas: 2 columnas en móvil, 3 en md, 5 en lg -->
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
                     <!-- Tarjeta: Clientes Activos -->
-                    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 rounded-[2.5rem] text-white hover:scale-[1.02] transition-all">
-                        <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6"><i data-lucide="users" class="w-6 h-6 text-white"></i></div>
-                        <h3 id="metric-clientes" class="text-4xl font-black mb-1">0</h3>
-                        <p class="text-[10px] font-bold uppercase tracking-widest opacity-70">Clientes Activos</p>
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-5 md:p-8 rounded-[2.5rem] text-white hover:scale-[1.02] transition-all">
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 md:mb-6"><i data-lucide="users" class="w-5 h-5 md:w-6 md:h-6 text-white"></i></div>
+                        <h3 id="metric-clientes" class="text-2xl md:text-4xl font-black mb-1">0</h3>
+                        <p class="text-[8px] md:text-[10px] font-bold uppercase tracking-widest opacity-70">Clientes Activos</p>
                     </div>
                     <!-- Tarjeta: Trámites Mes -->
-                    <div class="bg-gradient-to-br from-slate-800 to-slate-950 p-8 rounded-[2.5rem] border border-white/5 transition-all hover:border-white/20">
-                        <div class="w-12 h-12 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mb-6 border border-white/5"><i data-lucide="file-text" class="w-6 h-6"></i></div>
-                        <h3 id="num-tramites" class="text-4xl font-black text-white">0</h3>
-                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Trámites Mes</p>
+                    <div class="bg-gradient-to-br from-slate-800 to-slate-950 p-5 md:p-8 rounded-[2.5rem] border border-white/5 transition-all hover:border-white/20">
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mb-4 md:mb-6 border border-white/5"><i data-lucide="file-text" class="w-5 h-5 md:w-6 md:h-6"></i></div>
+                        <h3 id="num-tramites" class="text-2xl md:text-4xl font-black text-white">0</h3>
+                        <p class="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Trámites Mes</p>
                     </div>
                     <!-- Tarjeta: Pendientes -->
-                    <div class="bg-gradient-to-br from-slate-800 to-slate-950 p-8 rounded-[2.5rem] border border-white/5 transition-all hover:border-white/20">
-                        <div class="w-12 h-12 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mb-6 border border-white/5"><i data-lucide="clock" class="w-6 h-6"></i></div>
-                        <h3 id="num-pendientes" class="text-4xl font-black text-white">0</h3>
-                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pendientes</p>
+                    <div class="bg-gradient-to-br from-slate-800 to-slate-950 p-5 md:p-8 rounded-[2.5rem] border border-white/5 transition-all hover:border-white/20">
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mb-4 md:mb-6 border border-white/5"><i data-lucide="clock" class="w-5 h-5 md:w-6 md:h-6"></i></div>
+                        <h3 id="num-pendientes" class="text-2xl md:text-4xl font-black text-white">0</h3>
+                        <p class="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pendientes</p>
                     </div>
                     <!-- Tarjeta: Recaudación Hoy -->
-                    <div onclick="switchTab('metricas')" class="metrics-grid-item cursor-pointer bg-gradient-to-br from-slate-900 to-slate-950 p-8 rounded-[2.5rem] border border-white/5 transition-all hover:border-emerald-500/30">
-                        <div class="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-6 border border-emerald-500/20"><i data-lucide="dollar-sign" class="w-6 h-6"></i></div>
-                        <h3 id="num-recaudacion-hoy" class="text-3xl font-black text-emerald-400 sensitive-data">$ 0</h3>
-                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Recaudación Hoy</p>
+                    <div onclick="switchTab('metricas')" class="metrics-grid-item cursor-pointer bg-gradient-to-br from-slate-900 to-slate-950 p-5 md:p-8 rounded-[2.5rem] border border-white/5 transition-all hover:border-emerald-500/30">
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-4 md:mb-6 border border-emerald-500/20"><i data-lucide="dollar-sign" class="w-5 h-5 md:w-6 md:h-6"></i></div>
+                        <h3 id="num-recaudacion-hoy" class="text-xl md:text-3xl font-black text-emerald-400 sensitive-data">$ 0</h3>
+                        <p class="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Recaudación Hoy</p>
                     </div>
                     <!-- Tarjeta: Ganancia Total -->
-                    <div onclick="switchTab('metricas')" class="metrics-grid-item cursor-pointer bg-gradient-to-br from-slate-900 to-slate-950 p-8 rounded-[2.5rem] border border-white/5 transition-all hover:border-emerald-500/30">
-                        <div class="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-6 border border-emerald-500/20"><i data-lucide="trending-up" class="w-6 h-6"></i></div>
-                        <h3 id="num-ganancia-total" class="text-3xl font-black text-emerald-400 sensitive-data">$ 0</h3>
-                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ganancia Total</p>
+                    <div onclick="switchTab('metricas')" class="metrics-grid-item cursor-pointer bg-gradient-to-br from-slate-900 to-slate-950 p-5 md:p-8 rounded-[2.5rem] border border-white/5 transition-all hover:border-emerald-500/30">
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-4 md:mb-6 border border-emerald-500/20"><i data-lucide="trending-up" class="w-5 h-5 md:w-6 md:h-6"></i></div>
+                        <h3 id="num-ganancia-total" class="text-xl md:text-3xl font-black text-emerald-400 sensitive-data">$ 0</h3>
+                        <p class="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ganancia Total</p>
                     </div>
                 </div>
 
@@ -710,32 +842,36 @@
                     <div class="p-8"><p class="opacity-40 text-xs font-bold uppercase">Cargando agenda de hoy...</p></div>
                 </div>
 
-                <!-- Calculadora ARCA MOVIL (solo visible en celular) -->
-                <div id="calc-movil" class="md:hidden bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-2xl text-white scroll-mt-4">
-                    <h4 class="text-xs font-black uppercase tracking-widest mb-5 flex items-center">
-                        <i data-lucide="calculator" class="w-4 h-4 mr-2 text-blue-400"></i>Calculadora de Devoluciones ARCA
+            </section>
+
+            <!-- TAB: CALCULADORA (Móvil) -->
+            <section id="tab-calc" class="tab-content hidden space-y-6">
+                <div class="bg-slate-900 p-8 rounded-[2.5rem] border border-white/5 shadow-2x">
+                    <h4 class="text-xs font-black uppercase tracking-widest mb-6 flex items-center text-white">
+                        <i data-lucide="calculator" class="w-5 h-5 mr-3 text-blue-400"></i>Calculadora ARCA
                     </h4>
-                    <div class="space-y-4">
+                    <div class="space-y-6">
                         <div>
-                            <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">Monto Percibido ($)</label>
+                            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">Monto Percibido ($)</label>
                             <input type="number" id="calc-monto-mobile" placeholder="0.00" inputmode="decimal"
-                                class="w-full p-4 bg-slate-900 border border-slate-600 rounded-2xl text-white font-bold text-base outline-none focus:ring-2 focus:ring-blue-500">
+                                class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-white font-bold text-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                         </div>
                         <div>
-                            <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">Porcentaje de Devolución (%)</label>
+                            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">Porcentaje (%)</label>
                             <input type="number" id="calc-perc-mobile" value="35" inputmode="decimal"
-                                class="w-full p-4 bg-slate-900 border border-slate-600 rounded-2xl text-white font-bold text-base outline-none focus:ring-2 focus:ring-blue-500">
+                                class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-white font-bold text-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                         </div>
-                        <div class="pt-3 border-t border-slate-700">
-                            <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Total a Devolver</p>
-                            <p id="res-honorarios-mobile" class="text-4xl font-black text-emerald-400">$ 0</p>
+                        <div class="pt-6 border-t border-white/5">
+                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Total a Devolver</p>
+                            <p id="res-honorarios-mobile" class="text-5xl font-black text-emerald-400">$ 0</p>
                         </div>
-                        <div class="grid grid-cols-2 gap-3 pt-1">
-                            <button onclick="reiniciarCalculadoraMobile()" class="w-full py-4 bg-slate-700 text-slate-200 font-black rounded-2xl text-sm hover:bg-slate-600 active:scale-95 transition-all">Reiniciar</button>
-                            <button onclick="calcularPorcentajeMobile()" class="w-full py-4 bg-blue-600 text-white font-black rounded-2xl text-sm hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-900/40">Calcular</button>
+                        <div class="grid grid-cols-2 gap-4 pt-2">
+                            <button onclick="reiniciarCalculadoraMobile()" class="w-full py-4 bg-white/5 text-slate-400 font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-white/10 transition-all">Borrar</button>
+                            <button onclick="calcularPorcentajeMobile()" class="w-full py-4 bg-blue-600 text-white font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-900/40 transition-all">Calcular</button>
                         </div>
                     </div>
                 </div>
+                <p class="text-center text-[10px] text-slate-600 font-bold uppercase tracking-widest px-10">Calculá rápidamente las retenciones de ARCA / AFIP para tus trámites.</p>
             </section>
 
             <!-- TAB: CLIENTES -->
@@ -763,9 +899,10 @@
                     </div>
                 </div>
 
-                <!-- FAB Nuevo Cliente (Mobile) -->
-                <button onclick="toggleForm()" class="md:hidden fixed bottom-20 right-5 w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center z-50 transition-transform active:scale-95">
-                    <i data-lucide="plus" class="w-6 h-6"></i>
+
+                <!-- FAB Simple (Solo para Clientes) -->
+                <button id="fab-clientes" onclick="toggleForm()" class="md:hidden">
+                    <i data-lucide="plus" class="w-8 h-8"></i>
                 </button>
 
                 <div id="formContainer" class="hidden bg-slate-900 p-10 rounded-[2.5rem] border border-white/10 shadow-2xl shadow-black">
@@ -1103,31 +1240,31 @@
         <!-- NOTIFICACIÓN -->
         <div id="toast" class="hidden fixed bottom-24 right-6 bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl z-[100] font-bold text-sm"></div>
 
-        <!-- MOBILE NAV -->
-        <nav class="md:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-white/5 flex justify-around p-3 z-50">
+        <!-- NAVEGACIÓN INFERIOR (Mobile) -->
+        <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-xl border-t border-white/5 flex justify-around p-4">
             <button onclick="switchTab('inicio')" id="mobile-nav-inicio" class="flex flex-col items-center space-y-1 active-nav-mobile">
-                <i data-lucide="home" class="w-5 h-5"></i>
-                <span class="text-[9px] font-bold">Inicio</span>
+                <i data-lucide="home" class="w-6 h-6"></i>
+                <span class="text-[10px] font-black uppercase">Inicio</span>
             </button>
             <button onclick="switchTab('clientes')" id="mobile-nav-clientes" class="flex flex-col items-center space-y-1 text-slate-500">
-                <i data-lucide="users" class="w-5 h-5"></i>
-                <span class="text-[9px] font-bold">Clientes</span>
+                <i data-lucide="users" class="w-6 h-6"></i>
+                <span class="text-[10px] font-black uppercase">Clientes</span>
             </button>
             <button onclick="switchTab('agenda')" id="mobile-nav-agenda" class="flex flex-col items-center space-y-1 text-slate-500">
-                <i data-lucide="calendar" class="w-5 h-5"></i>
-                <span class="text-[9px] font-bold">Agenda</span>
+                <i data-lucide="calendar" class="w-6 h-6"></i>
+                <span class="text-[10px] font-black uppercase">Agenda</span>
             </button>
-            <button onclick="switchTab('inicio'); setTimeout(()=>{document.getElementById('calc-movil').scrollIntoView({behavior:'smooth'})}, 100)" class="flex flex-col items-center space-y-1 text-slate-500">
-                <i data-lucide="calculator" class="w-5 h-5"></i>
-                <span class="text-[9px] font-bold">Calc</span>
+            <button onclick="switchTab('calc')" id="mobile-nav-calc" class="flex flex-col items-center space-y-1 text-slate-500">
+                <i data-lucide="calculator" class="w-6 h-6"></i>
+                <span class="text-[10px] font-black uppercase">Calc</span>
             </button>
             <button onclick="switchTab('metricas')" id="mobile-nav-metricas" class="flex flex-col items-center space-y-1 text-slate-500">
-                <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
-                <span class="text-[9px] font-bold">Métricas</span>
+                <i data-lucide="bar-chart-2" class="w-6 h-6"></i>
+                <span class="text-[10px] font-black uppercase">Métricas</span>
             </button>
             <button onclick="switchTab('whatsapp')" id="mobile-nav-whatsapp" class="flex flex-col items-center space-y-1 text-slate-500">
-                <i data-lucide="message-square" class="w-5 h-5"></i>
-                <span class="text-[9px] font-bold">WApp</span>
+                <i data-lucide="message-square" class="w-6 h-6"></i>
+                <span class="text-[10px] font-black uppercase">WApp</span>
             </button>
         </nav>
     </main>
@@ -1161,23 +1298,40 @@
         function togglePrivacy() {
             isPrivacyMode = !isPrivacyMode;
             localStorage.setItem('jony_privacy', isPrivacyMode);
-            applyPrivacy();
+            syncPrivacyUI();
         }
 
-        function applyPrivacy() {
+        function syncPrivacyUI() {
+            const state = localStorage.getItem('jony_privacy') === 'true';
+            isPrivacyMode = state; // Sincronizar variable global
+            
+            // Aplicar al body (Selector indestructible)
+            if (state) {
+                document.body.setAttribute('data-privacy-hidden', 'true');
+                document.documentElement.classList.add('privacy-mode');
+            } else {
+                document.body.removeAttribute('data-privacy-hidden');
+                document.documentElement.classList.remove('privacy-mode');
+            }
+
+            // Sincronizar iconos
             const iconsEye = [document.getElementById('icon-eye-desc'), document.getElementById('icon-eye-mob')];
             const iconsEyeOff = [document.getElementById('icon-eye-off-desc'), document.getElementById('icon-eye-off-mob')];
             
-            if (isPrivacyMode) {
-                document.body.classList.add('privacy-mode');
-                iconsEye.forEach(i => i?.classList.add('hidden'));
-                iconsEyeOff.forEach(i => i?.classList.remove('hidden'));
-            } else {
-                document.body.classList.remove('privacy-mode');
-                iconsEye.forEach(i => i?.classList.remove('hidden'));
-                iconsEyeOff.forEach(i => i?.classList.add('hidden'));
-            }
+            iconsEye.forEach(i => i?.classList.toggle('hidden', state));
+            iconsEyeOff.forEach(i => i?.classList.toggle('hidden', !state));
+
+            if (window.lucide) lucide.createIcons();
         }
+
+        // Watchdog de Privacidad: Verifica sincronización cada 30 segundos
+        setInterval(syncPrivacyUI, 30000);
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-privacy-toggle')) {
+                togglePrivacy();
+            }
+        });
 
         // ========================
         // SISTEMA LIGHT / DARK MODE
@@ -1208,7 +1362,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            applyPrivacy();
+            syncPrivacyUI();
             applyThemeIcons();
             lucide.createIcons();
             
@@ -1240,6 +1394,8 @@
                 // 4. Actualizar Métricas Financieras
                 await cargarMetricas();
 
+                syncPrivacyUI(); // Garantizar privacidad tras recarga masiva
+
                 // Quitar indicador visual tras éxito
                 if (recHoy) {
                     recHoy.classList.remove('animate-pulse', 'text-amber-400');
@@ -1252,22 +1408,38 @@
         }
 
         function switchTab(tab) {
-            document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
-            document.getElementById(`tab-${tab}`).classList.add('active');
+            // Ocultar todos los contenidos de pestañas
+            document.querySelectorAll('.tab-content').forEach(s => {
+                s.classList.add('hidden');
+                s.classList.remove('active');
+            });
             
-            document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
-            if(document.getElementById(`side-${tab}`)) document.getElementById(`side-${tab}`).classList.add('active');
+            // Mostrar la pestaña seleccionada
+            const target = document.getElementById('tab-' + tab);
+            if (target) {
+                target.classList.remove('hidden');
+                target.classList.add('active');
+            }
+
+            // Sidebar desktop (remover activo de todos y poner en el actual)
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            const sideBtn = document.getElementById('side-' + tab);
+            if (sideBtn) sideBtn.classList.add('active');
+
+            // Bottom Nav mobile
+            document.querySelectorAll('nav.md\\:hidden button').forEach(b => {
+                b.classList.remove('active-nav-mobile');
+                b.classList.add('text-slate-500');
+            });
             
-            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-nav-mobile', 'text-slate-400'));
-            document.querySelectorAll('nav button').forEach(b => b.classList.add('text-slate-400'));
-            if(document.getElementById(`mobile-nav-${tab}`)) {
-                document.getElementById(`mobile-nav-${tab}`).classList.add('active-nav-mobile');
-                document.getElementById(`mobile-nav-${tab}`).classList.remove('text-slate-400');
+            const mobBtn = document.getElementById('mobile-nav-' + tab);
+            if (mobBtn) {
+                mobBtn.classList.add('active-nav-mobile');
+                mobBtn.classList.remove('text-slate-500');
             }
 
             if (tab === 'metricas') cargarMetricas();
-            if (tab === 'inicio') fetchClientes();
-            if (tab === 'clientes') renderClientes();
+            if (tab === 'clientes') fetchClientes();
             if (tab === 'agenda') fetchAgenda();
             if (tab === 'whatsapp') fetchTemplates();
             lucide.createIcons();
@@ -1287,18 +1459,12 @@
                 
                 if (!data.ok) return;
 
-                // Aplicar estado de privacidad antes de inyectar datos
-                const isPrivacy = localStorage.getItem('jony_privacy') === 'true';
-                if (isPrivacy) {
-                    document.body.classList.add('privacy-mode');
-                }
 
                 const gananciaTramites = data.tramites?.gananciaHistorica || 0;
                 const gananciaPrestamos = data.prestamos?.gananciaRealizada || 0;
                 const gananciaElectro = data.electro?.gananciaRealizada || 0;
                 const totalGanancias = gananciaTramites + gananciaPrestamos + gananciaElectro;
 
-                console.log('Pintando en pantalla ganancia de: ' + formatCurrency(totalGanancias));
 
                 // Update tab inicio
                 if (data.global) {
@@ -1386,7 +1552,7 @@
                 
                 lucide.createIcons();
                 lucide.createIcons();
-                applyPrivacy();
+                syncPrivacyUI();
             } catch (err) { console.error('Error renderizando clientes:', err); }
         }
 
@@ -1713,32 +1879,26 @@
 
                 row.innerHTML = `
                     <div onclick="toggleClienteDetalle('${c._id}')" class="flex flex-col md:grid md:grid-cols-12 gap-4 px-5 py-4 md:px-8 cursor-pointer items-start md:items-center" style="transition: background 0.15s; border-radius: inherit;" onmouseenter="this.style.background='rgba(255,255,255,0.04)'" onmouseleave="this.style.background=''">
-                        <!-- Info Principal -->
-                        <div class="w-full md:col-span-5 flex items-center justify-between">
-                            <div class="flex items-center space-x-3">
+                        <!-- Info Principal con Restauración Flexbox -->
+                        <div class="w-full md:col-span-12 client-card-row">
+                            <div class="flex items-center space-x-3 overflow-hidden text-container-flex">
                                 ${avatarHtml}
-                                <div class="min-w-0 flex-1">
+                                <div class="min-w-0">
                                     <p class="text-sm font-black truncate leading-tight" style="color: var(--text-primary)">${c.nombre}</p>
                                     <p class="text-[9px] font-bold uppercase tracking-widest truncate mt-0.5 ${moroso ? 'text-rose-400' : ''}" style="${moroso ? '' : 'color: var(--text-muted)'}">${subtitulo}</p>
                                 </div>
                             </div>
-                            <!-- Acciones Rápida Mobile (Apiladas Verticalmente) -->
-                            <div class="md:hidden flex flex-col space-y-2 shrink-0 ml-4">
+                            <!-- Acciones (Ancho Fijo y Alineado a la Derecha) -->
+                            <div class="actions-container-fixed">
                                 <button onclick="event.stopPropagation(); prepararEdicion('${c._id}')" class="p-2 bg-white/5 text-slate-400 hover:text-blue-400 rounded-xl transition-all border border-white/5 shadow-sm"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                                 <button onclick="event.stopPropagation(); borrarCliente('${c._id}')" class="p-2 bg-rose-500/10 text-rose-400 hover:text-rose-500 rounded-xl transition-all border border-rose-500/10 shadow-sm"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                         </div>
                         
-                        <!-- Status Badge -->
-                        <div class="w-full md:col-span-4 flex justify-between md:justify-center items-center mt-2 md:mt-0">
-                            <div class="md:hidden text-[10px] font-bold text-slate-400 uppercase tracking-widest">Estado</div>
-                            ${badgeHtml}
-                        </div>
-                        
-                        <!-- Acciones Rápidas Desktop -->
-                        <div class="hidden md:flex col-span-3 justify-end items-center space-x-2">
-                            <button onclick="event.stopPropagation(); prepararEdicion('${c._id}')" class="p-2 text-slate-500 hover:text-blue-400 hover:bg-white/5 rounded-xl transition-all"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                            <button onclick="event.stopPropagation(); borrarCliente('${c._id}')" class="p-2 text-rose-400/50 hover:text-rose-500 hover:bg-white/5 rounded-xl transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <!-- Status Badge (Mantenido como fila si es necesario) -->
+                        <div class="hidden md:flex md:col-span-12 justify-start items-center border-t border-white/5 pt-2 mt-1">
+                             <p class="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] mr-4">ESTADO ACTUAL:</p>
+                             ${badgeHtml}
                         </div>
                     </div>
                     
@@ -1785,7 +1945,7 @@
                 `;
                 container.appendChild(row);
             });
-            applyPrivacy();
+            syncPrivacyUI();
             lucide.createIcons();
         }
 
@@ -2313,7 +2473,7 @@
                     }
 
                     return `
-                        <div class="flex items-center space-x-4 w-full p-4 bg-slate-800/40 rounded-2xl border border-white/5 hover:bg-slate-800 transition-all group">
+                        <div class="flex items-center space-x-3 md:space-x-4 w-full p-3 md:p-4 bg-slate-800/40 rounded-2xl border border-white/5 hover:bg-slate-800 transition-all group">
                             <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center border border-white/10 shrink-0">
                                 <span class="text-lg">${icon}</span>
                             </div>
@@ -2832,11 +2992,11 @@
             selectEl.value = ''; // reset selection
         }
 
-        // Registro de Service Worker para PWA
+        // Registro de Service Worker para PWA con Cache Busting
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('Zentra PWA: Service Worker registrado'))
+                navigator.serviceWorker.register(`/sw.js?v=${APP_VERSION}`)
+                    .then(reg => console.log(`Zentra PWA v${APP_VERSION}: Service Worker registrado`))
                     .catch(err => console.log('Zentra PWA: Error al registrar SW', err));
             });
         }
