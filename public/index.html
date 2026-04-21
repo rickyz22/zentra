@@ -15,7 +15,7 @@
         // Cambiá este número cada vez que subas un fix
         // para que Jony vea los cambios al instante.
         // ==========================================
-        const APP_VERSION = '1.9.11'; 
+        const APP_VERSION = '1.9.12'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -452,6 +452,12 @@
             color: var(--text-primary) !important;
             border: 1px solid var(--border-input) !important;
         }
+
+        /* CLASE DE PRUEBA DE FUEGO V1.9.12 */
+        .saldo-highlight {
+            background-color: #fef08a !important;
+            color: #854d0e !important;
+        }
         html.light input::placeholder {
             color: var(--text-muted) !important;
         }
@@ -799,6 +805,7 @@
     </style>
 
     <script>
+        console.log('Zentra CRM: Versión V1.9.12 cargada');
         // Chequeo temprano de sesión
         if (!localStorage.getItem('jony_token')) {
             window.location.href = '/login.html';
@@ -1921,7 +1928,7 @@
                             </div>
                             <div class="finance-col">
                                 <p class="finance-label text-[9px] font-black text-slate-500 uppercase tracking-widest">Saldo Restante</p>
-                                <p class="finance-value text-xs md:text-sm font-black text-emerald-400 bg-emerald-500/10 rounded-lg">${formatCurrency(saldoRestante)}</p>
+                                <p class="finance-value saldo-highlight text-xs md:text-sm font-black rounded-lg">${formatCurrency(saldoRestante)}</p>
                             </div>
                         </div>
 
