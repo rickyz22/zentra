@@ -327,6 +327,36 @@
             border-top: 1px solid #D1D5DB !important;
         }
 
+        /* Alineación Grilla Financiera - INNEGOCIABLE */
+        .finance-panel {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 10px !important;
+            align-items: start !important;
+        }
+        .finance-col {
+            display: flex !important;
+            flex-direction: column !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .finance-label {
+            height: 45px !important; /* Altura innegociable solicitada */
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            margin: 0 !important;
+            padding: 0 2px !important;
+            line-height: 1.1 !important;
+        }
+        .finance-value {
+            margin: 4px 0 0 0 !important; /* Espacio controlado solo arriba */
+            padding: 0 !important;
+            display: block !important;
+            text-align: center !important;
+        }
+
         /* ========================
            SIDEBAR ITEM
            ======================== */
@@ -1846,18 +1876,18 @@
                     const saldoRestante = totalDevolver - (c.montoPagado || 0);
 
                     pagosInfoHtml = `
-                        <div class="mt-4 bg-slate-100/50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/5 rounded-2xl p-4 grid grid-cols-3 gap-2 text-center">
-                            <div>
-                                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 leading-tight">Capital<br>Original</p>
-                                <p class="text-xs font-black text-slate-700 dark:text-slate-300">${formatCurrency(capital)}</p>
+                        <div class="mt-4 finance-panel bg-slate-100/50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/5 rounded-2xl p-4">
+                            <div class="finance-col">
+                                <p class="finance-label text-[9px] font-black text-slate-500 uppercase tracking-widest">Capital Original</p>
+                                <p class="finance-value text-xs font-black text-slate-700 dark:text-slate-300">${formatCurrency(capital)}</p>
                             </div>
-                            <div class="border-x border-white/5">
-                                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 leading-tight">Total a<br>Devolver</p>
-                                <p class="text-xs font-black text-slate-700 dark:text-slate-200">${formatCurrency(totalDevolver)}</p>
+                            <div class="finance-col border-x border-slate-200/50 dark:border-white/5 px-1">
+                                <p class="finance-label text-[9px] font-black text-slate-500 uppercase tracking-widest">Total a Devolver</p>
+                                <p class="finance-value text-xs font-black text-slate-700 dark:text-slate-200">${formatCurrency(totalDevolver)}</p>
                             </div>
-                            <div>
-                                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 leading-tight">Saldo<br>Restante</p>
-                                <p class="text-xs md:text-sm font-black text-emerald-400 bg-emerald-500/10 rounded-lg py-0.5">${formatCurrency(saldoRestante)}</p>
+                            <div class="finance-col">
+                                <p class="finance-label text-[9px] font-black text-slate-500 uppercase tracking-widest">Saldo Restante</p>
+                                <p class="finance-value text-xs md:text-sm font-black text-emerald-400 bg-emerald-500/10 rounded-lg">${formatCurrency(saldoRestante)}</p>
                             </div>
                         </div>
 
