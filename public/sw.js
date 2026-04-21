@@ -7,13 +7,18 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
-  // Forzar que el nuevo SW tome el control de inmediato
-  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
     })
   );
+});
+
+// Listener para forzar la activación cuando el usuario hace clic en 'Actualizar'
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Limpieza de caches antiguos al activar el nuevo SW

@@ -762,6 +762,40 @@
             background-color: #1B2B3A !important;
             color: #F1F5F9 !important;
         }
+        /* ========================
+           UPDATE BANNER (PWA)
+           ======================== */
+        #update-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1e293b;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            z-index: 9999;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 90%;
+            max-width: 400px;
+        }
+        #update-banner.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        #update-banner button {
+            background: #3b82f6;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 13px;
+            border: none;
+            cursor: pointer;
+        }
     </style>
 
     <script>
@@ -3074,14 +3108,54 @@
             selectEl.value = ''; // reset selection
         }
 
-        // Registro de Service Worker para PWA con Cache Busting
+        // Registro de Service Worker con notificación de actualización controlada
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register(`/sw.js?v=${APP_VERSION}`)
-                    .then(reg => console.log(`Zentra PWA v${APP_VERSION}: Service Worker registrado`))
-                    .catch(err => console.log('Zentra PWA: Error al registrar SW', err));
+                navigator.serviceWorker.register(`/sw.js?v=${APP_VERSION}`).then(reg => {
+                    // Si ya hay un SW esperando al cargar
+                    if (reg.waiting) {
+                        showUpdateBanner(reg.waiting);
+                    }
+
+                    // Detectar cuando se encuentra un nuevo SW
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                showUpdateBanner(newWorker);
+                            }
+                        });
+                    });
+                });
+            });
+
+            // Recargar la página cuando el nuevo SW tome el control activo
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!refreshing) {
+                    window.location.reload();
+                    refreshing = true;
+                }
+            });
+        }
+
+        function showUpdateBanner(worker) {
+            const banner = document.getElementById('update-banner');
+            const btn = document.getElementById('update-btn');
+            banner.classList.add('show');
+            btn.addEventListener('click', () => {
+                worker.postMessage('SKIP_WAITING');
+                banner.classList.remove('show');
             });
         }
     </script>
+    <!-- Banner de Actualización PWA -->
+    <div id="update-banner">
+        <div class="flex-1">
+            <p class="text-sm font-bold">Nueva versión disponible</p>
+            <p class="text-[10px] opacity-70">Actualizá para ver los últimos cambios.</p>
+        </div>
+        <button id="update-btn">Actualizar ahora</button>
+    </div>
 </body>
 </html>
