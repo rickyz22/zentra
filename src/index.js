@@ -1,4 +1,5 @@
 require('dotenv').config();
+// Update v1.9.11 - Forzado de Redespliegue y Dashboard Fix
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -79,6 +80,11 @@ app.use('/api/clientes', auth, clienteRoutes);
 app.use('/api/agenda', auth, agendaRoutes);
 app.use('/api/templates', auth, templateRoutes);
 console.log('📡 Rutas registradas.');
+
+// Ruta final para asegurar que se sirva el Dashboard (index.html)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
+});
 
 // Iniciar servidor
 app.listen(PORT, () => {
