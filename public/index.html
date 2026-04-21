@@ -76,8 +76,8 @@
 
         /* --- LIGHT MODE --- */
         html.light {
-            /* Fondo general: gris muy suave con temperatura fría */
-            --bg-app:        #EEF2F7;
+            /* Fondo gris más perceptible para contraste solicitado (#f0f2f5) */
+            --bg-app:        #f0f2f5;
             /* Sidebar: siempre oscuro, tinte teal-slate tipo SaaS premium */
             --bg-sidebar:    #1B2B3A;
             --bg-sidebar-text: #94A3B8;
@@ -94,12 +94,12 @@
             --text-primary:  #0F172A;
             --text-secondary:#475569;
             --text-muted:    #94A3B8;
-            /* Bordes con más definición */
-            --border-color:  #E2E8F0;
+            /* Bordes definidos */
+            --border-color:  #E1E8ED;
             --border-input:  #CBD5E1;
-            /* Sombras sutiles sin color */
-            --shadow-card:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-            --shadow-hover:  0 4px 16px rgba(0,0,0,0.08);
+            /* Sombra con peso solicitado */
+            --shadow-card:   0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-hover:  0 8px 30px rgba(0, 0, 0, 0.12);
             --glass-bg:      rgba(255, 255, 255, 0.98);
         }
 
@@ -248,24 +248,76 @@
             opacity: 1;
             transform: translateY(0);
         }
-
-        /* ========================
+          /* ========================
            TARJETAS DE CLIENTES
            ======================== */
         .client-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
+            border-left-width: 6px !important; /* Barra de identidad reforzada */
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: var(--shadow-card);
         }
         .client-card:hover {
-            transform: scale(1.005);
-            border-color: rgba(255, 255, 255, 0.2);
-            box-shadow: none;
+            transform: scale(1.002);
+            border-color: var(--accent-blue);
+            box-shadow: var(--shadow-hover);
         }
-        html.light .client-card:hover {
-            border-color: rgba(0, 0, 0, 0.15);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        
+        /* Ajuste de legibilidad para el saldo en modo claro */
+        html.light .client-card .text-emerald-400 {
+            color: #059669 !important; /* Emerald 600 */
+        }
+        html.light .client-card .bg-emerald-500\/10 {
+            background-color: rgba(16, 185, 129, 0.08) !important;
+        }
+
+        /* 
+           ============================================================
+           FUERZA BRUTA: UNIFICACIÓN VISUAL MODO CLARO (ZENTRA LIGHT)
+           ============================================================ 
+        */
+        html.light .client-card,
+        html.light .client-card div:not(.bg-emerald-500\/10):not(.bg-emerald-50) {
+            background-color: #ffffff !important;
+        }
+
+        /* Paneles Financieros (Capital, Total, Saldo) */
+        html.light .client-card .bg-slate-100\/50,
+        html.light .client-card div.grid.grid-cols-3 {
+            background-color: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+
+        /* Reversión de Textos y Refuerzo de Títulos */
+        html.light .client-card h3,
+        html.light .client-card p:not(.text-slate-500):not(.text-slate-400),
+        html.light .client-card span:not(.text-emerald-600):not(.text-rose-500):not(.text-emerald-400) {
+            color: #1e293b !important;
+        }
+
+        /* Títulos internos reforzados (Labels con el gris sugerido #475569) */
+        html.light .client-card p.text-\[9px\\].font-black,
+        html.light .client-card p.text-\[10px\\].font-bold {
+            color: #475569 !important;
+            letter-spacing: 0.1em;
+            opacity: 1 !important;
+        }
+
+        /* Etiquetas muted */
+        html.light .client-card .text-slate-500,
+        html.light .client-card .text-slate-400 {
+            color: #64748b !important;
+        }
+
+        /* Corregir visibilidad de iconos en modo claro */
+        html.light .client-card .text-slate-300 {
+            color: #1e293b !important;
+        }
+        
+        /* Limpiar bordes top residuales en light mode */
+        html.light #listaClientes > .client-card:first-child {
+            border-top: 1px solid var(--border-color) !important;
         }
         /* Primer cliente también tiene borde top igual que los divisores entre cards */
         #listaClientes > .client-card:first-child {
@@ -1446,7 +1498,7 @@
         }
 
         function formatCurrency(val) {
-            return `$ ${Number(val || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            return `$ ${Number(val || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         }
 
         async function cargarMetricas() {
@@ -1794,14 +1846,14 @@
                     const saldoRestante = totalDevolver - (c.montoPagado || 0);
 
                     pagosInfoHtml = `
-                        <div class="mt-4 bg-slate-900/40 border border-white/5 rounded-2xl p-4 grid grid-cols-3 gap-2 text-center">
+                        <div class="mt-4 bg-slate-100/50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/5 rounded-2xl p-4 grid grid-cols-3 gap-2 text-center">
                             <div>
                                 <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 leading-tight">Capital<br>Original</p>
-                                <p class="text-xs font-black text-slate-300">${formatCurrency(capital)}</p>
+                                <p class="text-xs font-black text-slate-700 dark:text-slate-300">${formatCurrency(capital)}</p>
                             </div>
                             <div class="border-x border-white/5">
                                 <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 leading-tight">Total a<br>Devolver</p>
-                                <p class="text-xs font-black text-slate-200">${formatCurrency(totalDevolver)}</p>
+                                <p class="text-xs font-black text-slate-700 dark:text-slate-200">${formatCurrency(totalDevolver)}</p>
                             </div>
                             <div>
                                 <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 leading-tight">Saldo<br>Restante</p>
@@ -1903,7 +1955,7 @@
                     </div>
                     
                     <!-- Detalle Expandible (Acordeon) -->
-                    <div id="detail-${c._id}" class="hidden px-8 py-6 bg-slate-900/50 border-t border-white/5 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div id="detail-${c._id}" class="hidden px-8 py-6 bg-white dark:bg-slate-900/50 border-t border-slate-100 dark:border-white/5 animate-in fade-in slide-in-from-top-2 duration-200">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                             <div class="space-y-4">
                                 <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Contacto Directo</p>
@@ -2976,7 +3028,7 @@
             txt = txt.replace(/{{tramite}}/g, c.subTipoTramite || c.tramite || c.categoria || '');
             
             let saldoRestante = (c.montoDevolver || c.precioVenta || c.honorarios || 0) - (c.montoPagado || 0);
-            const saldoStr = saldoRestante > 0 ? Number(saldoRestante || 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '0,00';
+            const saldoStr = saldoRestante > 0 ? Number(saldoRestante || 0).toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:0}) : '0';
             txt = txt.replace(/{{monto}}/g, saldoStr);
             
             let proxCobroStr = '-';
