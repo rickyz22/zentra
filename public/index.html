@@ -1573,22 +1573,42 @@
             return `$ ${Number(val || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         }
 
-        async function cargarMetricas() {
+        let metricasCargadasPorPrimeraVez = false;
+        async function cargarMetricas(esReintento = false) {
             try {
+                // Pequeño delay inicial de 1.5s al cargar la página por primera vez (para dar tiempo a Render)
+                if (!metricasCargadasPorPrimeraVez && !esReintento) {
+                    metricasCargadasPorPrimeraVez = true;
+                    await new Promise(r => setTimeout(r, 1500));
+                }
+
                 const token = localStorage.getItem('jony_token');
+                if (!token) return;
+
+                // Verificación de Sesión / Conexión Activa antes de pedir métricas
+                try {
+                    const ping = await fetch('/api/clientes/stats', { method: 'HEAD', headers: { 'Authorization': `Bearer ${token}` } });
+                    if (!ping.ok && ping.status !== 405) {
+                        console.warn('Ping API falló, el servidor podría estar dormido.');
+                    }
+                } catch(e) {
+                    console.warn('No se pudo verificar la API antes de métricas:', e);
+                }
+
                 const res = await fetch('/api/clientes/stats', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                
+                if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+                
                 const data = await res.json();
                 
                 if (!data.ok) return;
-
 
                 const gananciaTramites = data.tramites?.gananciaHistorica || 0;
                 const gananciaPrestamos = data.prestamos?.gananciaRealizada || 0;
                 const gananciaElectro = data.electro?.gananciaRealizada || 0;
                 const totalGanancias = gananciaTramites + gananciaPrestamos + gananciaElectro;
-
 
                 // Update tab inicio
                 if (data.global) {
@@ -1675,9 +1695,36 @@
                 document.body.classList.add('metrics-loaded');
                 
                 lucide.createIcons();
-                lucide.createIcons();
                 syncPrivacyUI();
-            } catch (err) { console.error('Error renderizando clientes:', err); }
+            } catch (err) { 
+                console.error('Error renderizando métricas:', err); 
+                
+                const histCont = document.getElementById('historialMensualContainer');
+                if (histCont) {
+                    histCont.innerHTML = `
+                        <div class="bg-slate-900/50 border border-rose-500/30 rounded-2xl p-8 text-center flex flex-col items-center justify-center space-y-4">
+                            <div class="w-12 h-12 bg-rose-500/10 rounded-full flex items-center justify-center text-rose-500">
+                                <i data-lucide="server-crash" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-rose-400 font-black uppercase tracking-widest text-sm">El servidor no responde</h4>
+                                <p class="text-slate-400 text-xs mt-1 max-w-xs mx-auto">Render podría estar despertando de la inactividad o hay un problema de conexión.</p>
+                            </div>
+                            <button onclick="cargarMetricas(true)" class="mt-4 px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-rose-500/20">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                Reintentar Ahora
+                            </button>
+                            <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-2 animate-pulse">Reintentando automáticamente en 5s...</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                }
+
+                // Reintento automático a los 5 segundos si falla
+                setTimeout(() => {
+                    cargarMetricas(true);
+                }, 5000);
+            }
         }
 
         function calcularPorcentaje() {
