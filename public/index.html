@@ -846,6 +846,16 @@
             border: none;
             cursor: pointer;
         }
+        /* SKELETON LOADERS (Audit UX Fix) */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-sidebar) 25%, rgba(0, 174, 239, 0.05) 50%, var(--bg-sidebar) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
     </style>
 
     <script>
@@ -1104,17 +1114,17 @@
                                 <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="honorarios" id="fHonorarios" placeholder="Honorarios Sugeridos ($) (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
                             </div>
 
-                            <!-- Préstamos -->
+                             <!-- Préstamos -->
                             <div id="fieldsPrestamos" class="hidden grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="montoPrestado" id="fMontoPrestado" placeholder="Monto Prestado ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
-                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="montoDevolver" id="fMontoDevolver" placeholder="Monto a Devolver ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="montoPrestado" id="fMontoPrestado" placeholder="Monto Prestado ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) >= unmaskCurrency(document.getElementById('fMontoPrestado').value)) ? '' : '#ef4444';" name="montoDevolver" id="fMontoDevolver" placeholder="Monto a Devolver ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
                             </div>
 
                             <!-- Electrodomésticos -->
                             <div id="fieldsElectro" class="hidden grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                 <input type="text" name="producto" id="productoElectro" placeholder="Producto/Modelo (Ej: Heladera Patrick)" class="w-full col-span-2 p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
-                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="costoCompra" id="fCostoCompra" placeholder="Costo de Compra ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
-                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="precioVenta" id="fPrecioVenta" placeholder="Precio de Venta ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="costoCompra" id="fCostoCompra" placeholder="Costo de Compra ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) >= unmaskCurrency(document.getElementById('fCostoCompra').value)) ? '' : '#ef4444';" name="precioVenta" id="fPrecioVenta" placeholder="Precio de Venta ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
                             </div>
 
                             <div id="fieldsCuotas" class="space-y-6 hidden">
@@ -1807,7 +1817,20 @@
 
         // --- CLIENTS ---
         async function fetchClientes() {
+            const tableBody = document.getElementById('clientesTableBody');
             try {
+                // SKELETON LOADER (UX Audit)
+                if (tableBody) {
+                    tableBody.innerHTML = Array(5).fill(0).map(() => `
+                        <tr class="animate-pulse">
+                            <td class="px-8 py-6"><div class="h-4 bg-slate-800 rounded w-3/4 skeleton"></div></td>
+                            <td class="px-8 py-6"><div class="h-4 bg-slate-800 rounded w-1/2 skeleton"></div></td>
+                            <td class="px-8 py-6"><div class="h-4 bg-slate-800 rounded w-1/2 skeleton"></div></td>
+                            <td class="px-8 py-6"><div class="h-4 bg-slate-800 rounded w-1/4 skeleton"></div></td>
+                        </tr>
+                    `).join('');
+                }
+
                 const token = localStorage.getItem('jony_token');
                 const res = await fetch('/api/clientes', { headers: { 'Authorization': `Bearer ${token}` } });
                 const data = await res.json();
@@ -1815,7 +1838,10 @@
                 document.getElementById('metric-clientes').textContent = allClientes.length;
                 actualizarContadoresCategorias();
                 filtrarClientes();
-            } catch (err) { console.error(err); }
+            } catch (err) { 
+                console.error(err);
+                if (tableBody) tableBody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-rose-400 font-bold">Error al cargar clientes</td></tr>';
+            }
         }
 
         function actualizarContadoresCategorias() {
@@ -2324,7 +2350,13 @@
 
         // --- AGENDA ---
         async function fetchAgenda() {
+            const wrapper = document.getElementById('mini-agenda-wrapper');
+            const container = document.getElementById('agenda-container');
             try {
+                // SKELETON LOADER (UX Audit)
+                if (wrapper) wrapper.innerHTML = '<div class="p-8 space-y-4"><div class="h-20 bg-slate-800 rounded-3xl skeleton"></div><div class="h-20 bg-slate-800 rounded-3xl skeleton"></div></div>';
+                if (container) container.innerHTML = '<div class="col-span-full p-8 grid grid-cols-1 md:grid-cols-3 gap-6"><div class="h-48 bg-slate-800 rounded-[2.5rem] skeleton"></div><div class="h-48 bg-slate-800 rounded-[2.5rem] skeleton"></div><div class="h-48 bg-slate-800 rounded-[2.5rem] skeleton"></div></div>';
+
                 const token = localStorage.getItem('jony_token');
                 const res = await fetch('/api/agenda', { headers: { 'Authorization': `Bearer ${token}` } });
                 const data = await res.json();
