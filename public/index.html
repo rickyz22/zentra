@@ -12,10 +12,9 @@
     <script>
         // ==========================================
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
-        // Cambiá este número cada vez que subas un fix
-        // para que Jony vea los cambios al instante.
+        // Debe coincidir con APP_VERSION en src/index.js
         // ==========================================
-        const APP_VERSION = '1.9.13'; 
+        const APP_VERSION = '2.0.0'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -41,79 +40,91 @@
         })();
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@400;500;700;900&family=Roboto:wght@300;400;500;700&display=swap');
 
         /* ========================
            SISTEMA DE VARIABLES CSS
            ======================== */
         :root {
-            --accent-blue:  #3b82f6;
-            --accent-green: #10b981;
-            --accent-orange:#f97316;
-            --transition-theme: background-color 0.25s ease, color 0.2s ease, border-color 0.2s ease;
+            /* Acentos Base (Se ajustan por modo) */
+            --accent-blue:  #00AEEF;
+            --accent-green: #00FF7F;
+            --accent-red:   #FF3B3B;
+            --accent-yellow:#FFD700;
+            --transition-theme: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
-        /* --- DARK MODE (default) --- */
+        /* --- DARK MODE (Tecnológico / Deportivo) --- */
         html.dark {
-            --bg-app:        #0d1117;
-            --bg-sidebar:    #0f172a;
-            --bg-card:       #1a2236;
-            --bg-input:      #0d1117;
-            --bg-header:     rgba(13, 17, 23, 0.85);
-            --bg-table-head: #0d1117;
-            --bg-filter-bar: #1a2236;
-            --bg-cat-pill:   #0f172a;
-            --bg-cat-active: #1e293b;
+            --bg-app:        #050814; /* Negro/Azul marino profundo */
+            --bg-sidebar:    #0a0f1c;
+            --bg-card:       linear-gradient(145deg, #0f172a 0%, #0a0f1c 100%);
+            --bg-input:      rgba(0, 174, 239, 0.05);
+            --bg-header:     rgba(5, 8, 20, 0.85);
+            --bg-table-head: #0a0f1c;
+            --bg-filter-bar: #0f172a;
+            --bg-cat-pill:   rgba(0, 174, 239, 0.1);
+            --bg-cat-active: rgba(0, 174, 239, 0.2);
             --text-primary:  #f1f5f9;
             --text-secondary:#94a3b8;
             --text-muted:    #475569;
-            --border-color:  rgba(255, 255, 255, 0.08);
-            --border-input:  rgba(255, 255, 255, 0.06);
-            --shadow-card:   none;
-            --shadow-hover:  none;
-            --glass-bg:      rgba(15, 23, 42, 0.75);
+            --border-color:  rgba(0, 174, 239, 0.15);
+            --border-input:  rgba(0, 174, 239, 0.3);
+            --shadow-card:   0 4px 20px rgba(0, 0, 0, 0.5);
+            --shadow-hover:  0 0 15px rgba(0, 174, 239, 0.3);
+            --glass-bg:      rgba(10, 15, 28, 0.75);
+            
+            --font-heading:  'Orbitron', sans-serif;
+            --font-body:     'Roboto', sans-serif;
+            --glow-blue:     0 0 10px rgba(0, 174, 239, 0.6);
+            --glow-green:    0 0 10px rgba(0, 255, 127, 0.5);
         }
 
-        /* --- LIGHT MODE --- */
+        /* --- LIGHT MODE (Minimalista / Profesional) --- */
         html.light {
-            /* Fondo gris más perceptible para contraste solicitado (#f0f2f5) */
-            --bg-app:        #f0f2f5;
-            /* Sidebar: siempre oscuro, tinte teal-slate tipo SaaS premium */
-            --bg-sidebar:    #1B2B3A;
-            --bg-sidebar-text: #94A3B8;
-            --bg-sidebar-text-active: #FFFFFF;
-            /* Tarjetas: blanco puro con borde definido */
+            --bg-app:        #F5F5F5;
+            --bg-sidebar:    #FFFFFF;
             --bg-card:       #FFFFFF;
             --bg-input:      #F8FAFC;
             --bg-header:     rgba(255, 255, 255, 0.98);
             --bg-table-head: #F1F5F9;
             --bg-filter-bar: #FFFFFF;
             --bg-cat-pill:   #EEF2F7;
-            --bg-cat-active: #FFFFFF;
-            /* Textos */
-            --text-primary:  #0F172A;
-            --text-secondary:#475569;
-            --text-muted:    #94A3B8;
-            /* Bordes definidos */
+            --bg-cat-active: #E2E8F0;
+            
+            --text-primary:  #333333;
+            --text-secondary:#555555;
+            --text-muted:    #888888;
+            
             --border-color:  #E1E8ED;
             --border-input:  #CBD5E1;
-            /* Sombra con peso solicitado */
-            --shadow-card:   0 4px 20px rgba(0, 0, 0, 0.08);
-            --shadow-hover:  0 8px 30px rgba(0, 0, 0, 0.12);
+            
+            --shadow-card:   none; /* Flat design */
+            --shadow-hover:  0 4px 12px rgba(0,0,0,0.05); /* Sutil */
             --glass-bg:      rgba(255, 255, 255, 0.98);
+            
+            --font-heading:  'Inter', sans-serif;
+            --font-body:     'Inter', sans-serif;
+            --glow-blue:     none;
+            --glow-green:    none;
         }
 
         /* ========================
            BASE
            ======================== */
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font-body);
             background-color: var(--bg-app);
             color: var(--text-primary);
             overflow-x: hidden;
             width: 100%;
             position: relative;
             transition: var(--transition-theme);
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-heading);
+            letter-spacing: 0.5px;
         }
 
         * { box-sizing: border-box; }
@@ -137,27 +148,27 @@
 
         /* ========================
            SIDEBAR LIGHT MODE
-           Siempre oscuro, tinte teal-slate
+           Plano, texto gris, sin dark backgrounds
            ======================== */
         html.light aside {
-            background-color: #1B2B3A !important;
-            border-right: 1px solid rgba(255,255,255,0.06);
+            background-color: var(--bg-sidebar) !important;
+            border-right: 1px solid var(--border-color);
         }
         html.light aside .sidebar-item {
-            color: #64748B;
+            color: var(--text-secondary);
         }
         html.light aside .sidebar-item:hover {
-            background: rgba(255,255,255,0.07);
-            color: #CBD5E1;
+            background: #F1F5F9;
+            color: var(--text-primary);
         }
         html.light aside .sidebar-item.active {
-            background: linear-gradient(90deg, rgba(59,130,246,0.18) 0%, rgba(59,130,246,0) 100%);
-            border-left: 3px solid #3B82F6;
-            color: #FFFFFF;
+            background: #EEF2F7;
+            border-left: 3px solid var(--accent-blue);
+            color: var(--accent-blue);
         }
-        /* Titulo Zentra siempre blanco sobre sidebar oscuro */
+        /* Titulo Zentra Light */
         html.light #sidebar-title {
-            color: #FFFFFF !important;
+            color: var(--text-primary) !important;
         }
         /* Calculadora sidebar en light mode */
         html.light .calc-wrapper {
@@ -187,6 +198,22 @@
             background-color: var(--bg-sidebar);
             border-right: 1px solid var(--border-color);
             transition: background-color 0.25s ease;
+        }
+        
+        html.dark aside .sidebar-item {
+            transition: all 0.3s ease;
+        }
+        html.dark aside .sidebar-item:hover {
+            box-shadow: inset 4px 0 0 var(--accent-blue), 0 0 15px rgba(0, 174, 239, 0.1);
+            color: var(--accent-blue);
+            text-shadow: 0 0 8px rgba(0, 174, 239, 0.8);
+            background: rgba(0, 174, 239, 0.05);
+        }
+        html.dark aside .sidebar-item.active {
+            background: linear-gradient(90deg, rgba(0, 174, 239, 0.15) 0%, transparent 100%);
+            border-left: 3px solid var(--accent-blue);
+            color: var(--accent-blue);
+            text-shadow: var(--glow-blue);
         }
 
         /* ========================
@@ -249,18 +276,24 @@
             transform: translateY(0);
         }
           /* ========================
-           TARJETAS DE CLIENTES
+           TARJETAS DE CLIENTES Y MÉTRICAS
            ======================== */
-        .client-card {
+        .client-card, .metrics-grid-item {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-left-width: 6px !important; /* Barra de identidad reforzada */
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: var(--shadow-card);
         }
-        .client-card:hover {
-            transform: scale(1.002);
+        .client-card { border-left-width: 6px !important; }
+        
+        html.dark .client-card:hover, html.dark .metrics-grid-item:hover {
+            transform: scale(1.005);
             border-color: var(--accent-blue);
+            box-shadow: var(--shadow-hover);
+        }
+        
+        html.light .client-card:hover, html.light .metrics-grid-item:hover {
+            transform: translateY(-2px);
             box-shadow: var(--shadow-hover);
         }
         
@@ -358,12 +391,12 @@
         }
 
         /* ========================
-           SIDEBAR ITEM
+           SIDEBAR ITEM (MÓVIL BASE)
            ======================== */
         .sidebar-item.active {
-            background: linear-gradient(90deg, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0) 100%);
+            background: linear-gradient(90deg, rgba(0, 174, 239, 0.12) 0%, transparent 100%);
             border-left: 3px solid var(--accent-blue);
-            color: #fff;
+            color: var(--accent-blue);
         }
 
         /* ========================
@@ -388,17 +421,19 @@
            NAVIGATION MOBILE
            ======================== */
         .active-nav-mobile {
-            color: var(--accent-blue);
-            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));
+            color: var(--accent-blue) !important;
+        }
+        html.dark .active-nav-mobile {
+            filter: drop-shadow(0 0 8px rgba(0, 174, 239, 0.6));
         }
 
         /* ========================
            SUCCESS PULSE
            ======================== */
         @keyframes successPulse {
-            0%   { box-shadow: 0 0 0  0px rgba(16, 185, 129, 0.4); }
-            70%  { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0  0px rgba(16, 185, 129, 0); }
+            0%   { box-shadow: 0 0 0  0px rgba(0, 255, 127, 0.4); }
+            70%  { box-shadow: 0 0 0 15px rgba(0, 255, 127, 0); }
+            100% { box-shadow: 0 0 0  0px rgba(0, 255, 127, 0); }
         }
         .success-pulse { animation: successPulse 1s ease-out; }
 
@@ -484,65 +519,73 @@
             background: var(--bg-cat-pill);
             border-color: var(--border-color);
             color: var(--text-secondary);
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
         }
         #btn-theme:hover {
             background: var(--accent-blue);
             color: #fff;
             border-color: transparent;
+            box-shadow: var(--shadow-hover);
         }
 
         /* ========================
-           CALCULADORA (LIGHT)
+           CALCULADORA ARCA Y MINI AGENDA (DARK/LIGHT)
            ======================== */
+        html.dark .calc-wrapper {
+            background: rgba(0, 174, 239, 0.03) !important;
+            border: 1px solid rgba(0, 174, 239, 0.2) !important;
+            box-shadow: inset 0 0 20px rgba(0, 174, 239, 0.05), 0 4px 15px rgba(0,0,0,0.4) !important;
+        }
+        html.dark .calc-wrapper input, html.dark .calc-wrapper button {
+            background: rgba(0, 0, 0, 0.3) !important;
+            border: 1px solid rgba(0, 174, 239, 0.3) !important;
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5), inset -1px -1px 2px rgba(255,255,255,0.05); /* Neumorfismo oscuro */
+        }
+        
         html.light .calc-wrapper {
-            background-color: #FFFFFF !important;
-            border: 1px solid #D1D5DB !important;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.07) !important;
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            box-shadow: none !important;
         }
         html.light .calc-wrapper input {
-            background-color: #FFFFFF !important;
-            border: 1px solid #D1D5DB !important;
-            color: #111827 !important;
+            background-color: var(--bg-input) !important;
+            border: 1px solid var(--border-input) !important;
+            color: var(--text-primary) !important;
         }
         html.light .calc-wrapper h4 {
-            color: #6B7280 !important;
+            color: var(--text-secondary) !important;
         }
 
-        /* ========================
-           TARJETAS MINI AGENDA
-           ======================== */
+        /* TARJETAS MINI AGENDA LIGHT */
         html.light #mini-agenda-wrapper {
-            background-color: #1B2B3A !important;
-            border: 1px solid rgba(255,255,255,0.08) !important;
-            color: #E2E8F0 !important;
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-primary) !important;
         }
         html.light #mini-agenda-wrapper p {
-            color: #94A3B8 !important;
+            color: var(--text-secondary) !important;
             opacity: 1 !important;
         }
 
         /* ========================
-           LIGHT MODE - SECCIONES CON COLOR SIDEBAR
-           Todas las secciones usan #1B2B3A igual que el sidebar
-           para crear jerarquía visual en modo claro
+           LIGHT MODE - LIMPIEZA DE SECCIONES
+           Todos usan colores claros, sin dark backgrounds
            ======================== */
 
-        /* --- MÉTRICAS: bloques contenedores --- */
+        /* --- MÉTRICAS --- */
         html.light #tab-metricas > div {
-            background-color: #1B2B3A !important;
-            border-color: rgba(255,255,255,0.08) !important;
+            background-color: var(--bg-card) !important;
+            border-color: var(--border-color) !important;
         }
         html.light #tab-metricas h3 {
-            color: #94A3B8 !important;
+            color: var(--text-primary) !important;
         }
-        /* Cards internas de métricas: ligeramente más claro que el contenedor */
         html.light #tab-metricas .metrics-grid-item:not(.bg-gradient-to-br) {
-            background-color: #243447 !important;
-            border-color: rgba(255,255,255,0.08) !important;
+            background-color: var(--bg-input) !important;
+            border-color: var(--border-color) !important;
         }
         html.light #tab-metricas .metrics-grid-item h4 {
-            color: #94A3B8 !important;
+            color: var(--text-secondary) !important;
         }
 
         /* ========================
@@ -3194,18 +3237,149 @@
             });
         }
 
-        function showUpdateBanner(worker) {
-            const banner = document.getElementById('update-banner');
-            const btn = document.getElementById('update-btn');
-            banner.classList.add('show');
-            btn.addEventListener('click', () => {
-                banner.style.display = 'none'; // Ocultar instantáneamente
-                worker.postMessage('SKIP_WAITING');
-                banner.classList.remove('show');
-            });
+        // ====================================================
+        // SISTEMA DE VERSIONES: Chequeo contra el servidor
+        // ====================================================
+        async function checkVersion() {
+            try {
+                const res = await fetch('/api/version');
+                if (!res.ok) return;
+                const data = await res.json();
+                const serverVersion = data.version;
+                const localVersion = localStorage.getItem('zentra_app_version');
+
+                if (localVersion !== serverVersion) {
+                    // Nueva versión detectada: mostrar banner
+                    showVersionBanner(serverVersion);
+                }
+            } catch (e) {
+                console.warn('No se pudo verificar la versión del servidor:', e);
+            }
         }
+
+        function showVersionBanner(serverVersion) {
+            const banner = document.getElementById('version-update-banner');
+            if (!banner) return;
+            banner.classList.add('show');
+
+            document.getElementById('version-update-btn').onclick = () => {
+                localStorage.setItem('zentra_app_version', serverVersion);
+                banner.classList.remove('show');
+                // Pequeño delay para que el banner se cierre antes de recargar
+                setTimeout(() => window.location.reload(true), 300);
+            };
+
+            document.getElementById('version-dismiss-btn').onclick = () => {
+                banner.classList.remove('show');
+            };
+        }
+
+        // Ejecutar el chequeo de versión al cargar la página
+        window.addEventListener('load', () => {
+            setTimeout(checkVersion, 2000); // 2s de delay para esperar que Render despierte
+        });
     </script>
-    <!-- Banner de Actualización PWA -->
+
+    <!-- ===================================================
+         BANNER DE ACTUALIZACIÓN DE VERSIÓN (Chequeo API)
+         =================================================== -->
+    <style>
+        #version-update-banner {
+            position: fixed;
+            top: -120px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 99999;
+            width: 92%;
+            max-width: 480px;
+            transition: top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        #version-update-banner.show {
+            top: 16px;
+        }
+        html.dark #version-update-banner .banner-inner {
+            background: linear-gradient(135deg, #0a0f1c 0%, #0f172a 100%);
+            border: 1px solid rgba(0, 174, 239, 0.4);
+            box-shadow: 0 0 30px rgba(0, 174, 239, 0.2), 0 10px 40px rgba(0, 0, 0, 0.6);
+        }
+        html.dark #version-update-banner .banner-title {
+            color: #00AEEF;
+            text-shadow: 0 0 10px rgba(0, 174, 239, 0.6);
+        }
+        html.dark #version-update-banner .banner-subtitle {
+            color: #94a3b8;
+        }
+        html.dark #version-update-banner .btn-update {
+            background: linear-gradient(90deg, #00AEEF, #0077B6);
+            box-shadow: 0 0 15px rgba(0, 174, 239, 0.4);
+            color: #fff;
+        }
+        html.dark #version-update-banner .btn-update:hover {
+            box-shadow: 0 0 25px rgba(0, 174, 239, 0.7);
+            transform: scale(1.03);
+        }
+        html.dark #version-update-banner .btn-dismiss {
+            color: #475569;
+        }
+        html.dark #version-update-banner .btn-dismiss:hover {
+            color: #94a3b8;
+        }
+        html.light #version-update-banner .banner-inner {
+            background: #FFFFFF;
+            border: 1px solid #E1E8ED;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+        }
+        html.light #version-update-banner .banner-title {
+            color: #00AEEF;
+        }
+        html.light #version-update-banner .banner-subtitle {
+            color: #555555;
+        }
+        html.light #version-update-banner .btn-update {
+            background: #00AEEF;
+            color: #fff;
+        }
+        html.light #version-update-banner .btn-update:hover {
+            background: #0077B6;
+            transform: scale(1.02);
+        }
+        html.light #version-update-banner .btn-dismiss {
+            color: #888888;
+        }
+        html.light #version-update-banner .btn-dismiss:hover {
+            color: #555555;
+        }
+        .btn-update, .btn-dismiss {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+    </style>
+    <div id="version-update-banner">
+        <div class="banner-inner" style="border-radius: 16px; padding: 16px 20px; display: flex; align-items: center; gap: 16px;">
+            <!-- Icono -->
+            <div style="flex-shrink:0; width:40px; height:40px; border-radius:12px; background:rgba(0,174,239,0.15); display:flex; align-items:center; justify-content:center;">
+                <i data-lucide="zap" style="width:20px; height:20px; color:#00AEEF;"></i>
+            </div>
+            <!-- Texto -->
+            <div style="flex:1; min-width:0;">
+                <p class="banner-title" style="font-family: var(--font-heading, 'Inter'); font-size:13px; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; margin:0;">&#9889; ¡Nueva versión de Zentra!</p>
+                <p class="banner-subtitle" style="font-size:11px; margin:2px 0 0; opacity:0.85;">Hay mejoras disponibles. Actualizate para verlas.</p>
+            </div>
+            <!-- Botones -->
+            <div style="display:flex; gap:8px; flex-shrink:0; align-items:center;">
+                <button id="version-update-btn" class="btn-update" style="padding:8px 16px; border-radius:10px; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:0.08em;">
+                    Actualizar
+                </button>
+                <button id="version-dismiss-btn" class="btn-dismiss" style="padding:8px; border-radius:10px; background:transparent; font-size:18px; line-height:1;">
+                    &times;
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Banner de Actualización PWA (Service Worker) -->
     <div id="update-banner">
         <div class="flex-1">
             <p class="text-sm font-bold">Nueva versión disponible</p>

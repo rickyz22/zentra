@@ -1,5 +1,9 @@
 require('dotenv').config();
-// Update v1.9.12 - FINAL DEPLOY FIX - NO DEBUG ROUTES
+// ==========================================
+// VERSIÓN CANÓNICA DEL SERVIDOR
+// Actualizá este número con cada deploy
+// ==========================================
+const APP_VERSION = '2.0.0';
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -76,6 +80,11 @@ async function seedUser() {
         console.error('❌ Error al crear usuario inicial:', error);
     }
 }
+
+// Ruta pública de versión (sin auth, para chequeo de caché en el frontend)
+app.get('/api/version', (req, res) => {
+    res.json({ version: APP_VERSION, ok: true });
+});
 
 // Rutas de la API (prefijo /api)
 console.log('📡 Registrando rutas...');
