@@ -1460,6 +1460,12 @@
         let personalesExpanded = true; // Jony: Nuevo estado para acordeón
         let allTemplates = [];
         let filtroCategoriaActual = 'Todos';
+        
+        // --- VARIABLES DE PAGINACIÓN (Audit v2) ---
+        let currentPage = 1;
+        let totalPages = 1;
+        let isLoadingMore = false;
+        let hasMore = true;
 
         // --- FUNCIONES UTILITARIAS ---
         function generarLinkWhatsApp(telefono, mensaje = '') {
@@ -1591,6 +1597,11 @@
         }
 
         function switchTab(tab) {
+            // Haptic Feedback (Audit v2) - Solo en móviles
+            if (window.navigator.vibrate) {
+                window.navigator.vibrate(10);
+            }
+
             // Ocultar todos los contenidos de pestañas
             document.querySelectorAll('.tab-content').forEach(s => {
                 s.classList.add('hidden');
@@ -1816,10 +1827,15 @@
         }
 
         // --- CLIENTS ---
-        async function fetchClientes() {
+        async function fetchClientes(isInitial = true) {
+            if (isLoadingMore || (!hasMore && !isInitial)) return;
+            
             const tableBody = document.getElementById('clientesTableBody');
-            try {
-                // SKELETON LOADER (UX Audit)
+            if (isInitial) {
+                currentPage = 1;
+                allClientes = [];
+                hasMore = true;
+                // SKELETON LOADER inicial
                 if (tableBody) {
                     tableBody.innerHTML = Array(5).fill(0).map(() => `
                         <tr class="animate-pulse">
@@ -1830,24 +1846,44 @@
                         </tr>
                     `).join('');
                 }
+            }
 
+            isLoadingMore = true;
+            try {
                 const token = localStorage.getItem('jony_token');
-                const res = await fetch('/api/clientes', { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch(`/api/clientes?page=${currentPage}&limit=20`, { 
+                    headers: { 'Authorization': `Bearer ${token}` } 
+                });
                 const data = await res.json();
-                allClientes = data.clientes || [];
-                document.getElementById('metric-clientes').textContent = allClientes.length;
-                actualizarContadoresCategorias();
-                filtrarClientes();
+                
+                if (data.ok) {
+                    const nuevosClientes = data.clientes || [];
+                    if (isInitial) {
+                        allClientes = nuevosClientes;
+                    } else {
+                        allClientes = [...allClientes, ...nuevosClientes];
+                    }
+                    
+                    totalPages = data.totalPages;
+                    hasMore = currentPage < totalPages;
+                    currentPage++;
+
+                    document.getElementById('metric-clientes').textContent = data.total || allClientes.length;
+                    actualizarContadoresCategorias(data.total);
+                    renderClientes();
+                }
             } catch (err) { 
                 console.error(err);
-                if (tableBody) tableBody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-rose-400 font-bold">Error al cargar clientes</td></tr>';
+                if (isInitial && tableBody) tableBody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-rose-400 font-bold">Error al cargar clientes</td></tr>';
+            } finally {
+                isLoadingMore = false;
             }
         }
 
-        function actualizarContadoresCategorias() {
+        function actualizarContadoresCategorias(totalServer) {
             if (!allClientes) return;
             const counts = {
-                Todos: allClientes.length,
+                Todos: totalServer || allClientes.length,
                 Préstamos: allClientes.filter(c => c.categoria === 'Préstamos').length,
                 Electro: allClientes.filter(c => c.categoria === 'Electrodomésticos').length,
                 Trámites: allClientes.filter(c => c.categoria === 'Trámites').length
@@ -1858,6 +1894,16 @@
             if(document.getElementById('countCatElectro')) document.getElementById('countCatElectro').textContent = `(${counts.Electro})`;
             if(document.getElementById('countCatTramites')) document.getElementById('countCatTramites').textContent = `(${counts.Trámites})`;
         }
+
+        // --- INFINITE SCROLL (Audit v2) ---
+        window.addEventListener('scroll', () => {
+            const currentTab = document.querySelector('.tab-content.active');
+            if (currentTab && currentTab.id === 'tab-clientes') {
+                if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+                    fetchClientes(false);
+                }
+            }
+        });
 
         let filtroSoloMorosos = false;
 
