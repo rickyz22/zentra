@@ -52,7 +52,8 @@ exports.crearCliente = async (req, res) => {
 // Traer todos los clientes de la base de datos
 exports.obtenerClientes = async (req, res) => {
     try {
-        const clientes = await Cliente.find().sort({ fecha: -1 });
+        // Optimización: Excluir historialPagos del listado general para reducir peso de la respuesta
+        const clientes = await Cliente.find().select('-historialPagos').sort({ fecha: -1 });
         res.status(200).json({
             ok: true,
             count: clientes.length,
@@ -254,54 +255,68 @@ exports.eliminarPago = async (req, res) => {
 // Obtener estadísticas y recaudación corregida para GMT-3 (Argentina)
 exports.obtenerEstadisticas = async (req, res) => {
     try {
-        // 1. Conteo de clientes por tipo de trámite
-        const results = await Cliente.aggregate([
-            { $group: { _id: '$tramite', count: { $sum: 1 } } }
-        ]);
-        const stats = {};
-        results.forEach(item => { if (item._id) stats[item._id] = item.count; });
-
-        // 2. Ventanas de tiempo en Argentina (GMT-3)
-        // MongoDB almacena en UTC. Argentina = UTC-3, así que sumamos 3h para compensar
-        // y luego definimos los rangos correctos.
-        const TZ_OFFSET_MS = 3 * 60 * 60 * 1000; // 3 horas en milisegundos
-
+        // Ventanas de tiempo en Argentina (GMT-3)
+        const TZ_OFFSET_MS = 3 * 60 * 60 * 1000;
         const ahoraUTC = new Date();
-        // "Ahora" en hora Argentina
         const ahoraAR  = new Date(ahoraUTC.getTime() - TZ_OFFSET_MS);
 
-        // Inicio de HOY en hora Argentina (00:00:00), convertido a UTC para MongoDB
         const todayStart = new Date(Date.UTC(
             ahoraAR.getUTCFullYear(),
             ahoraAR.getUTCMonth(),
             ahoraAR.getUTCDate(),
-            3, 0, 0, 0   // AR 00:00 = UTC 03:00
+            3, 0, 0, 0
         ));
         const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
 
-        // Inicio del MES actual en hora Argentina
         const monthStart = new Date(Date.UTC(
             ahoraAR.getUTCFullYear(),
             ahoraAR.getUTCMonth(),
             1,
-            3, 0, 0, 0   // AR 00:00 = UTC 03:00
+            3, 0, 0, 0
         ));
 
-        // 3. Honorarios desde AGENDA (fuente primaria - ya tiene fecha de vencimiento)
-        const agendaFinance = await Agenda.aggregate([
-            {
-                $facet: {
-                    hoy: [
-                        { $match: { fecha: { $gte: todayStart, $lt: todayEnd }, honorarios: { $gt: 0 } } },
-                        { $group: { _id: '$clienteId', total: { $sum: '$honorarios' } } }
-                    ],
-                    mes: [
-                        { $match: { fecha: { $gte: monthStart }, honorarios: { $gt: 0 } } },
-                        { $group: { _id: '$clienteId', total: { $sum: '$honorarios' } } }
-                    ]
+        // PARALELIZACIÓN DE QUERIES (Audit Fix)
+        const [
+            results,
+            agendaFinance,
+            clientesHoy,
+            clientesMes,
+            clientesConPagos,
+            agendaTotalAgg,
+            todosClientesTramites,
+            todosPreEles,
+            todaAgenda,
+            todosTramites,
+            todosPreElesGanancia
+        ] = await Promise.all([
+            Cliente.aggregate([{ $group: { _id: '$tramite', count: { $sum: 1 } } }]),
+            Agenda.aggregate([
+                {
+                    $facet: {
+                        hoy: [
+                            { $match: { fecha: { $gte: todayStart, $lt: todayEnd }, honorarios: { $gt: 0 } } },
+                            { $group: { _id: '$clienteId', total: { $sum: '$honorarios' } } }
+                        ],
+                        mes: [
+                            { $match: { fecha: { $gte: monthStart }, honorarios: { $gt: 0 } } },
+                            { $group: { _id: '$clienteId', total: { $sum: '$honorarios' } } }
+                        ]
+                    }
                 }
-            }
+            ]),
+            Cliente.find({ honorarios: { $gt: 0 }, createdAt: { $gte: todayStart, $lt: todayEnd } }),
+            Cliente.find({ honorarios: { $gt: 0 }, createdAt: { $gte: monthStart } }),
+            Cliente.find({ 'historialPagos.fecha': { $gte: monthStart } }),
+            Agenda.aggregate([{ $group: { _id: '$clienteId', total: { $sum: '$honorarios' } } }]),
+            Cliente.find({ $or: [{ categoria: 'Trámites' }, { categoria: { $exists: false } }] }),
+            Cliente.find({ categoria: { $in: ['Préstamos', 'Electrodomésticos'] } }),
+            Agenda.find({ honorarios: { $gt: 0 } }),
+            Cliente.find({ honorarios: { $gt: 0 } }),
+            Cliente.find({ categoria: { $in: ['Préstamos', 'Electrodomésticos'] } })
         ]);
+
+        const stats = {};
+        results.forEach(item => { if (item._id) stats[item._id] = item.count; });
 
         // Clientes que ya están cubiertos por la agenda (para evitar doble conteo)
         const clientesEnAgendaHoy = new Set(
@@ -314,16 +329,6 @@ exports.obtenerEstadisticas = async (req, res) => {
         const agendaHoy = agendaFinance[0].hoy.reduce((s, x) => s + x.total, 0);
         const agendaMes = agendaFinance[0].mes.reduce((s, x) => s + x.total, 0);
 
-        // 4. Honorarios desde CLIENTES (usando fecha de creación, sin duplicar con agenda)
-        const clientesHoy = await Cliente.find({
-            honorarios: { $gt: 0 },
-            createdAt: { $gte: todayStart, $lt: todayEnd }
-        });
-        const clientesMes = await Cliente.find({
-            honorarios: { $gt: 0 },
-            createdAt: { $gte: monthStart }
-        });
-
         const clientesHoyExtra = clientesHoy
             .filter(c => !clientesEnAgendaHoy.has(c._id.toString()))
             .reduce((s, c) => s + (c.honorarios || 0), 0);
@@ -332,14 +337,9 @@ exports.obtenerEstadisticas = async (req, res) => {
             .filter(c => !clientesEnAgendaMes.has(c._id.toString()))
             .reduce((s, c) => s + (c.honorarios || 0), 0);
 
-        // 5. NUEVO: Flujo de Caja (Pagos de Préstamos y Electrodomésticos HOY y ESTE MES)
-        const clientesConPagos = await Cliente.find({ 
-            'historialPagos.fecha': { $gte: monthStart } 
-        });
-
+        // 5. NUEVO: Flujo de Caja
         let pagosRegistradosHoy = 0;
         let pagosRegistradosMes = 0;
-
         let presHoy = 0, presMes = 0;
         let elecHoy = 0, elecMes = 0;
 
@@ -365,38 +365,20 @@ exports.obtenerEstadisticas = async (req, res) => {
             }
         });
 
-        // Solo trámites
         const tramitesRecaudacionHoy = agendaHoy + clientesHoyExtra;
         const tramitesRecaudacionMes = agendaMes + clientesMesExtra;
 
-        // Total Global
         const globalRecaudacionHoy = tramitesRecaudacionHoy + pagosRegistradosHoy;
         const globalRecaudacionMes = tramitesRecaudacionMes + pagosRegistradosMes;
 
-        // Histórico de Trámites
-        const agendaTotalAgg = await Agenda.aggregate([{ $group: { _id: '$clienteId', total: { $sum: '$honorarios' } } }]);
         const agendaTotales = agendaTotalAgg.reduce((s, x) => s + (Number(x.total) || 0), 0);
         const clientesEnAgendaTodos = new Set(agendaTotalAgg.map(x => x._id ? x._id.toString() : null).filter(Boolean));
 
-        const todosClientesTramites = await Cliente.find({ 
-            $or: [{ categoria: 'Trámites' }, { categoria: { $exists: false } }] 
-        });
-
-
         const clientesHistoExtra = todosClientesTramites
             .filter(c => !clientesEnAgendaTodos.has(c._id.toString()))
-            .reduce((s, c) => {
-                const hon = Number(c.honorarios) || 0;
-
-                return s + hon;
-            }, 0);
+            .reduce((s, c) => s + (Number(c.honorarios) || 0), 0);
         
         const gananciaHistoricaTramites = agendaTotales + clientesHistoExtra;
-
-        // Nuevas métricas "Capital en Calle" para Préstamos / Electro
-        const todosPreEles = await Cliente.find({
-            categoria: { $in: ['Préstamos', 'Electrodomésticos'] }
-        });
 
         let mPrestamos = { recaudacionHoy: presHoy, recaudacionMes: presMes, capitalEnCalle: 0, gananciaPendiente: 0, gananciaRealizada: 0 };
         let mElectro = { recaudacionHoy: elecHoy, recaudacionMes: elecMes, capitalEnCalle: 0, gananciaPendiente: 0, gananciaRealizada: 0 };
@@ -427,7 +409,7 @@ exports.obtenerEstadisticas = async (req, res) => {
             if (c.estado === 'Cerrado' || c.estado === 'Pagado') {
                 cap = 0; 
                 gPend = 0;
-                gReal = Math.max(0, retorno - costo); // Asumir liquidación final completada
+                gReal = Math.max(0, retorno - costo);
             }
 
             typeObj.capitalEnCalle = Math.round((typeObj.capitalEnCalle + cap) * 100) / 100;
@@ -435,7 +417,7 @@ exports.obtenerEstadisticas = async (req, res) => {
             typeObj.gananciaRealizada = Math.round((typeObj.gananciaRealizada + gReal) * 100) / 100;
         });
 
-        // 6. HISTORIAL MENSUAL DE GANANCIAS
+        // 6. HISTORIAL MENSUAL
         const historialMap = {};
         const getMonthKey = (dateStr) => {
             if (!dateStr) return null;
@@ -450,8 +432,6 @@ exports.obtenerEstadisticas = async (req, res) => {
             if (!historialMap[m]) historialMap[m] = { tramites: 0, prestamos: 0, electro: 0 };
         };
 
-        // 6.1 Trámites (Agenda + Clientes)
-        const todaAgenda = await Agenda.find({ honorarios: { $gt: 0 } });
         const agendaIds = new Set();
         todaAgenda.forEach(a => {
             if (a.clienteId) agendaIds.add(a.clienteId.toString());
@@ -459,7 +439,6 @@ exports.obtenerEstadisticas = async (req, res) => {
             if (mk) { initMonth(mk); historialMap[mk].tramites += (Number(a.honorarios) || 0); }
         });
 
-        const todosTramites = await Cliente.find({ honorarios: { $gt: 0 } });
         todosTramites.forEach(c => {
             if (!agendaIds.has(c._id.toString())) {
                 const mk = getMonthKey(c.createdAt || c.fecha);
@@ -467,19 +446,15 @@ exports.obtenerEstadisticas = async (req, res) => {
             }
         });
 
-        // 6.2 Préstamos / Electro (Barrido Cronológico de Capital)
-        const todosPreElesGanancia = await Cliente.find({ categoria: { $in: ['Préstamos', 'Electrodomésticos'] } });
         todosPreElesGanancia.forEach(c => {
             if (!c.historialPagos || c.historialPagos.length === 0) return;
             const costo = c.categoria === 'Préstamos' ? (Number(c.montoPrestado) || 0) : (Number(c.costoCompra) || 0);
-            
             const pagosOrdenados = [...c.historialPagos].sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
             let capitalRecuperado = 0;
             
             pagosOrdenados.forEach(p => {
                 const pagoFisico = Number(p.monto) || 0;
                 let gananciaNetaDelPago = 0;
-
                 if (capitalRecuperado < costo) {
                     const porcionCapital = Math.min(pagoFisico, costo - capitalRecuperado);
                     gananciaNetaDelPago = Math.max(0, pagoFisico - porcionCapital);
@@ -487,7 +462,6 @@ exports.obtenerEstadisticas = async (req, res) => {
                 } else {
                     gananciaNetaDelPago = pagoFisico;
                 }
-
                 if (gananciaNetaDelPago > 0) {
                     const mk = getMonthKey(p.fecha);
                     if (mk) {

@@ -4,13 +4,14 @@ const clienteController = require('../controllers/clienteController');
 const auth = require('../middleware/auth');
 
 // Rutas configuradas para /api/clientes
-router.post('/', auth, clienteController.crearCliente);
-router.get('/', auth, clienteController.obtenerClientes);
-router.get('/stats', auth, clienteController.obtenerEstadisticas);
-router.get('/export', auth, clienteController.exportarDatos);
-router.put('/:id', auth, clienteController.actualizarCliente);
-router.post('/:id/pago', auth, clienteController.registrarPago);
-router.delete('/:id/pago/:pagoId', auth, clienteController.eliminarPago);
-router.delete('/:id', auth, clienteController.eliminarCliente);
+// El middleware 'auth' ya se aplica en index.js al montar el router
+router.post('/', clienteController.crearCliente);
+router.get('/', clienteController.obtenerClientes);
+router.get('/stats', clienteController.obtenerEstadisticas);
+router.get('/export', clienteController.exportarDatos);
+router.put('/:id', clienteController.actualizarCliente);
+router.post('/:id/pago', clienteController.registrarPago);
+router.delete('/:id/pago/:pagoId', clienteController.eliminarPago);
+router.delete('/:id', clienteController.eliminarCliente);
 
 module.exports = router;

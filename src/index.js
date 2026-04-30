@@ -3,7 +3,7 @@ require('dotenv').config();
 // VERSIÓN CANÓNICA DEL SERVIDOR
 // Actualizá este número con cada deploy
 // ==========================================
-const APP_VERSION = '2.0.0';
+const APP_VERSION = '2.1.0';
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -43,7 +43,12 @@ app.use('/assets', express.static('assets'));
 app.get('/favicon.ico', (req, res) => res.sendFile(path.join(__dirname, '../assets/logo.png')));
 
 // Conexión a MongoDB (Usando variable de entorno para seguridad en producción)
-const mongoURI = process.env.MONGODB_URI || "mongodb://admin_jony:jony1234@ac-ur15yb9-shard-00-00.rke4rvj.mongodb.net:27017,ac-ur15yb9-shard-00-01.rke4rvj.mongodb.net:27017,ac-ur15yb9-shard-00-02.rke4rvj.mongodb.net:27017/crm_jony?ssl=true&replicaSet=atlas-tocu41-shard-0&authSource=admin&retryWrites=true&w=majority";
+const mongoURI = process.env.MONGODB_URI;
+
+if (!mongoURI) {
+    console.error('❌ ERROR: MONGODB_URI no está definida en el entorno.');
+    process.exit(1);
+}
 
 // Configuración de Mongoose con opciones robustas
 const mongooseOptions = {
@@ -65,16 +70,24 @@ mongoose.connect(mongoURI, mongooseOptions)
 // Función para crear el usuario inicial si no existe
 async function seedUser() {
     try {
-        const jony = await User.findOne({ username: 'jony' });
-        if (!jony) {
-            const hashedPassword = await bcrypt.hash('schornig22', 10);
+        const adminUsername = process.env.ADMIN_USERNAME || 'jony';
+        const adminPassword = process.env.ADMIN_PASSWORD;
+        
+        if (!adminPassword) {
+            console.warn('⚠️ No se ha definido ADMIN_PASSWORD en el entorno.');
+            return;
+        }
+
+        const user = await User.findOne({ username: adminUsername });
+        if (!user) {
+            const hashedPassword = await bcrypt.hash(adminPassword, 10);
             await User.create({
-                username: 'jony',
+                username: adminUsername,
                 password: hashedPassword
             });
-            console.log('👤 Usuario "jony" creado exitosamente.');
+            console.log(`👤 Usuario "${adminUsername}" creado exitosamente.`);
         } else {
-            console.log('👤 Usuario "jony" verificado.');
+            console.log(`👤 Usuario "${adminUsername}" verificado.`);
         }
     } catch (error) {
         console.error('❌ Error al crear usuario inicial:', error);

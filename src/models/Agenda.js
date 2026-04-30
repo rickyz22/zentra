@@ -26,9 +26,19 @@ const agendaSchema = new mongoose.Schema({
         type: String,
         enum: ['Trámite', 'Cobro', 'personal', 'vencimiento'],
         default: 'Trámite'
+    },
+    // Campo faltante detectado en auditoría para filtros consistentes
+    categoria: {
+        type: String,
+        default: ''
     }
 }, {
     timestamps: true
 });
+
+// ÍNDICES PARA RENDIMIENTO (Audit Fix)
+agendaSchema.index({ fecha: 1 });
+agendaSchema.index({ clienteId: 1 });
+agendaSchema.index({ categoria: 1 });
 
 module.exports = mongoose.model('Agenda', agendaSchema);

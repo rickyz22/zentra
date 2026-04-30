@@ -76,4 +76,9 @@ const clienteSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// ÍNDICES PARA RENDIMIENTO (Audit Fix)
+clienteSchema.index({ categoria: 1, estado: 1, createdAt: -1 });
+clienteSchema.index({ honorarios: 1, createdAt: -1 });
+clienteSchema.index({ fecha: -1 });
+
 module.exports = mongoose.model('Cliente', clienteSchema);
