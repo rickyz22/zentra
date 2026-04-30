@@ -7,6 +7,9 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
+  // skipWaiting() inmediato: el nuevo SW toma control sin esperar confirmación
+  // Esto garantiza que mobile siempre ejecute la última versión automáticamente
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);

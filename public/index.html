@@ -1433,6 +1433,11 @@
                 <i data-lucide="message-square" class="w-6 h-6"></i>
                 <span class="text-[10px] font-black uppercase">WApp</span>
             </button>
+            <!-- Logout mobile: siempre visible en bottom nav -->
+            <button onclick="logout()" class="flex flex-col items-center space-y-1 text-rose-500/70 hover:text-rose-400 transition-colors">
+                <i data-lucide="log-out" class="w-6 h-6"></i>
+                <span class="text-[10px] font-black uppercase">Salir</span>
+            </button>
         </nav>
     </main>
 
@@ -3251,32 +3256,34 @@
                 const res = await fetch('/api/version');
                 if (!res.ok) return;
                 const data = await res.json();
-                // .trim() evita que espacios en blanco disparen el banner por error
+                // .trim() evita que espacios en blanco activen la actualización por error
                 const serverVersion = (data.version || '').trim();
                 const localVersion = (localStorage.getItem('zentra_app_version') || '').trim();
 
                 if (localVersion !== serverVersion) {
-                    // Nueva versión detectada: mostrar banner
-                    showVersionBanner(serverVersion);
+                    console.log(`Zentra: Nueva versión detectada (local: "${localVersion}" → servidor: "${serverVersion}"). Actualizando...`);
+                    // Guardar versión nueva Y recargar automáticamente sin mostrar banner
+                    // Esto garantiza que mobile siempre esté sincronizado sin intervención del usuario
+                    localStorage.setItem('zentra_app_version', serverVersion);
+                    // Pequeño delay para que el setItem se persista antes del reload
+                    setTimeout(() => window.location.reload(true), 300);
                 }
             } catch (e) {
                 console.warn('No se pudo verificar la versión del servidor:', e);
             }
         }
 
+        // showVersionBanner ya no se usa para auto-update, se mantiene por compatibilidad
         function showVersionBanner(serverVersion) {
             const banner = document.getElementById('version-update-banner');
             if (!banner) return;
             banner.classList.add('show');
 
             document.getElementById('version-update-btn').onclick = () => {
-                // 1. Guardar la versión exacta del servidor ANTES de recargar
                 localStorage.setItem('zentra_app_version', serverVersion);
-                // 2. Ocultar el banner INSTANTÁNEAMENTE para evitar el glitch visual
                 banner.style.opacity = '0';
                 banner.style.pointerEvents = 'none';
                 banner.classList.remove('show');
-                // 3. Esperar que la animación de salida termine antes de recargar
                 setTimeout(() => window.location.reload(true), 500);
             };
 
