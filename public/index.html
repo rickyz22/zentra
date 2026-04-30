@@ -3004,6 +3004,7 @@
             if(document.getElementById('currentDateMobile')) document.getElementById('currentDateMobile').textContent = dShort; 
         }
         function logout() {
+            if (!confirm('¿Cerrar sesión?')) return;
             // Borramos solo las claves de sesión, nunca la versión de la app
             localStorage.removeItem('jony_token');
             localStorage.removeItem('token');
