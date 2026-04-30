@@ -2998,7 +2998,13 @@
             if(document.getElementById('currentDateDesktop')) document.getElementById('currentDateDesktop').textContent = d; 
             if(document.getElementById('currentDateMobile')) document.getElementById('currentDateMobile').textContent = dShort; 
         }
-        function logout() { localStorage.clear(); window.location.href = '/login.html'; }
+        function logout() {
+            // Borramos solo las claves de sesión, nunca la versión de la app
+            localStorage.removeItem('jony_token');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        }
 
         async function descargarExcel() {
             try {
@@ -3245,8 +3251,9 @@
                 const res = await fetch('/api/version');
                 if (!res.ok) return;
                 const data = await res.json();
-                const serverVersion = data.version;
-                const localVersion = localStorage.getItem('zentra_app_version');
+                // .trim() evita que espacios en blanco disparen el banner por error
+                const serverVersion = (data.version || '').trim();
+                const localVersion = (localStorage.getItem('zentra_app_version') || '').trim();
 
                 if (localVersion !== serverVersion) {
                     // Nueva versión detectada: mostrar banner
@@ -3263,10 +3270,14 @@
             banner.classList.add('show');
 
             document.getElementById('version-update-btn').onclick = () => {
+                // 1. Guardar la versión exacta del servidor ANTES de recargar
                 localStorage.setItem('zentra_app_version', serverVersion);
+                // 2. Ocultar el banner INSTANTÁNEAMENTE para evitar el glitch visual
+                banner.style.opacity = '0';
+                banner.style.pointerEvents = 'none';
                 banner.classList.remove('show');
-                // Pequeño delay para que el banner se cierre antes de recargar
-                setTimeout(() => window.location.reload(true), 300);
+                // 3. Esperar que la animación de salida termine antes de recargar
+                setTimeout(() => window.location.reload(true), 500);
             };
 
             document.getElementById('version-dismiss-btn').onclick = () => {
