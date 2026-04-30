@@ -3217,33 +3217,34 @@
             selectEl.value = ''; // reset selection
         }
 
-        // Registro de Service Worker con notificación de actualización controlada
+        // Registro de Service Worker — auto-update silencioso
+        // El SW hace skipWaiting() automáticamente, controllerchange recarga la página
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register(`/sw.js?v=${APP_VERSION}`).then(reg => {
-                    // Si ya hay un SW esperando al cargar
+                    // Si ya hay un SW esperando, forzar activación inmediata
                     if (reg.waiting) {
-                        showUpdateBanner(reg.waiting);
+                        reg.waiting.postMessage('SKIP_WAITING');
                     }
 
-                    // Detectar cuando se encuentra un nuevo SW
+                    // Detectar cuando se instala un nuevo SW
                     reg.addEventListener('updatefound', () => {
                         const newWorker = reg.installing;
                         newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                showUpdateBanner(newWorker);
-                            }
+                            // El SW ya llama skipWaiting() solo — no mostramos banner
+                            // El controllerchange a continuación dispara el reload automático
+                            console.log('Zentra SW: nuevo worker instalado, estado:', newWorker.state);
                         });
                     });
                 });
             });
 
-            // Recargar la página cuando el nuevo SW tome el control activo
+            // Recargar la página automáticamente cuando el nuevo SW tome el control
             let refreshing = false;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
                 if (!refreshing) {
-                    window.location.reload();
                     refreshing = true;
+                    window.location.reload();
                 }
             });
         }
