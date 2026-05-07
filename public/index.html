@@ -1680,7 +1680,7 @@
         }
 
         let metricasCargadasPorPrimeraVez = false;
-        async function cargarMetricas(esReintento = false) {
+        async function cargarMetricas(esReintento = false, retryDelay = 5000) {
             try {
                 // Pequeño delay inicial de 1.5s al cargar la página por primera vez (para dar tiempo a Render)
                 if (!metricasCargadasPorPrimeraVez && !esReintento) {
@@ -1831,20 +1831,21 @@
                                 <h4 class="text-rose-400 font-black uppercase tracking-widest text-sm">El servidor no responde</h4>
                                 <p class="text-slate-400 text-xs mt-1 max-w-xs mx-auto">Render podría estar despertando de la inactividad o hay un problema de conexión.</p>
                             </div>
-                            <button onclick="cargarMetricas(true)" class="mt-4 px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-rose-500/20">
+                            <button onclick="cargarMetricas(true, 5000)" class="mt-4 px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-rose-500/20">
                                 <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
                                 Reintentar Ahora
                             </button>
-                            <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-2 animate-pulse">Reintentando automáticamente en 5s...</p>
+                            <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-2 animate-pulse">Reintentando automáticamente en ${retryDelay / 1000}s...</p>
                         </div>
                     `;
                     lucide.createIcons();
                 }
 
-                // Reintento automático a los 5 segundos si falla
+                // Exponential Backoff (Máximo 30 segundos)
+                const nextDelay = Math.min(retryDelay * 2, 30000);
                 setTimeout(() => {
-                    cargarMetricas(true);
-                }, 5000);
+                    cargarMetricas(true, nextDelay);
+                }, retryDelay);
             }
         }
 
