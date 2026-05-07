@@ -14,6 +14,7 @@ const clienteRoutes = require('./routes/clienteRoutes');
 const authRoutes = require('./routes/authRoutes');
 const agendaRoutes = require('./routes/agendaRoutes');
 const templateRoutes = require('./routes/templateRoutes');
+const tasksRoutes = require('./routes/tasksRoutes');
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -105,6 +106,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/clientes', auth, clienteRoutes);
 app.use('/api/agenda', auth, agendaRoutes);
 app.use('/api/templates', auth, templateRoutes);
+app.use('/api/tasks', tasksRoutes); // Endpoint público pero protegido por x-cron-secret
 console.log('📡 Rutas registradas.');
 
 // Ruta final para asegurar que se sirva el Dashboard (index.html) sin caché
