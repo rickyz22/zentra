@@ -1643,6 +1643,32 @@
             return `$ ${Number(val || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         }
 
+        async function verificarConexion() {
+            try {
+                const token = localStorage.getItem('jony_token');
+                const ping = await fetch('/api/version', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!ping.ok) {
+                    if (ping.status === 401 || ping.status === 403) {
+                        console.warn('⚠️ [VerificarConexion] Error de Sesión. Forzando login/reload.');
+                        if (!sessionStorage.getItem('jony_retry_session')) {
+                            sessionStorage.setItem('jony_retry_session', 'true');
+                            window.location.reload(true);
+                        } else {
+                            logout();
+                        }
+                    } else {
+                        console.warn('⚠️ [VerificarConexion] Falló ping: HTTP ' + ping.status);
+                    }
+                    return false;
+                }
+                console.log('✅ [VerificarConexion] OK.');
+                return true;
+            } catch (e) {
+                console.warn('❌ [VerificarConexion] Error de red:', e);
+                return false;
+            }
+        }
+
         let metricasCargadasPorPrimeraVez = false;
         async function cargarMetricas(esReintento = false) {
             try {
@@ -1655,25 +1681,40 @@
                 const token = localStorage.getItem('jony_token');
                 if (!token) return;
 
-                // Verificación de Sesión / Conexión Activa antes de pedir métricas
-                try {
-                    const ping = await fetch('/api/clientes/stats', { method: 'HEAD', headers: { 'Authorization': `Bearer ${token}` } });
-                    if (!ping.ok && ping.status !== 405) {
-                        console.warn('Ping API falló, el servidor podría estar dormido.');
-                    }
-                } catch(e) {
-                    console.warn('No se pudo verificar la API antes de métricas:', e);
-                }
-
                 const res = await fetch('/api/clientes/stats', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
-                if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+                if (!res.ok) {
+                    if (res.status === 401 || res.status === 403) {
+                        console.warn('⚠️ [Sesión] Error ' + res.status + ': Token inválido o expirado.');
+                        if (!sessionStorage.getItem('jony_retry_session')) {
+                            sessionStorage.setItem('jony_retry_session', 'true');
+                            window.location.reload(true);
+                            return;
+                        } else {
+                            sessionStorage.removeItem('jony_retry_session');
+                            logout();
+                            return;
+                        }
+                    } else if (res.status >= 500) {
+                        console.warn('⚠️ [Server] Error ' + res.status + ': Render despertando o fallando.');
+                    }
+                    throw new Error(`HTTP Error ${res.status}`);
+                }
                 
                 const data = await res.json();
                 
-                if (!data.ok) return;
+                // Validación de Datos: Si vuelve vacío
+                if (!data || !data.ok || Object.keys(data).length <= 1) {
+                    console.warn('⚠️ [Métricas] Datos vacíos. Verificando conexión...');
+                    const conectado = await verificarConexion();
+                    if (!conectado) throw new Error('Servidor no responde correctamente.');
+                    return;
+                }
+                
+                // Limpiar flag de reintento si fue exitoso
+                sessionStorage.removeItem('jony_retry_session');
 
                 const gananciaTramites = data.tramites?.gananciaHistorica || 0;
                 const gananciaPrestamos = data.prestamos?.gananciaRealizada || 0;
@@ -3360,12 +3401,19 @@
             if (!banner) return;
             banner.classList.add('show');
 
-            document.getElementById('version-update-btn').onclick = () => {
-                localStorage.setItem('zentra_app_version', serverVersion);
-                banner.style.opacity = '0';
-                banner.style.pointerEvents = 'none';
-                banner.classList.remove('show');
-                setTimeout(() => window.location.reload(true), 500);
+            document.getElementById('version-update-btn').onclick = async () => {
+                try {
+                    localStorage.setItem('zentra_app_version', serverVersion);
+                    // Sincronización Post-Actualización: Esperamos 800ms antes del reload
+                    await new Promise(r => setTimeout(r, 800));
+                    banner.style.opacity = '0';
+                    banner.style.pointerEvents = 'none';
+                    banner.classList.remove('show');
+                    window.location.reload(true);
+                } catch (e) {
+                    console.error('Error guardando versión:', e);
+                    window.location.reload(true);
+                }
             };
 
             document.getElementById('version-dismiss-btn').onclick = () => {
