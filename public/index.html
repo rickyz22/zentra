@@ -1468,6 +1468,16 @@
         let hasMore = true;
 
         // --- FUNCIONES UTILITARIAS ---
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
         function generarLinkWhatsApp(telefono, mensaje = '') {
             if (!telefono) return '#';
             // Limpieza total: solo números
@@ -2062,7 +2072,22 @@
                 return;
             }
 
-            recs.forEach((c, idx) => {
+            recs.forEach((rawC, idx) => {
+                const c = { 
+                    ...rawC, 
+                    nombre: escapeHTML(rawC.nombre), 
+                    telefono: escapeHTML(rawC.telefono),
+                    producto: escapeHTML(rawC.producto),
+                    empresa: escapeHTML(rawC.empresa),
+                    tramite: escapeHTML(rawC.tramite),
+                    subTipoTramite: escapeHTML(rawC.subTipoTramite),
+                    notas: escapeHTML(rawC.notas),
+                    promesaPago: escapeHTML(rawC.promesaPago)
+                };
+                if (c.historialPagos) {
+                    c.historialPagos = c.historialPagos.map(p => ({ ...p, metodo: escapeHTML(p.metodo) }));
+                }
+
                 const row = document.createElement('div');
                 const moroso = isMoroso(c);
                 const isEven = idx % 2 === 0;
@@ -2515,7 +2540,12 @@
                     return;
                 }
 
-                recsFiltrados.forEach(item => {
+                recsFiltrados.forEach(rawItem => {
+                    const item = { ...rawItem, titulo: escapeHTML(rawItem.titulo) };
+                    if (item.clienteId) {
+                        item.clienteId = { ...item.clienteId, nombre: escapeHTML(item.clienteId.nombre), telefono: escapeHTML(item.clienteId.telefono) };
+                    }
+
                     const date = new Date(item.fecha);
                     const div = document.createElement('div');
                     
@@ -2687,6 +2717,9 @@
             
             let html = '';
             actsDay.forEach(item => {
+                const tituloSafe = escapeHTML(item.titulo);
+                const nombreSafe = escapeHTML(item.clienteId?.nombre);
+                
                 const isCobro = item.tipo === 'Cobro Virtual';
                 const icon = isCobro ? (item.categoria === 'Préstamos' ? '💰' : '🔌') : '⚡';
                 const color = isCobro ? 'text-emerald-400 bg-emerald-500/10' : 'text-violet-400 bg-violet-500/10';
@@ -2698,7 +2731,7 @@
                         </div>
                         <div class="flex-1 min-w-0">
                             <h5 class="text-xs font-black text-white truncate uppercase tracking-wider">
-                                ${item.titulo}${item.clienteId?.nombre ? ' - ' + item.clienteId.nombre : ''}
+                                ${tituloSafe}${nombreSafe ? ' - ' + nombreSafe : ''}
                             </h5>
                             <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">
                                 ${isCobro ? `Cobro: ${formatCurrency(item.montoCuota || 0)}` : 'Trámite Personal'}
@@ -3219,7 +3252,8 @@
             if (allTemplates.length === 0) {
                 container.innerHTML = '<p class="text-slate-400 font-bold text-sm col-span-2">No hay plantillas creadas. Creá la primera arriba.</p>';
             } else {
-                allTemplates.forEach(t => {
+                allTemplates.forEach(rawT => {
+                    const t = { ...rawT, titulo: escapeHTML(rawT.titulo), cuerpo: escapeHTML(rawT.cuerpo) };
                     container.innerHTML += `
                     <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col justify-between group hover:border-emerald-500 transition-all">
                         <div>
