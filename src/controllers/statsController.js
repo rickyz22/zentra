@@ -59,10 +59,68 @@ exports.obtenerEstadisticas = async (req, res) => {
             Cliente.find({ 'historialPagos.fecha': { $gte: monthStart } }),
             Agenda.aggregate([{ $group: { _id: '$clienteId', total: { $sum: '$honorarios' } } }]),
             Cliente.find({ $or: [{ categoria: 'Trámites' }, { categoria: { $exists: false } }] }),
-            Cliente.find({ categoria: { $in: ['Préstamos', 'Electrodomésticos'] } }),
+            
+            // Reemplazamos la carga masiva en RAM por Aggregation nativa de Mongo
+            Cliente.aggregate([
+                { $match: { categoria: { $in: ['Préstamos', 'Electrodomésticos'] } } },
+                {
+                    $project: {
+                        categoria: 1,
+                        costo: { $cond: [{ $eq: ['$categoria', 'Préstamos'] }, { $ifNull: ['$montoPrestado', 0] }, { $ifNull: ['$costoCompra', 0] }] },
+                        retorno: { $cond: [{ $eq: ['$categoria', 'Préstamos'] }, { $ifNull: ['$montoDevolver', 0] }, { $ifNull: ['$precioVenta', 0] }] },
+                        pago: { $ifNull: ['$montoPagado', 0] },
+                        estado: { $ifNull: ['$estado', 'Pendiente'] }
+                    }
+                },
+                {
+                    $project: {
+                        categoria: 1,
+                        cap: {
+                            $cond: [
+                                { $in: ['$estado', ['Cerrado', 'Pagado']] }, 0,
+                                { $max: [0, { $subtract: ['$costo', '$pago'] }] }
+                            ]
+                        },
+                        gPend: {
+                            $cond: [
+                                { $in: ['$estado', ['Cerrado', 'Pagado']] }, 0,
+                                {
+                                    $cond: [
+                                        { $lte: ['$pago', '$costo'] },
+                                        { $max: [0, { $subtract: ['$retorno', '$costo'] }] },
+                                        { $max: [0, { $subtract: ['$retorno', '$pago'] }] }
+                                    ]
+                                }
+                            ]
+                        },
+                        gReal: {
+                            $cond: [
+                                { $in: ['$estado', ['Cerrado', 'Pagado']] },
+                                { $max: [0, { $subtract: ['$retorno', '$costo'] }] },
+                                {
+                                    $cond: [
+                                        { $lte: ['$pago', '$costo'] }, 0,
+                                        { $subtract: ['$pago', '$costo'] }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$categoria',
+                        capitalEnCalle: { $sum: '$cap' },
+                        gananciaPendiente: { $sum: '$gPend' },
+                        gananciaRealizada: { $sum: '$gReal' }
+                    }
+                }
+            ]),
+            
             Agenda.find({ honorarios: { $gt: 0 } }),
             Cliente.find({ honorarios: { $gt: 0 } }),
-            Cliente.find({ categoria: { $in: ['Préstamos', 'Electrodomésticos'] } })
+            // Optimización: Solo traer aquellos que tengan pagos registrados para el historial mensual
+            Cliente.find({ categoria: { $in: ['Préstamos', 'Electrodomésticos'] }, 'historialPagos.0': { $exists: true } })
         ]);
 
         const stats = {};
@@ -133,38 +191,17 @@ exports.obtenerEstadisticas = async (req, res) => {
         let mPrestamos = { recaudacionHoy: presHoy, recaudacionMes: presMes, capitalEnCalle: 0, gananciaPendiente: 0, gananciaRealizada: 0 };
         let mElectro = { recaudacionHoy: elecHoy, recaudacionMes: elecMes, capitalEnCalle: 0, gananciaPendiente: 0, gananciaRealizada: 0 };
 
-        todosPreEles.forEach(c => {
-            let costo = 0, retorno = 0, typeObj;
-            if (c.categoria === 'Préstamos') {
-                costo = Number(c.montoPrestado) || 0; 
-                retorno = Number(c.montoDevolver) || 0; 
-                typeObj = mPrestamos;
-            } else {
-                costo = Number(c.costoCompra) || 0; 
-                retorno = Number(c.precioVenta) || 0; 
-                typeObj = mElectro;
+        // Procesar resultados pre-calculados por MongoDB Aggregation
+        todosPreEles.forEach(grupo => {
+            if (grupo._id === 'Préstamos') {
+                mPrestamos.capitalEnCalle = Math.round(grupo.capitalEnCalle * 100) / 100;
+                mPrestamos.gananciaPendiente = Math.round(grupo.gananciaPendiente * 100) / 100;
+                mPrestamos.gananciaRealizada = Math.round(grupo.gananciaRealizada * 100) / 100;
+            } else if (grupo._id === 'Electrodomésticos') {
+                mElectro.capitalEnCalle = Math.round(grupo.capitalEnCalle * 100) / 100;
+                mElectro.gananciaPendiente = Math.round(grupo.gananciaPendiente * 100) / 100;
+                mElectro.gananciaRealizada = Math.round(grupo.gananciaRealizada * 100) / 100;
             }
-
-            const pago = Number(c.montoPagado) || 0;
-            let cap = Math.max(0, costo - pago);
-            let gPend = 0, gReal = 0;
-
-            if (pago <= costo) {
-                gPend = Math.max(0, retorno - costo);
-            } else {
-                gReal = pago - costo;
-                gPend = Math.max(0, retorno - pago);
-            }
-
-            if (c.estado === 'Cerrado' || c.estado === 'Pagado') {
-                cap = 0; 
-                gPend = 0;
-                gReal = Math.max(0, retorno - costo);
-            }
-
-            typeObj.capitalEnCalle = Math.round((typeObj.capitalEnCalle + cap) * 100) / 100;
-            typeObj.gananciaPendiente = Math.round((typeObj.gananciaPendiente + gPend) * 100) / 100;
-            typeObj.gananciaRealizada = Math.round((typeObj.gananciaRealizada + gReal) * 100) / 100;
         });
 
         // 6. HISTORIAL MENSUAL
