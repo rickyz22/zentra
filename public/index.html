@@ -82,7 +82,7 @@
 
         /* --- LIGHT MODE (Minimalista / Profesional) --- */
         html.light {
-            --bg-app:        #F5F5F5;
+            --bg-app:        #F4F7F6;
             --bg-sidebar:    #FFFFFF;
             --bg-card:       #FFFFFF;
             --bg-input:      #F8FAFC;
@@ -96,17 +96,21 @@
             --text-secondary:#555555;
             --text-muted:    #888888;
             
-            --border-color:  #E1E8ED;
+            --border-color:  #E0E0E0;
             --border-input:  #CBD5E1;
             
-            --shadow-card:   none; /* Flat design */
-            --shadow-hover:  0 4px 12px rgba(0,0,0,0.05); /* Sutil */
+            --shadow-card:   0 4px 12px rgba(0,0,0,0.05);
+            --shadow-hover:  0 6px 16px rgba(0,0,0,0.08);
             --glass-bg:      rgba(255, 255, 255, 0.98);
             
             --font-heading:  'Inter', sans-serif;
             --font-body:     'Inter', sans-serif;
             --glow-blue:     none;
             --glow-green:    none;
+
+            /* Nuevos colores de acento corporativos para Light Mode */
+            --accent-blue:   #1D4ED8; /* Azul más corporativo (Tailwind Blue 700) */
+            --accent-green:  #28a745; /* Verde sólido esmeralda */
         }
 
         /* ========================
@@ -153,6 +157,7 @@
         html.light aside {
             background-color: var(--bg-sidebar) !important;
             border-right: 1px solid var(--border-color);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.02); /* Sombra separadora clara */
         }
         html.light aside .sidebar-item {
             color: var(--text-secondary);
@@ -214,6 +219,31 @@
             border-left: 3px solid var(--accent-blue);
             color: var(--accent-blue);
             text-shadow: var(--glow-blue);
+        }
+
+        /* En Light Mode, Backup y Logout solo icono + texto gris oscuro y fondo transparente */
+        html.light #btnBackup {
+            background: transparent !important;
+            border: 1px solid transparent !important;
+            color: var(--text-secondary) !important;
+            box-shadow: none !important;
+        }
+        html.light #btnBackup i { color: var(--accent-blue) !important; }
+        html.light #btnBackup:hover {
+            background: #F8FAFC !important;
+            border-color: var(--border-color) !important;
+        }
+        
+        html.light #btnLogout {
+            background: transparent !important;
+            border: 1px solid transparent !important;
+            color: var(--text-secondary) !important;
+            box-shadow: none !important;
+        }
+        html.light #btnLogout i { color: #DC2626 !important; }
+        html.light #btnLogout:hover {
+            background: #FEF2F2 !important;
+            border-color: #FCA5A5 !important;
         }
 
         /* ========================
@@ -299,10 +329,10 @@
         
         /* Ajuste de legibilidad para el saldo en modo claro */
         html.light .client-card .text-emerald-400 {
-            color: #059669 !important; /* Emerald 600 */
+            color: var(--accent-green) !important;
         }
         html.light .client-card .bg-emerald-500\/10 {
-            background-color: rgba(16, 185, 129, 0.08) !important;
+            background-color: rgba(40, 167, 69, 0.08) !important;
         }
 
         /* 
@@ -311,8 +341,14 @@
            ============================================================ 
         */
         html.light .client-card,
-        html.light .client-card div:not(.bg-emerald-500\/10):not(.bg-emerald-50) {
-            background-color: #ffffff !important;
+        html.light .client-card div:not(.bg-emerald-500\/10):not(.bg-emerald-50),
+        html.light .bg-slate-900\/50,
+        html.light .bg-slate-900,
+        html.light .bg-white\/5,
+        html.light .metrics-grid-item {
+            background-color: var(--bg-card) !important;
+            box-shadow: var(--shadow-card) !important;
+            border: 1px solid var(--border-color) !important;
         }
 
         /* Paneles Financieros (Capital, Total, Saldo) */
