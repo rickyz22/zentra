@@ -14,7 +14,7 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ==========================================
-        const APP_VERSION = '2.1.0'; 
+        const APP_VERSION = '2.1.1'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -897,7 +897,7 @@
     <script>
         // --- CONFIGURACIÓN GLOBAL ---
         console.log(`%c Zentra CRM: Versión ${APP_VERSION} %c`, 'background: #00AEEF; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
-        // Chequeo temprano de sesión
+        // Chequeo temprano de sesión (existencia del token)
         if (!localStorage.getItem('jony_token')) {
             window.location.href = '/login.html';
         }
@@ -1596,12 +1596,68 @@
             document.getElementById('icon-moon-mob')?.classList.toggle('hidden', isDark);
         }
 
+        // --- FORCE LOGOUT (sin confirm, para sesiones expiradas) ---
+        function forceLogout() {
+            console.warn('🔒 Sesión expirada. Redirigiendo a login...');
+            localStorage.removeItem('jony_token');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            sessionStorage.removeItem('jony_retry_session');
+            window.location.href = '/login.html';
+        }
+
+        // --- FETCH AUTENTICADO (manejo centralizado de 401) ---
+        async function authFetch(url, options = {}) {
+            const token = localStorage.getItem('jony_token');
+            if (!token) { forceLogout(); return null; }
+            
+            const headers = { ...options.headers, 'Authorization': `Bearer ${token}` };
+            const res = await fetch(url, { ...options, headers });
+            
+            if (res.status === 401 || res.status === 403) {
+                forceLogout();
+                return null;
+            }
+            return res;
+        }
+
+        // --- VALIDAR SESIÓN CONTRA EL SERVIDOR ---
+        async function validarSesion() {
+            try {
+                const token = localStorage.getItem('jony_token');
+                if (!token) return false;
+                
+                // Usar un endpoint protegido para verificar que el token sea válido
+                const res = await fetch('/api/clientes?page=1&limit=1', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (res.status === 401 || res.status === 403) {
+                    console.warn('⚠️ Token expirado o inválido.');
+                    return false;
+                }
+                
+                return res.ok;
+            } catch (e) {
+                console.warn('❌ Error validando sesión:', e);
+                // Error de red (servidor dormido), no forzar logout
+                return true; // Dar beneficio de la duda si es error de red
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             syncPrivacyUI();
             applyThemeIcons();
             lucide.createIcons();
             
-            // Carga inicial completa
+            // PASO 1: Validar que el token sea válido antes de cargar datos
+            const sesionValida = await validarSesion();
+            if (!sesionValida) {
+                forceLogout();
+                return; // No continuar cargando datos
+            }
+            
+            // PASO 2: Sesión válida, cargar todo
             await refrescarTodo();
             
             fetchTemplates();
@@ -1691,20 +1747,10 @@
 
         async function verificarConexion() {
             try {
-                const token = localStorage.getItem('jony_token');
-                const ping = await fetch('/api/version', { headers: { 'Authorization': `Bearer ${token}` } });
-                if (!ping.ok) {
-                    if (ping.status === 401 || ping.status === 403) {
-                        console.warn('⚠️ [VerificarConexion] Error de Sesión. Forzando login/reload.');
-                        if (!sessionStorage.getItem('jony_retry_session')) {
-                            sessionStorage.setItem('jony_retry_session', 'true');
-                            window.location.reload(true);
-                        } else {
-                            logout();
-                        }
-                    } else {
-                        console.warn('⚠️ [VerificarConexion] Falló ping: HTTP ' + ping.status);
-                    }
+                const res = await authFetch('/api/version');
+                if (!res) return false; // authFetch ya maneja 401
+                if (!res.ok) {
+                    console.warn('⚠️ [VerificarConexion] Falló ping: HTTP ' + res.status);
                     return false;
                 }
                 console.log('✅ [VerificarConexion] OK.');
@@ -1725,25 +1771,13 @@
                 }
 
                 const token = localStorage.getItem('jony_token');
-                if (!token) return;
+                if (!token) { forceLogout(); return; }
 
-                const res = await fetch('/api/clientes/stats', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const res = await authFetch('/api/clientes/stats');
+                if (!res) return; // authFetch ya manejó 401 → forceLogout
                 
                 if (!res.ok) {
-                    if (res.status === 401 || res.status === 403) {
-                        console.warn('⚠️ [Sesión] Error ' + res.status + ': Token inválido o expirado.');
-                        if (!sessionStorage.getItem('jony_retry_session')) {
-                            sessionStorage.setItem('jony_retry_session', 'true');
-                            window.location.reload(true);
-                            return;
-                        } else {
-                            sessionStorage.removeItem('jony_retry_session');
-                            logout();
-                            return;
-                        }
-                    } else if (res.status >= 500) {
+                    if (res.status >= 500) {
                         console.warn('⚠️ [Server] Error ' + res.status + ': Render despertando o fallando.');
                     }
                     throw new Error(`HTTP Error ${res.status}`);
@@ -1938,10 +1972,8 @@
 
             isLoadingMore = true;
             try {
-                const token = localStorage.getItem('jony_token');
-                const res = await fetch(`/api/clientes?page=${currentPage}&limit=20`, { 
-                    headers: { 'Authorization': `Bearer ${token}` } 
-                });
+                const res = await authFetch(`/api/clientes?page=${currentPage}&limit=20`);
+                if (!res) return; // authFetch ya manejó 401
                 const data = await res.json();
                 
                 if (data.ok) {
@@ -2440,8 +2472,8 @@
             const url = editingClientId ? `/api/clientes/${editingClientId}` : '/api/clientes';
             
             try {
-                const res = await fetch(url, {
-                    method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('jony_token')}` },
+                const res = await authFetch(url, {
+                    method, headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
                 const resData = await res.json();
@@ -2479,9 +2511,9 @@
             const montoLimpio = unmaskCurrency(montoStr);
             
             try {
-                const res = await fetch(`/api/clientes/${clienteId}/pago`, {
+                const res = await authFetch(`/api/clientes/${clienteId}/pago`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('jony_token')}` },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ monto: montoLimpio, metodo })
                 });
                 const resData = await res.json();
@@ -2506,8 +2538,8 @@
                 if (wrapper) wrapper.innerHTML = '<div class="p-8 space-y-4"><div class="h-20 bg-slate-800 rounded-3xl skeleton"></div><div class="h-20 bg-slate-800 rounded-3xl skeleton"></div></div>';
                 if (container) container.innerHTML = '<div class="col-span-full p-8 grid grid-cols-1 md:grid-cols-3 gap-6"><div class="h-48 bg-slate-800 rounded-[2.5rem] skeleton"></div><div class="h-48 bg-slate-800 rounded-[2.5rem] skeleton"></div><div class="h-48 bg-slate-800 rounded-[2.5rem] skeleton"></div></div>';
 
-                const token = localStorage.getItem('jony_token');
-                const res = await fetch('/api/agenda', { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await authFetch('/api/agenda');
+                if (!res) return;
                 const data = await res.json();
                 
                 // On-the-fly virtual projection based on payments
@@ -2637,11 +2669,10 @@
         async function borrarPago(clienteId, pagoId) {
             if (!confirm('⚠️ ¿Seguro quieres eliminar este pago? Eso recalculará el saldo restante y las ganancias.')) return;
             try {
-                const token = localStorage.getItem('jony_token');
-                const res = await fetch(`/api/clientes/${clienteId}/pago/${pagoId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
+                const res = await authFetch(`/api/clientes/${clienteId}/pago/${pagoId}`, {
+                    method: 'DELETE'
                 });
+                if (!res) return;
                 const data = await res.json();
                 if (data.ok) {
                     await refrescarTodo();
@@ -2658,11 +2689,10 @@
         async function borrarRecordatorio(id) {
             if (!confirm('⚠️ ¿Seguro quieres borrar este recordatorio?')) return;
             try {
-                const token = localStorage.getItem('jony_token');
-                const res = await fetch(`/api/agenda/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
+                const res = await authFetch(`/api/agenda/${id}`, {
+                    method: 'DELETE'
                 });
+                if (!res) return;
                 if (res.ok) {
                     await refrescarTodo();
                     showToast('Éxito', 'Recordatorio eliminado', 'emerald');
@@ -2798,8 +2828,8 @@
         async function borrarRecordatorioDesdeModal(id, dateStr) {
             if(!confirm('¿Eliminar este trámite?')) return;
             try {
-                const token = localStorage.getItem('jony_token');
-                const res = await fetch(`/api/agenda/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await authFetch(`/api/agenda/${id}`, { method: 'DELETE' });
+                if (!res) return;
                 const data = await res.json();
                 if(data.ok) {
                     allRecordatorios = allRecordatorios.filter(r => r._id !== id);
@@ -3105,11 +3135,12 @@
             }
             
             try {
-                const res = await fetch('/api/agenda', {
+                const res = await authFetch('/api/agenda', {
                     method: 'POST', 
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('jony_token')}` },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+                if (!res) return;
                 if (res.ok) {
                     closeAgendaModal(); 
                     await refrescarTodo();
@@ -3167,10 +3198,10 @@
             const nombre = c ? c.nombre : 'este cliente';
             if (!confirm(`⚠️ ¿Estás seguro?\n\nSe borrará a "${nombre}" y TODOS sus trámites agendados.\n\nEsta acción no se puede deshacer.`)) return;
             try {
-                const res = await fetch(`/api/clientes/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('jony_token')}` }
+                const res = await authFetch(`/api/clientes/${id}`, {
+                    method: 'DELETE'
                 });
+                if (!res) return;
                 const data = await res.json();
                 if(data.ok) {
                     await fetchClientes();
@@ -3207,10 +3238,8 @@
                 console.log('🚀 Iniciando Generación de Backup en Caliente...');
                 showToast('Preparando Backup', 'Obteniendo datos frescos de MongoDB...', 'blue');
                 
-                const token = localStorage.getItem('jony_token');
-                const res = await fetch('/api/clientes', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const res = await authFetch('/api/clientes');
+                if (!res) throw new Error('Sesión expirada');
                 
                 if (!res.ok) throw new Error('Error al obtener datos frescos del servidor');
                 
@@ -3269,8 +3298,8 @@
         async function fetchTemplates() {
             try {
                 console.log('Cargando plantillas...');
-                const token = localStorage.getItem('jony_token');
-                const res = await fetch('/api/templates', { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await authFetch('/api/templates');
+                if (!res) return;
                 const data = await res.json();
                 if (data.ok) {
                     allTemplates = data.templates || [];
@@ -3318,12 +3347,12 @@
             const url = id ? `/api/templates/${id}` : `/api/templates`;
             
             try {
-                const token = localStorage.getItem('jony_token');
-                const res = await fetch(url, {
+                const res = await authFetch(url, {
                     method,
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+                if (!res) return;
                 const data = await res.json();
                 if (data.ok) {
                     resetTemplateForm();
@@ -3356,8 +3385,8 @@
         async function deleteTemplate(id) {
             if(!confirm('¿Borrar esta plantilla?')) return;
             try {
-                const token = localStorage.getItem('jony_token');
-                const res = await fetch(`/api/templates/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await authFetch(`/api/templates/${id}`, { method: 'DELETE' });
+                if (!res) return;
                 const data = await res.json();
                 if(data.ok) await fetchTemplates();
             } catch(e) { console.error(e); }
