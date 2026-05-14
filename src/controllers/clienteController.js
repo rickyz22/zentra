@@ -8,13 +8,23 @@ exports.crearCliente = async (req, res) => {
     try {
         const data = req.body;
         
-        // Redondeo de montos
-        if (data.montoPrestado) data.montoPrestado = Math.round(data.montoPrestado);
-        if (data.montoDevolver) data.montoDevolver = Math.round(data.montoDevolver);
-        if (data.costoCompra) data.costoCompra = Math.round(data.costoCompra);
-        if (data.precioVenta) data.precioVenta = Math.round(data.precioVenta);
-        let honorariosCalculados = Math.round(data.honorarios) || 0;
-        const pagoInicial = parseFloat(data.pagoInicial) || 0;
+        // Función utilitaria para limpieza de montos (Audit v3.3.1)
+        const toNum = (val) => {
+            if (val === undefined || val === null || val === '') return 0;
+            if (typeof val === 'number') return Math.round(val);
+            // Soportar formatos: "100.000", "100000", "100.000,50"
+            const clean = val.toString().replace(/\./g, '').replace(',', '.');
+            const num = parseFloat(clean);
+            return isNaN(num) ? 0 : Math.round(num);
+        };
+
+        // Normalización de montos
+        data.montoPrestado = toNum(data.montoPrestado);
+        data.montoDevolver = toNum(data.montoDevolver);
+        data.costoCompra = toNum(data.costoCompra);
+        data.precioVenta = toNum(data.precioVenta);
+        let honorariosCalculados = toNum(data.honorarios);
+        const pagoInicial = toNum(data.pagoInicial);
 
         // Regla Senior: Si es trámite y no hay honorarios pero sí abono, el abono define el total
         if (data.categoria === 'Trámites' && honorariosCalculados === 0 && pagoInicial > 0) {
@@ -23,15 +33,15 @@ exports.crearCliente = async (req, res) => {
 
         // Validación de montos obligatorios por categoría
         if (data.categoria === 'Préstamos') {
-            if (!data.montoPrestado || data.montoPrestado <= 0) return res.status(400).json({ ok: false, msg: 'El monto prestado es obligatorio para Préstamos' });
-            if (!data.montoDevolver || data.montoDevolver <= 0) return res.status(400).json({ ok: false, msg: 'El monto a devolver es obligatorio para Préstamos' });
+            if (data.montoPrestado <= 0) return res.status(400).json({ ok: false, msg: 'El monto prestado es obligatorio para Préstamos' });
+            if (data.montoDevolver <= 0) return res.status(400).json({ ok: false, msg: 'El monto a devolver es obligatorio para Préstamos' });
         }
         if (data.categoria === 'Electrodomésticos') {
-            if (!data.costoCompra || data.costoCompra <= 0) return res.status(400).json({ ok: false, msg: 'El costo de compra es obligatorio para Electrodomésticos' });
-            if (!data.precioVenta || data.precioVenta <= 0) return res.status(400).json({ ok: false, msg: 'El precio de venta es obligatorio para Electrodomésticos' });
+            if (data.costoCompra <= 0) return res.status(400).json({ ok: false, msg: 'El costo de compra es obligatorio para Electrodomésticos' });
+            if (data.precioVenta <= 0) return res.status(400).json({ ok: false, msg: 'El precio de venta es obligatorio para Electrodomésticos' });
         }
         
-        const fechaBase = data.fechaIngreso ? new Date(data.fechaIngreso + 'T12:00:00') : new Date();
+        const fechaBase = (data.fechaIngreso && data.fechaIngreso.length > 5) ? new Date(data.fechaIngreso + 'T12:00:00') : new Date();
 
         // 1. Lógica de Cliente Único (Upsert por DNI)
         let cliente = null;
@@ -41,6 +51,17 @@ exports.crearCliente = async (req, res) => {
 
         // 2. Estructura de la operación base
         const esTramite = data.categoria === 'Trámites';
+        // Manejo robusto de fecha de vencimiento (Audit v3.3.1)
+        let fVto = null;
+        if (data.fechaVencimiento && data.fechaVencimiento.length > 5) {
+            fVto = new Date(data.fechaVencimiento + 'T12:00:00');
+            if (isNaN(fVto.getTime())) fVto = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        } else if (esTramite && pagoInicial >= honorariosCalculados) {
+            fVto = null;
+        } else {
+            fVto = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        }
+
         const nuevaOperacion = {
             tipo: data.categoria || 'Trámites',
             estado: esTramite ? 'Pagado' : 'Activo',
@@ -56,7 +77,7 @@ exports.crearCliente = async (req, res) => {
             cuotasTotales: esTramite ? 1 : (data.cuotasTotales ? Number(data.cuotasTotales) : 1),
             saldoPendiente: esTramite ? Math.max(0, honorariosCalculados - pagoInicial) : (data.montoDevolver || data.precioVenta || honorariosCalculados || 0),
             historialPagos: [],
-            fechaVencimiento: (esTramite && pagoInicial >= honorariosCalculados) ? null : (data.fechaVencimiento ? new Date(data.fechaVencimiento + 'T12:00:00') : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
+            fechaVencimiento: fVto
         };
 
         // Forzar estado Pagado si el abono cubre el total (Fix Crítico v3.1.1)

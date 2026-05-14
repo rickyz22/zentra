@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.3.0-SEARCH'; // v3.3.0-SEARCH-UPGRADE
+const CACHE_NAME = 'zentra-v3.3.1-STABLE'; // v3.3.1-STABLE-UPGRADE
 const ASSETS = [
   '/',
   '/index.html',

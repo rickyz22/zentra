@@ -1666,7 +1666,7 @@
     </main>
 
     <script>
-        console.log('%c Zentra v3.3.0: Buscador Multicampo y Fix Vencimiento Activo %c', 'background: #7c3aed; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
+        console.log('%c Zentra v3.3.1: Robustez de Datos y Fix Vencimiento %c', 'background: #059669; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
         let allClientes = [];
         let allRecordatorios = [];
         let editingClientId = null;
@@ -2756,16 +2756,13 @@
             e.preventDefault();
             const data = Object.fromEntries(new FormData(e.target));
             
-            // FIX: Capturar fechaVencimiento de cualquier paso del wizard (v3.3.0)
-            const vtoInput = e.target.querySelector('input[name="fechaVencimiento"]:not([value=""])') || 
-                             e.target.querySelector('input[name="fechaVencimiento"]');
-            if (vtoInput && vtoInput.value) data.fechaVencimiento = vtoInput.value;
+            // FIX: Capturar fechaVencimiento solo del input ACTIVO (habilitado) del wizard
+            const activeVto = Array.from(e.target.querySelectorAll('input[name="fechaVencimiento"]')).find(i => !i.disabled && i.value);
+            if (activeVto) data.fechaVencimiento = activeVto.value;
 
-            console.log('DEBUG: Datos procesados para enviar:', data);
-            
             if (data.cuotasTotales) data.cuotasTotales = parseInt(data.cuotasTotales) || 1;
             
-            // Clean up unrelated fields based on category
+            // Unmasking de montos por categoría
             if (data.categoria === 'Trámites') {
                 if (data.honorarios) data.honorarios = unmaskCurrency(data.honorarios);
                 if (data.pagoInicial) data.pagoInicial = unmaskCurrency(data.pagoInicial);
@@ -2773,12 +2770,16 @@
             } else if (data.categoria === 'Préstamos') {
                 if (data.montoPrestado) data.montoPrestado = unmaskCurrency(data.montoPrestado);
                 if (data.montoDevolver) data.montoDevolver = unmaskCurrency(data.montoDevolver);
+                if (data.pagoInicial) data.pagoInicial = unmaskCurrency(data.pagoInicial);
                 delete data.subTipoTramite; delete data.honorarios; delete data.costoCompra; delete data.precioVenta; delete data.producto; delete data.empresa;
             } else if (data.categoria === 'Electrodomésticos') {
                 if (data.costoCompra) data.costoCompra = unmaskCurrency(data.costoCompra);
                 if (data.precioVenta) data.precioVenta = unmaskCurrency(data.precioVenta);
+                if (data.pagoInicial) data.pagoInicial = unmaskCurrency(data.pagoInicial);
                 delete data.subTipoTramite; delete data.honorarios; delete data.montoPrestado; delete data.montoDevolver; delete data.empresa;
             }
+
+            console.log('DEBUG: Datos finales a enviar (Audit v3.3.1):', data);
 
             const method = editingClientId ? 'PUT' : 'POST';
             const url = editingClientId ? `/api/clientes/${editingClientId}` : '/api/clientes';
