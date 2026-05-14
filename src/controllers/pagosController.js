@@ -32,16 +32,16 @@ exports.registrarPago = async (req, res) => {
             if (operacion.saldoPendiente <= 0) {
                 operacion.estado = 'Pagado';
                 operacion.saldoPendiente = 0;
+                operacion.fechaVencimiento = undefined; // Ya no hay vencimiento si está pagado
             } else {
                 operacion.estado = 'Activo';
-            }
-
-            // Desplazar fecha de vencimiento (+30 días)
-            if (operacion.fechaVencimiento) {
-                const currentVenc = new Date(operacion.fechaVencimiento);
-                operacion.fechaVencimiento = new Date(currentVenc.setDate(currentVenc.getDate() + 30));
-            } else {
-                operacion.fechaVencimiento = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                // Solo desplazamos si la deuda persiste
+                if (operacion.fechaVencimiento) {
+                    const currentVenc = new Date(operacion.fechaVencimiento);
+                    operacion.fechaVencimiento = new Date(currentVenc.setDate(currentVenc.getDate() + 30));
+                } else {
+                    operacion.fechaVencimiento = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                }
             }
 
             cliente.markModified('operaciones');
@@ -59,6 +59,17 @@ exports.registrarPago = async (req, res) => {
                 }
             }
             cliente.markModified('historialPagos');
+        }
+
+        // --- LÓGICA DE CIERRE GLOBAL ---
+        // Si no tiene NINGUNA operación activa, el cliente pasa a estado 'Cerrado'
+        const tieneOpsActivas = cliente.operaciones.some(op => !['Pagado', 'Cancelado', 'Cerrado'].includes(op.estado));
+        
+        // También verificamos el estado legacy si es necesario
+        if (!tieneOpsActivas && cliente.estado !== 'Activo' && cliente.estado !== 'Moroso') {
+            cliente.estado = 'Cerrado';
+        } else if (tieneOpsActivas) {
+            cliente.estado = 'Activo';
         }
 
         await cliente.save();
