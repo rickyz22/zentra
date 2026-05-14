@@ -14,9 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.2.1'; 
-        const CACHE_NAME = 'zentra-v3.2.1';
-        // ==========================================
+        const APP_VERSION = '3.3.0'; 
+        const CACHE_NAME = 'zentra-v3.3.0'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -2280,21 +2279,46 @@
         function filtrarClientes() {
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
             
+            // Si no hay query, mostrar todos según filtros de pestaña (v3.3.0 UX)
+            if (!query) {
+                let allItems = [...allClientes];
+                if (filtroCategoriaActual !== 'Todos') {
+                    allItems = allItems.filter(c => (c.categoria || 'Trámites') === filtroCategoriaActual);
+                }
+                if (filtroSoloMorosos) {
+                    allItems = allItems.filter(c => isMoroso(c));
+                }
+                return renderClientes(allItems);
+            }
+            
             let filtered = allClientes.filter(c => {
-                // Nomalizacion: Unimos todos los campos buscables, incluyendo el nuevo campo 'empresa'
-                const camposBuscables = [
-                    c.nombre, 
-                    c.categoria, 
-                    c.subTipoTramite, 
-                    c.tramite, 
-                    c.producto, 
-                    c.empresa
-                ];
+                // Normalización de campos para búsqueda flexible
+                const nombre = (c.nombre || '').toLowerCase();
+                const empresa = (c.empresa || '').toLowerCase();
+                const dni = String(c.dni || '').toLowerCase();
+                const telefono = String(c.telefono || '').toLowerCase();
+                const categoria = (c.categoria || '').toLowerCase();
+                const subTipo = (c.subTipoTramite || '').toLowerCase();
+                const tramite = (c.tramite || '').toLowerCase();
+                const producto = (c.producto || '').toLowerCase();
                 
-                const searchStr = camposBuscables.filter(Boolean).join(' ').toLowerCase();
-                return searchStr.includes(query);
+                // Prioridad Numérica (DNI o Teléfono)
+                if (/^\d+$/.test(query)) {
+                    if (dni.includes(query) || telefono.includes(query)) return true;
+                }
+
+                // Búsqueda General (Includes)
+                return nombre.includes(query) || 
+                       empresa.includes(query) || 
+                       dni.includes(query) || 
+                       telefono.includes(query) ||
+                       categoria.includes(query) ||
+                       subTipo.includes(query) ||
+                       tramite.includes(query) ||
+                       producto.includes(query);
             });
             
+            // Aplicar filtros de contexto (Categoría/Morosos) sobre el resultado de búsqueda
             if (filtroCategoriaActual !== 'Todos') {
                 filtered = filtered.filter(c => {
                     const cat = c.categoria || 'Trámites';
@@ -2305,6 +2329,7 @@
             if (filtroSoloMorosos) {
                 filtered = filtered.filter(c => isMoroso(c));
             }
+            
             renderClientes(filtered);
         }
 
