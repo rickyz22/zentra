@@ -14,7 +14,7 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '2.8.4'; 
+        const APP_VERSION = '2.8.5'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -2370,7 +2370,7 @@
                         operacionesHtml += `
                             <div class="mb-4 border border-slate-200 dark:border-white/10 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-sm">
                                 <div class="flex justify-between items-center mb-3">
-                                    <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1">${icon} ${op.tipo} ${op._id === 'legacy' ? '(Original)' : `#${index + 1}`} - ${op.estado} ${detalleSecundario ? `<span class="text-slate-400 lowercase ml-1">(${detalleSecundario})</span>` : ''} <span class="text-slate-400 ml-2">📅 Vence: ${fechaVenc}</span></p>
+                                    <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1">${icon} ${op.tipo} ${op._id === 'legacy' ? '(Original)' : `#${index + 1}`} - ${op.estado} ${detalleSecundario ? `<span class="text-slate-400 lowercase ml-1">(${detalleSecundario})</span>` : ''} <span class="text-slate-400 ml-2">📅 Vence: ${fechaVenc}</span> <button onclick="editarVencimiento('${c._id}', '${op._id}')" class="ml-1 text-blue-400 hover:text-blue-300 transition-all" title="Reprogramar fecha">✏️</button></p>
                                     <div class="flex items-center gap-4">
                                         ${op.tipo !== 'Trámites' ? `<span class="font-black text-slate-400 text-[10px] uppercase tracking-widest">Cuota: ${cuotasPagadas}/${cuotasTotales} (${formatCurrency(valorCuota)})</span>` : ''}
                                         ${op.estado !== 'Cerrado' && op.estado !== 'Cancelado' && op.estado !== 'Pagado' ? `
@@ -3487,6 +3487,38 @@
             } catch(e) { 
                 console.error(e); 
                 showToast('Error', 'Fallo de conexión al eliminar', 'rose');
+            }
+        };
+
+        window.editarVencimiento = async function(clienteId, operacionId) {
+            const nuevaFecha = prompt("Ingrese la nueva fecha de vencimiento (AAAA-MM-DD):");
+            if (!nuevaFecha) return;
+
+            const regex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!regex.test(nuevaFecha)) {
+                showToast('Error', 'Formato inválido. Use AAAA-MM-DD', 'rose');
+                return;
+            }
+
+            try {
+                const res = await authFetch(`/api/clientes/${clienteId}/operaciones/${operacionId}/vencimiento`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ nuevaFecha })
+                });
+                
+                if (!res) return;
+                const data = await res.json();
+                
+                if (data.ok) {
+                    showToast('Éxito', 'Vencimiento reprogramado', 'emerald');
+                    if (typeof fetchClientes === 'function') await fetchClientes();
+                    else refrescarTodo();
+                } else {
+                    showToast('Error', data.msg || 'No se pudo reprogramar', 'rose');
+                }
+            } catch (error) {
+                console.error(error);
+                showToast('Error', 'Fallo de conexión.', 'rose');
             }
         };
 

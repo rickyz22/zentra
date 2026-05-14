@@ -301,3 +301,28 @@ exports.eliminarOperacion = async (req, res) => {
         res.status(500).json({ ok: false, msg: 'Error al eliminar la operación' });
     }
 };
+// Reprogramar fecha de vencimiento de una operación
+exports.reprogramarVencimiento = async (req, res) => {
+    try {
+        const { id, operacionId } = req.params;
+        const { nuevaFecha } = req.body;
+
+        if (!nuevaFecha) return res.status(400).json({ ok: false, msg: 'La nueva fecha es obligatoria' });
+
+        const cliente = await Cliente.findById(id);
+        if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
+
+        // Buscar la operación
+        const op = cliente.operaciones.id(operacionId);
+        if (!op) return res.status(404).json({ ok: false, msg: 'Operación no encontrada' });
+
+        // Aplicar fix de timezone
+        op.fechaVencimiento = new Date(nuevaFecha + 'T12:00:00');
+        
+        await cliente.save();
+        res.status(200).json({ ok: true, msg: 'Vencimiento reprogramado exitosamente', nuevaFecha: op.fechaVencimiento });
+    } catch (error) {
+        console.error('Error al reprogramar:', error);
+        res.status(500).json({ ok: false, msg: 'Error interno al reprogramar vencimiento' });
+    }
+};
