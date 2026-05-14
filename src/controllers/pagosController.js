@@ -65,11 +65,13 @@ exports.registrarPago = async (req, res) => {
         // Si no tiene NINGUNA operación activa, el cliente pasa a estado 'Cerrado'
         const tieneOpsActivas = cliente.operaciones.some(op => !['Pagado', 'Cancelado', 'Cerrado'].includes(op.estado));
         
-        // También verificamos el estado legacy si es necesario
-        if (!tieneOpsActivas && cliente.estado !== 'Activo' && cliente.estado !== 'Moroso') {
+        if (!tieneOpsActivas) {
             cliente.estado = 'Cerrado';
-        } else if (tieneOpsActivas) {
-            cliente.estado = 'Activo';
+        } else {
+            // Si tiene operaciones activas y estaba cerrado, lo activamos
+            if (cliente.estado === 'Cerrado' || cliente.estado === 'Pagado') {
+                cliente.estado = 'Activo';
+            }
         }
 
         await cliente.save();
