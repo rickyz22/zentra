@@ -1666,7 +1666,7 @@
     </main>
 
     <script>
-        console.log('%c Zentra v3.3.2: Fix Agenda y DNI Único %c', 'background: #0ea5e9; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
+        console.log('%c Zentra v3.3.4: Etiquetas Dinámicas y UX Reforzada %c', 'background: #f59e0b; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
         let allClientes = [];
         let allRecordatorios = [];
         let editingClientId = null;
@@ -2372,6 +2372,18 @@
                     c.historialPagos = c.historialPagos.map(p => ({ ...p, metodo: escapeHTML(p.metodo) }));
                 }
 
+                let subtitulo = c.subTipoTramite || c.tramite || c.categoria;
+                if (c.categoria === 'Electrodomésticos' && c.producto) {
+                    subtitulo = `Producto: ${c.producto}`;
+                }
+                
+                // Lógica de Etiqueta Dinámica de Inicio (v3.3.4)
+                let labelInicio = 'Inicio/Prestamo:';
+                const catNorm = (c.categoria || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                if (catNorm.includes('electro')) labelInicio = 'Inicio/Electro:';
+                else if (catNorm.includes('tramite')) labelInicio = 'Inicio/Tramite:';
+                else if (catNorm.includes('prestam')) labelInicio = 'Inicio/Prestamo:';
+
                 const row = document.createElement('div');
                 const moroso = isMoroso(c);
                 const isEven = idx % 2 === 0;
@@ -2396,10 +2408,6 @@
                 const inicial = (c.nombre || '?')[0].toUpperCase();
                 const avatarHtml = `<div class="w-9 h-9 ${avatarBg} border ${avatarBorder} rounded-full flex items-center justify-center font-black text-sm shrink-0">${inicial}</div>`;
 
-                let subtitulo = c.subTipoTramite || c.tramite || c.categoria;
-                if (c.categoria === 'Electrodomésticos' && c.producto) {
-                    subtitulo = `Producto: ${c.producto}`;
-                }
                 // Mostrar empresa si existe (Trámites)
                 if (c.categoria === 'Trámites' && c.empresa) {
                     subtitulo += ` · ${c.empresa}`;
@@ -2611,7 +2619,7 @@
                                 <div class="flex items-center space-x-3 mt-4">
                                     <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center"><i data-lucide="calendar-days" class="w-4 h-4"></i></div>
                                     <div class="flex flex-col">
-                                        <span class="text-sm font-bold text-slate-700"><strong>Inicio/Préstamo:</strong> ${c.fechaIngreso ? new Date(c.fechaIngreso).toLocaleDateString('es-AR', { timeZone: 'UTC' }) : 'Sin fecha registrada'}</span>
+                                        <span class="text-sm font-bold text-slate-700"><strong>${labelInicio}</strong> ${c.fechaIngreso ? new Date(c.fechaIngreso).toLocaleDateString('es-AR', { timeZone: 'UTC' }) : 'Sin fecha registrada'}</span>
                                     </div>
                                 </div>
                                 <div class="flex gap-2">
