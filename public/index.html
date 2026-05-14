@@ -14,7 +14,7 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '2.6.0'; 
+        const APP_VERSION = '2.6.1'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -1177,6 +1177,11 @@
 
                             <div id="fieldsCuotas" class="space-y-6 hidden">
                                 <input type="number" name="cuotasTotales" id="fCuotas" placeholder="Cantidad de Cuotas" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                            </div>
+
+                            <div id="fieldsVencimiento" class="space-y-2">
+                                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Primer Vencimiento (Opcional)</p>
+                                <input type="date" name="fechaVencimiento" id="fFechaVencimiento" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all">
                             </div>
                         </div>
                         <!-- Fecha de Ingreso -->

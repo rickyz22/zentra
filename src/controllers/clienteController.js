@@ -41,7 +41,8 @@ exports.crearCliente = async (req, res) => {
             honorarios: data.honorarios,
             cuotasTotales: data.cuotasTotales ? Number(data.cuotasTotales) : 1,
             saldoPendiente: (data.montoDevolver || data.precioVenta || data.honorarios || 0),
-            historialPagos: []
+            historialPagos: [],
+            fechaVencimiento: data.fechaVencimiento ? new Date(data.fechaVencimiento) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         };
 
         const clienteData = {
@@ -53,6 +54,7 @@ exports.crearCliente = async (req, res) => {
             empresa: data.empresa,
             legajoToyota: data.legajoToyota,
             notas: data.notas,
+            categoria: data.categoria || 'Trámites',
             fechaIngreso: fechaBase,
             operaciones: [nuevaOperacion]
         };
