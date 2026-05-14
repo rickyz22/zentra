@@ -62,6 +62,7 @@ const clienteSchema = new mongoose.Schema({
         },
         default: 'Trámites'
     },
+    moneda: { type: String, enum: ['ARS', 'USD'], default: 'ARS' },
     producto: {
         type: String,
         required: false
@@ -96,6 +97,7 @@ const clienteSchema = new mongoose.Schema({
         honorarios: Number,
         cuotasTotales: { type: Number, default: 1 },
         saldoPendiente: { type: Number, default: 0 },
+        moneda: { type: String, enum: ['ARS', 'USD'], default: 'ARS' },
         historialPagos: [{
             monto: { type: Number, required: true },
             fecha: { type: Date, default: Date.now },

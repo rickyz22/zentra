@@ -12,13 +12,23 @@ exports.registrarPago = async (req, res) => {
 
         const fechaEfectiva = fechaPago ? new Date(fechaPago + 'T12:00:00') : new Date();
 
+        // Identificar moneda para la nota (Audit v3.4.0)
+        let moneda = 'ARS';
+        if (operacionId && operacionId !== 'legacy') {
+            const op = cliente.operaciones.id(operacionId);
+            if (op) moneda = op.moneda || 'ARS';
+        } else {
+            moneda = cliente.moneda || 'ARS';
+        }
+        const sym = moneda === 'USD' ? 'U$S' : '$';
+
         const nuevoPago = {
             monto: Number(monto),
             metodo: metodo || 'Efectivo',
             fecha: fechaEfectiva,
             nota: conRecargo === true || conRecargo === 'true'
-                ? `Pago con recargo por mora del 15% ($${Number(monto).toLocaleString('es-AR')}) vía ${metodo || 'Efectivo'}`
-                : `Pago de $${Number(monto).toLocaleString('es-AR')} vía ${metodo || 'Efectivo'}`
+                ? `Pago con recargo por mora del 15% (${sym}${Number(monto).toLocaleString('es-AR')}) vía ${metodo || 'Efectivo'}`
+                : `Pago de ${sym}${Number(monto).toLocaleString('es-AR')} vía ${metodo || 'Efectivo'}`
         };
 
         if (operacionId && operacionId !== 'legacy') {

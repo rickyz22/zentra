@@ -31,30 +31,37 @@ exports.obtenerEstadisticas = async (req, res) => {
             Agenda.find({})
         ]);
 
-        // Inicializar contadores
-        let gHoy = 0, gMes = 0;
-        let pStats = { recaudacionHoy: 0, recaudacionMes: 0, capitalEnCalle: 0, gananciaPendiente: 0, gananciaRealizada: 0 };
-        let eStats = { recaudacionHoy: 0, recaudacionMes: 0, capitalEnCalle: 0, gananciaPendiente: 0, gananciaRealizada: 0 };
-        let tStats = { recaudacionHoy: 0, recaudacionMes: 0, gananciaHistorica: 0 };
+        // Inicializar contadores multimoneda
+        const initStats = () => ({ 
+            ARS: { recaudacionHoy: 0, recaudacionMes: 0, capitalEnCalle: 0, gananciaPendiente: 0, gananciaRealizada: 0 },
+            USD: { recaudacionHoy: 0, recaudacionMes: 0, capitalEnCalle: 0, gananciaPendiente: 0, gananciaRealizada: 0 }
+        });
+
+        let pStats = initStats();
+        let eStats = initStats();
+        let tStats = { ARS: { recaudacionHoy: 0, recaudacionMes: 0, gananciaHistorica: 0 }, USD: { recaudacionHoy: 0, recaudacionMes: 0, gananciaHistorica: 0 } };
         
         const historialMap = {};
         const initMonth = (m) => {
-            if (!historialMap[m]) historialMap[m] = { tramites: 0, prestamos: 0, electro: 0 };
+            if (!historialMap[m]) historialMap[m] = { 
+                ARS: { tramites: 0, prestamos: 0, electro: 0 },
+                USD: { tramites: 0, prestamos: 0, electro: 0 }
+            };
         };
+
         const getMonthKey = (date) => {
             if (!date) return null;
             const d = new Date(date);
-            // Ajuste a GMT-3 para agrupar por mes correctamente en Argentina
             const localD = new Date(d.getTime() - TZ_OFFSET_MS);
             return `${localD.getUTCFullYear()}-${(localD.getUTCMonth() + 1).toString().padStart(2, '0')}`;
         };
 
         // 1. Procesar Clientes y sus Operaciones
         clientes.forEach(c => {
-            // Unificamos: si no tiene operaciones, creamos una virtual desde la raíz (Legacy)
             const ops = (c.operaciones && c.operaciones.length > 0) ? c.operaciones : [{
                 tipo: c.categoria || 'Trámites',
                 estado: c.estado || 'Activo',
+                moneda: c.moneda || 'ARS',
                 montoPrestado: c.montoPrestado,
                 montoDevolver: c.montoDevolver,
                 costoCompra: c.costoCompra,
@@ -67,25 +74,24 @@ exports.obtenerEstadisticas = async (req, res) => {
             ops.forEach(op => {
                 const tipo = op.tipo || 'Trámites';
                 const estado = op.estado || 'Activo';
+                const moneda = op.moneda || 'ARS';
 
                 if (tipo === 'Trámites') {
                     const h = Number(op.honorarios) || 0;
-                    tStats.gananciaHistorica += h;
+                    tStats[moneda].gananciaHistorica += h;
                     const created = new Date(op.createdAt || c.createdAt);
                     if (created >= monthStart) {
-                        tStats.recaudacionMes += h;
-                        if (created >= todayStart && created < todayEnd) tStats.recaudacionHoy += h;
+                        tStats[moneda].recaudacionMes += h;
+                        if (created >= todayStart && created < todayEnd) tStats[moneda].recaudacionHoy += h;
                     }
                     const mk = getMonthKey(created);
-                    if (mk) { initMonth(mk); historialMap[mk].tramites += h; }
+                    if (mk) { initMonth(mk); historialMap[mk][moneda].tramites += h; }
                 } else {
-                    // Préstamos o Electrodomésticos
                     const isP = (tipo === 'Préstamos');
-                    const target = isP ? pStats : eStats;
+                    const target = (isP ? pStats : eStats)[moneda];
                     const costo = isP ? (Number(op.montoPrestado) || 0) : (Number(op.costoCompra) || 0);
                     const retorno = isP ? (Number(op.montoDevolver) || 0) : (Number(op.precioVenta) || 0);
                     
-                    // Pagos
                     const pagos = op.historialPagos || [];
                     const pagosOrdenados = [...pagos].sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
                     let totalPagadoOp = 0;
@@ -95,14 +101,12 @@ exports.obtenerEstadisticas = async (req, res) => {
                         const monto = Number(p.monto) || 0;
                         totalPagadoOp += monto;
                         
-                        // Flujo de caja
                         const f = new Date(p.fecha);
                         if (f >= monthStart) {
                             target.recaudacionMes += monto;
                             if (f >= todayStart && f < todayEnd) target.recaudacionHoy += monto;
                         }
 
-                        // Ganancia real del pago (método FIFO: primero recupero capital, luego es ganancia)
                         let gananciaNeta = 0;
                         if (capitalRecuperado < costo) {
                             const porcionCap = Math.min(monto, costo - capitalRecuperado);
@@ -116,18 +120,15 @@ exports.obtenerEstadisticas = async (req, res) => {
                             const mk = getMonthKey(p.fecha);
                             if (mk) {
                                 initMonth(mk);
-                                if (isP) historialMap[mk].prestamos += gananciaNeta;
-                                else historialMap[mk].electro += gananciaNeta;
+                                if (isP) historialMap[mk][moneda].prestamos += gananciaNeta;
+                                else historialMap[mk][moneda].electro += gananciaNeta;
                             }
-                            // Ganancia Realizada Total
                             target.gananciaRealizada += gananciaNeta;
                         }
                     });
 
-                    // Capital en calle y Ganancia Pendiente (solo si no está cerrado)
                     if (!['Cerrado', 'Pagado', 'Cancelado'].includes(estado)) {
                         target.capitalEnCalle += Math.max(0, costo - capitalRecuperado);
-                        // La ganancia pendiente es lo que falta cobrar del retorno total una vez cubierto el costo
                         const gananciaTotalEsperada = Math.max(0, retorno - costo);
                         const gananciaYaCobrada = Math.max(0, totalPagadoOp - capitalRecuperado);
                         target.gananciaPendiente += Math.max(0, gananciaTotalEsperada - gananciaYaCobrada);
@@ -136,18 +137,19 @@ exports.obtenerEstadisticas = async (req, res) => {
             });
         });
 
-        // 2. Procesar Agenda (Solo Trámites agendados)
+        // 2. Procesar Agenda (Solo Trámites agendados - Asumimos ARS por ahora)
         agenda.forEach(a => {
             const h = Number(a.honorarios) || 0;
             if (h > 0) {
-                tStats.gananciaHistorica += h;
+                const moneda = a.moneda || 'ARS'; // Si el modelo Agenda no tiene moneda, será ARS
+                tStats[moneda].gananciaHistorica += h;
                 const f = new Date(a.fecha);
                 if (f >= monthStart) {
-                    tStats.recaudacionMes += h;
-                    if (f >= todayStart && f < todayEnd) tStats.recaudacionHoy += h;
+                    tStats[moneda].recaudacionMes += h;
+                    if (f >= todayStart && f < todayEnd) tStats[moneda].recaudacionHoy += h;
                 }
                 const mk = getMonthKey(a.fecha);
-                if (mk) { initMonth(mk); historialMap[mk].tramites += h; }
+                if (mk) { initMonth(mk); historialMap[mk][moneda].tramites += h; }
             }
         });
 
@@ -156,37 +158,27 @@ exports.obtenerEstadisticas = async (req, res) => {
             .map(([id, valores]) => ({
                 id,
                 etiqueta: new Date(id + '-02').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }),
-                total: Math.round((valores.tramites + valores.prestamos + valores.electro) * 100) / 100,
+                totalARS: Math.round((valores.ARS.tramites + valores.ARS.prestamos + valores.ARS.electro) * 100) / 100,
+                totalUSD: Math.round((valores.USD.tramites + valores.USD.prestamos + valores.USD.electro) * 100) / 100,
                 valores
             }))
             .sort((a, b) => b.id.localeCompare(a.id));
 
-        // Totales Globales
-        const globalHoy = tStats.recaudacionHoy + pStats.recaudacionHoy + eStats.recaudacionHoy;
-        const globalMes = tStats.recaudacionMes + pStats.recaudacionMes + eStats.recaudacionMes;
-
         res.status(200).json({
             ok: true,
-            global: { recaudacionHoy: Math.round(globalHoy), recaudacionMes: Math.round(globalMes) },
-            tramites: { 
-                recaudacionHoy: Math.round(tStats.recaudacionHoy), 
-                recaudacionMes: Math.round(tStats.recaudacionMes), 
-                gananciaHistorica: Math.round(tStats.gananciaHistorica) 
+            global: { 
+                recaudacionHoy: { 
+                    ARS: Math.round(tStats.ARS.recaudacionHoy + pStats.ARS.recaudacionHoy + eStats.ARS.recaudacionHoy),
+                    USD: Math.round(tStats.USD.recaudacionHoy + pStats.USD.recaudacionHoy + eStats.USD.recaudacionHoy)
+                },
+                recaudacionMes: {
+                    ARS: Math.round(tStats.ARS.recaudacionMes + pStats.ARS.recaudacionMes + eStats.ARS.recaudacionMes),
+                    USD: Math.round(tStats.USD.recaudacionMes + pStats.USD.recaudacionMes + eStats.USD.recaudacionMes)
+                }
             },
-            prestamos: {
-                recaudacionHoy: Math.round(pStats.recaudacionHoy),
-                recaudacionMes: Math.round(pStats.recaudacionMes),
-                capitalEnCalle: Math.round(pStats.capitalEnCalle),
-                gananciaPendiente: Math.round(pStats.gananciaPendiente),
-                gananciaRealizada: Math.round(pStats.gananciaRealizada)
-            },
-            electro: {
-                recaudacionHoy: Math.round(eStats.recaudacionHoy),
-                recaudacionMes: Math.round(eStats.recaudacionMes),
-                capitalEnCalle: Math.round(eStats.capitalEnCalle),
-                gananciaPendiente: Math.round(eStats.gananciaPendiente),
-                gananciaRealizada: Math.round(eStats.gananciaRealizada)
-            },
+            tramites: tStats,
+            prestamos: pStats,
+            electro: eStats,
             historialMensual
         });
 

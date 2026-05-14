@@ -76,6 +76,7 @@ exports.crearCliente = async (req, res) => {
             honorarios: honorariosCalculados,
             cuotasTotales: esTramite ? 1 : (data.cuotasTotales ? Number(data.cuotasTotales) : 1),
             saldoPendiente: esTramite ? Math.max(0, honorariosCalculados - pagoInicial) : (data.montoDevolver || data.precioVenta || honorariosCalculados || 0),
+            moneda: data.moneda || 'ARS',
             historialPagos: [],
             fechaVencimiento: fVto
         };
@@ -146,6 +147,7 @@ exports.crearCliente = async (req, res) => {
                 legajoToyota: data.legajoToyota,
                 notas: data.notas,
                 categoria: data.categoria || 'Trámites',
+                moneda: data.moneda || 'ARS',
                 fechaIngreso: fechaBase,
                 estado: (esTramite && nuevaOperacion.estado === 'Pagado') ? 'Pagado' : (esTramite ? 'Activo' : 'Pendiente'),
                 operaciones: [nuevaOperacion]
@@ -381,6 +383,7 @@ exports.agregarOperacion = async (req, res) => {
             honorarios: data.honorarios ? Math.round(data.honorarios) : undefined,
             cuotasTotales: (data.categoria === 'Trámites' || data.tipo === 'Trámites') ? 1 : (data.cuotasTotales ? Number(data.cuotasTotales) : 1),
             saldoPendiente: Math.round(data.montoDevolver || data.precioVenta || data.honorarios || 0),
+            moneda: data.moneda || 'ARS',
             historialPagos: [],
             fechaVencimiento: data.fechaVencimiento ? new Date(data.fechaVencimiento + 'T12:00:00') : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         };

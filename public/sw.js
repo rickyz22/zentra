@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.3.4-LABELS'; // v3.3.4-LABELS-UPGRADE
+const CACHE_NAME = 'zentra-v3.4.0-CURRENCY'; // v3.4.0-CURRENCY-UPGRADE
 const ASSETS = [
   '/',
   '/index.html',

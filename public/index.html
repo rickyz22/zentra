@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.3.4'; 
-        const CACHE_NAME = 'zentra-v3.3.4-LABELS'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.4.0'; 
+        const CACHE_NAME = 'zentra-v3.4.0-CURRENCY'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1042,13 +1042,17 @@
                     <!-- Tarjeta: Recaudación Hoy -->
                     <div onclick="switchTab('metricas')" class="metrics-grid-item cursor-pointer bg-gradient-to-br from-slate-900 to-slate-950 p-5 md:p-8 rounded-[2.5rem] border border-white/5 transition-all hover:border-emerald-500/30">
                         <div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-4 md:mb-6 border border-emerald-500/20"><i data-lucide="dollar-sign" class="w-5 h-5 md:w-6 md:h-6"></i></div>
-                        <h3 id="num-recaudacion-hoy" class="text-xl md:text-3xl font-black text-emerald-400 sensitive-data">$ 0</h3>
+                        <div id="num-recaudacion-hoy" class="sensitive-data">
+                            <h3 class="text-xl md:text-3xl font-black text-emerald-400">$ 0</h3>
+                        </div>
                         <p class="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Recaudación Hoy</p>
                     </div>
                     <!-- Tarjeta: Ganancia Total -->
                     <div onclick="switchTab('metricas')" class="metrics-grid-item cursor-pointer bg-gradient-to-br from-slate-900 to-slate-950 p-5 md:p-8 rounded-[2.5rem] border border-white/5 transition-all hover:border-emerald-500/30">
                         <div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-4 md:mb-6 border border-emerald-500/20"><i data-lucide="trending-up" class="w-5 h-5 md:w-6 md:h-6"></i></div>
-                        <h3 id="num-ganancia-total" class="text-xl md:text-3xl font-black text-emerald-400 sensitive-data">$ 0</h3>
+                        <div id="num-ganancia-total" class="sensitive-data">
+                            <h3 class="text-xl md:text-3xl font-black text-emerald-400">$ 0</h3>
+                        </div>
                         <p class="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ganancia Total</p>
                     </div>
                 </div>
@@ -1211,6 +1215,11 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div class="space-y-4">
                                     <h5 class="text-white font-black text-sm flex items-center"><i data-lucide="banknote" class="w-4 h-4 mr-2 text-slate-400"></i>Detalles Financieros</h5>
+                                    <div class="flex gap-2 p-1 bg-slate-950 rounded-2xl border border-white/5 mb-2">
+                                        <button type="button" onclick="setMoneda(this, 'ARS')" class="flex-1 py-2 text-[10px] font-black rounded-xl transition-all bg-emerald-500 text-white moneda-btn">ARS</button>
+                                        <button type="button" onclick="setMoneda(this, 'USD')" class="flex-1 py-2 text-[10px] font-black rounded-xl transition-all text-slate-500 hover:text-white moneda-btn">USD</button>
+                                        <input type="hidden" name="moneda" value="ARS">
+                                    </div>
                                     <div class="grid grid-cols-2 gap-4">
                                         <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="montoPrestado" placeholder="Monto Prestado ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
                                         <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="montoDevolver" placeholder="Monto a Devolver ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
@@ -1252,6 +1261,11 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div class="space-y-4">
                                     <h5 class="text-white font-black text-sm flex items-center"><i data-lucide="tv" class="w-4 h-4 mr-2 text-slate-400"></i>Detalles del Producto</h5>
+                                    <div class="flex gap-2 p-1 bg-slate-950 rounded-2xl border border-white/5 mb-2">
+                                        <button type="button" onclick="setMoneda(this, 'ARS')" class="flex-1 py-2 text-[10px] font-black rounded-xl transition-all bg-blue-500 text-white moneda-btn">ARS</button>
+                                        <button type="button" onclick="setMoneda(this, 'USD')" class="flex-1 py-2 text-[10px] font-black rounded-xl transition-all text-slate-500 hover:text-white moneda-btn">USD</button>
+                                        <input type="hidden" name="moneda" value="ARS">
+                                    </div>
                                     <input type="text" name="producto" placeholder="Producto/Modelo (Ej: Heladera Patrick)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
                                     <div class="grid grid-cols-2 gap-4">
                                         <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="costoCompra" placeholder="Costo Compra ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
@@ -1666,7 +1680,7 @@
     </main>
 
     <script>
-        console.log('%c Zentra v3.3.4: Etiquetas Dinámicas y UX Reforzada %c', 'background: #f59e0b; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
+        console.log('%c Zentra v3.4.0: Soporte Multimoneda ARS/USD %c', 'background: #10b981; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
         let allClientes = [];
         let allRecordatorios = [];
         let editingClientId = null;
@@ -1929,8 +1943,21 @@
             lucide.createIcons();
         }
 
-        function formatCurrency(val) {
-            return `$ ${Number(val || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+        function formatCurrency(val, moneda = 'ARS') {
+            const sym = moneda === 'USD' ? 'U$S' : '$';
+            return `${sym} ${Number(val || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+        }
+
+        function setMoneda(btn, moneda) {
+            const container = btn.parentElement;
+            container.querySelectorAll('.moneda-btn').forEach(b => {
+                b.classList.remove('bg-emerald-500', 'bg-blue-500', 'text-white');
+                b.classList.add('text-slate-500');
+            });
+            const isElectro = container.closest('#step-datos-electro');
+            btn.classList.add(isElectro ? 'bg-blue-500' : 'bg-emerald-500', 'text-white');
+            btn.classList.remove('text-slate-500');
+            container.querySelector('input[name="moneda"]').value = moneda;
         }
 
         async function verificarConexion() {
@@ -1972,7 +1999,6 @@
                 }
                 
                 const data = await res.json();
-                
                 // Validación de Datos: Si vuelve vacío
                 if (!data || !data.ok || Object.keys(data).length <= 1) {
                     console.warn('⚠️ [Métricas] Datos vacíos. Verificando conexión...');
@@ -1984,75 +2010,105 @@
                 // Limpiar flag de reintento si fue exitoso
                 sessionStorage.removeItem('jony_retry_session');
 
-                const gananciaTramites = data.tramites?.gananciaHistorica || 0;
-                const gananciaPrestamos = data.prestamos?.gananciaRealizada || 0;
-                const gananciaElectro = data.electro?.gananciaRealizada || 0;
-                const totalGanancias = gananciaTramites + gananciaPrestamos + gananciaElectro;
-
                 // Update tab inicio
                 if (data.global) {
                     const elHoy = document.getElementById('num-recaudacion-hoy');
                     if (elHoy) {
-                        elHoy.textContent = formatCurrency(data.global.recaudacionHoy);
-                        elHoy.classList.remove('stat-updated');
-                        void elHoy.offsetWidth;
-                        elHoy.classList.add('stat-updated');
+                        elHoy.innerHTML = `
+                            <h3 class="text-xl md:text-3xl font-black text-emerald-400">${formatCurrency(data.global.recaudacionHoy.ARS, 'ARS')}</h3>
+                            <div class="w-full h-px bg-white/5 my-1.5"></div>
+                            <h4 class="text-base md:text-lg font-bold text-emerald-500/80">${formatCurrency(data.global.recaudacionHoy.USD, 'USD')}</h4>
+                        `;
                     }
                 }
+                
+                const ganTotalARS = (data.tramites?.ARS?.gananciaHistorica || 0) + (data.prestamos?.ARS?.gananciaRealizada || 0) + (data.electro?.ARS?.gananciaRealizada || 0);
+                const ganTotalUSD = (data.tramites?.USD?.gananciaHistorica || 0) + (data.prestamos?.USD?.gananciaRealizada || 0) + (data.electro?.USD?.gananciaRealizada || 0);
+
                 const elTot = document.getElementById('num-ganancia-total');
                 if (elTot) {
-                    elTot.textContent = formatCurrency(totalGanancias);
-                    elTot.classList.remove('stat-updated');
-                    void elTot.offsetWidth;
-                    elTot.classList.add('stat-updated');
+                    elTot.innerHTML = `
+                        <h3 class="text-xl md:text-3xl font-black text-emerald-400">${formatCurrency(ganTotalARS, 'ARS')}</h3>
+                        <div class="w-full h-px bg-white/5 my-1.5"></div>
+                        <h4 class="text-base md:text-lg font-bold text-emerald-500/80">${formatCurrency(ganTotalUSD, 'USD')}</h4>
+                    `;
                 }
 
                 // Trámites
                 if (data.tramites) {
-                    document.getElementById('val-tramites-hoy').textContent = formatCurrency(data.tramites.recaudacionHoy);
-                    document.getElementById('val-tramites-mes').textContent = formatCurrency(data.tramites.recaudacionMes);
-                    document.getElementById('val-tramites-hist').textContent = formatCurrency(data.tramites.gananciaHistorica);
+                    const t = data.tramites;
+                    const renderM = (id, vals) => {
+                        const el = document.getElementById(id);
+                        if(!el) return;
+                        el.innerHTML = `
+                            <div class="flex flex-col">
+                                <span class="text-xl font-black" style="color: var(--text-primary)">${formatCurrency(vals.ARS, 'ARS')}</span>
+                                <div class="w-full h-px bg-slate-800 my-1"></div>
+                                <span class="text-sm font-bold opacity-60" style="color: var(--text-secondary)">${formatCurrency(vals.USD, 'USD')}</span>
+                            </div>
+                        `;
+                    };
+                    
+                    const elHoyT = document.getElementById('val-tramites-hoy');
+                    if(elHoyT) elHoyT.textContent = formatCurrency(t.ARS.recaudacionHoy, 'ARS');
+
+                    renderM('val-tramites-mes', { ARS: t.ARS.recaudacionMes, USD: t.USD.recaudacionMes });
+                    renderM('val-tramites-hist', { ARS: t.ARS.gananciaHistorica, USD: t.USD.gananciaHistorica });
                 }
 
                 // Préstamos
                 if (data.prestamos) {
-                    document.getElementById('val-prestamos-calle').textContent = formatCurrency(data.prestamos.capitalEnCalle);
-                    document.getElementById('val-prestamos-pend').textContent = formatCurrency(data.prestamos.gananciaPendiente);
-                    document.getElementById('val-prestamos-real').textContent = formatCurrency(data.prestamos.gananciaRealizada);
+                    const p = data.prestamos;
+                    const renderM = (id, key) => {
+                        const el = document.getElementById(id);
+                        if(!el) return;
+                        el.innerHTML = `
+                            <div class="flex flex-col">
+                                <span class="text-xl font-black" style="color: var(--text-primary)">${formatCurrency(p.ARS[key], 'ARS')}</span>
+                                <div class="w-full h-px bg-slate-800 my-1"></div>
+                                <span class="text-sm font-bold opacity-60" style="color: var(--text-secondary)">${formatCurrency(p.USD[key], 'USD')}</span>
+                            </div>
+                        `;
+                    };
+                    renderM('val-prestamos-calle', 'capitalEnCalle');
+                    renderM('val-prestamos-pend', 'gananciaPendiente');
+                    renderM('val-prestamos-real', 'gananciaRealizada');
                 }
 
                 // Electrodomésticos
                 if (data.electro) {
-                    document.getElementById('val-electro-calle').textContent = formatCurrency(data.electro.capitalEnCalle);
-                    document.getElementById('val-electro-pend').textContent = formatCurrency(data.electro.gananciaPendiente);
-                    document.getElementById('val-electro-real').textContent = formatCurrency(data.electro.gananciaRealizada);
+                    const e = data.electro;
+                    const renderM = (id, key) => {
+                        const el = document.getElementById(id);
+                        if(!el) return;
+                        el.innerHTML = `
+                            <div class="flex flex-col">
+                                <span class="text-xl font-black" style="color: var(--text-primary)">${formatCurrency(e.ARS[key], 'ARS')}</span>
+                                <div class="w-full h-px bg-slate-800 my-1"></div>
+                                <span class="text-sm font-bold opacity-60" style="color: var(--text-secondary)">${formatCurrency(e.USD[key], 'USD')}</span>
+                            </div>
+                        `;
+                    };
+                    renderM('val-electro-calle', 'capitalEnCalle');
+                    renderM('val-electro-pend', 'gananciaPendiente');
+                    renderM('val-electro-real', 'gananciaRealizada');
                 }
 
                 // Historial Mensual
                 const histCont = document.getElementById('historialMensualContainer');
                 if (data.historialMensual && data.historialMensual.length > 0) {
                     histCont.innerHTML = '';
-                    
-                    const d = new Date();
-                    const currentMonthKey = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-
                     data.historialMensual.forEach(mes => {
-                        const isCurrent = mes.id === currentMonthKey;
-                        const badge = isCurrent ? `<span class="bg-blue-600 text-white text-[10px] uppercase font-black px-3 py-1 rounded-full shadow-lg shadow-blue-500/20 ml-3">Mes Actual</span>` : '';
+                        const isCurrent = mes.id === `${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}`;
+                        const badge = isCurrent ? `<span class="bg-blue-600 text-white text-[8px] uppercase font-black px-2 py-0.5 rounded-full ml-2">Actual</span>` : '';
                         
                         histCont.innerHTML += `
-                            <div class="bg-slate-950/50 border ${isCurrent ? 'border-blue-500/30' : 'border-slate-800'} rounded-2xl p-5 md:p-6 transition-all hover:bg-slate-800/80">
-                                <div class="flex items-center justify-between mb-4 pb-4 border-b border-slate-800">
-                                    <h4 class="text-lg font-black text-white flex items-center">${mes.etiqueta.toUpperCase()} ${badge}</h4>
+                            <div class="bg-slate-950/50 border ${isCurrent ? 'border-blue-500/30' : 'border-slate-800'} rounded-2xl p-4 transition-all hover:bg-slate-800/80">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="text-sm font-black text-white uppercase tracking-wider">${mes.etiqueta}${badge}</h4>
                                     <div class="text-right">
-                                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total del Mes</p>
-                                        <p class="text-xl md:text-2xl font-black text-emerald-400 drop-shadow-md sensitive-data">${formatCurrency(mes.total)}</p>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-3 gap-2 md:gap-4 divide-x divide-slate-800">
-                                    <div class="px-2 md:px-4">
-                                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1"><span class="opacity-50 mr-1">💵</span> Préstamos</p>
-                                        <p class="text-sm md:text-lg font-bold text-white sensitive-data">${formatCurrency(mes.valores.prestamos)}</p>
+                                        <p class="text-lg font-black text-emerald-400 sensitive-data">${formatCurrency(mes.totalARS, 'ARS')}</p>
+                                        <p class="text-[10px] font-bold text-emerald-500/60 sensitive-data">${formatCurrency(mes.totalUSD, 'USD')}</p>
                                     </div>
                                     <div class="px-2 md:px-4">
                                         <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1"><span class="opacity-50 mr-1">📦</span> Electro</p>
@@ -2475,8 +2531,9 @@
                                 let dStr = new Date(p.fecha).toLocaleString('es-AR', opciones);
                                 dStr = dStr.replace(',', ' -') + ' hs';
                                 
-                                const mntStr = formatCurrency(p.monto || 0);
-                                const msj = `Hola ${c.nombre}! Confirmo que recibí tu pago de ${mntStr} el día ${dStr.split(' - ')[0]} a las ${dStr.split(' - ')[1].replace(' hs', '')} hs. Tu saldo pendiente es ${formatCurrency(saldoPend)}. ¡Muchas gracias!`;
+                                
+                                const mntStr = formatCurrency(p.monto || 0, op.moneda);
+                                const msj = `Hola ${c.nombre}! Confirmo que recibí tu pago de ${mntStr} el día ${dStr.split(' - ')[0]} a las ${dStr.split(' - ')[1].replace(' hs', '')} hs. Tu saldo pendiente es ${formatCurrency(saldoPend, op.moneda)}. ¡Muchas gracias!`;
                                 const waLink = generarLinkWhatsApp(c.telefono, msj);
 
                                 itemsHtml += `
@@ -2508,7 +2565,7 @@
                                 <div class="flex justify-between items-center mb-3">
                                     <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1">${icon} ${op.tipo} ${op._id === 'legacy' ? '(Original)' : `#${index + 1}`} - ${op.estado} ${detalleSecundario ? `<span class="text-slate-400 lowercase ml-1">(${detalleSecundario})</span>` : ''} <span class="text-slate-400 ml-2">📅 Vence: ${fechaVenc}</span> <button onclick="abrirModalVencimiento('${c._id}', '${op._id}', '${op.fechaVencimiento || ''}')" class="ml-1 text-blue-400 hover:text-blue-300 transition-all" title="Reprogramar fecha">✏️</button></p>
                                     <div class="flex items-center gap-4">
-                                        ${op.tipo !== 'Trámites' ? `<span class="font-black text-slate-400 text-[10px] uppercase tracking-widest">Cuota: ${cuotasPagadas}/${cuotasTotales} (${formatCurrency(valorCuota)})</span>` : ''}
+                                        ${op.tipo !== 'Trámites' ? `<span class="font-black text-slate-400 text-[10px] uppercase tracking-widest">Cuota: ${cuotasPagadas}/${cuotasTotales} (${formatCurrency(valorCuota, op.moneda)})</span>` : ''}
                                         ${op.estado !== 'Cerrado' && op.estado !== 'Cancelado' && op.estado !== 'Pagado' ? `
                                             <div class="flex gap-2">
                                                 <button onclick="openPagoModal('${c._id}', '${c.nombre}', '${op._id}', ${valorCuota}, '${op.fechaVencimiento || ''}')" class="py-1 px-3 bg-emerald-500 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center">
@@ -2527,17 +2584,17 @@
                                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate w-full">
                                             ${op.tipo === 'Préstamos' ? 'Capital' : (op.tipo === 'Electrodomésticos' ? 'Costo' : 'Honorarios')}
                                         </p>
-                                        <p class="text-xs font-black text-slate-700 truncate w-full">${formatCurrency(montoP || montoD)}</p>
+                                        <p class="text-xs font-black text-slate-700 truncate w-full">${formatCurrency(montoP || montoD, op.moneda)}</p>
                                     </div>
                                     <!-- 2. TOTAL -->
                                     <div class="finance-col flex flex-col items-center border-l border-slate-200 px-2 text-center min-w-0">
                                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate w-full">Total</p>
-                                        <p class="text-xs font-black text-slate-700 truncate w-full">${formatCurrency(montoD)}</p>
+                                        <p class="text-xs font-black text-slate-700 truncate w-full">${formatCurrency(montoD, op.moneda)}</p>
                                     </div>
                                     <!-- 3. SALDO -->
                                     <div class="finance-col flex flex-col items-center md:items-end border-l border-slate-200 pl-2 text-center md:text-right min-w-0">
                                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate w-full">Saldo</p>
-                                        <p class="text-xs font-black ${saldoPend > 0 ? 'text-rose-500' : 'text-emerald-500'} truncate w-full">${formatCurrency(saldoPend)}</p>
+                                        <p class="text-xs font-black ${saldoPend > 0 ? 'text-rose-500' : 'text-emerald-500'} truncate w-full">${formatCurrency(saldoPend, op.moneda)}</p>
                                     </div>
                                 </div>
                                 <div class="mt-3 border-t border-slate-100 pt-3">
