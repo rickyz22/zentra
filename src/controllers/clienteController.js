@@ -307,10 +307,16 @@ exports.reprogramarVencimiento = async (req, res) => {
         const { id, operacionId } = req.params;
         const { nuevaFecha } = req.body;
 
-        if (!nuevaFecha) return res.status(400).json({ ok: false, msg: 'La nueva fecha es obligatoria' });
+        if (!nuevaFecha) {
+            console.warn('Rechazo de seguridad: Fecha vacía', { id, operacionId });
+            return res.status(400).json({ ok: false, msg: 'La nueva fecha es obligatoria' });
+        }
 
         const cliente = await Cliente.findById(id);
-        if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
+        if (!cliente) {
+            console.warn('Rechazo de seguridad: Cliente no encontrado', { id });
+            return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
+        }
 
         const opId = operacionId;
         const esIdValido = (opId && opId !== 'undefined' && opId !== 'null' && opId !== 'legacy' && opId.length === 24);
@@ -336,6 +342,7 @@ exports.reprogramarVencimiento = async (req, res) => {
         // 2. Si YA tiene operaciones -> EXIGIR COINCIDENCIA EXACTA
         else {
             if (!esIdValido) {
+                console.warn('Rechazo de seguridad: ID de operación inválido', { opId });
                 return res.status(400).json({ ok: false, msg: 'ID de operación inválido para un cliente ya migrado.' });
             }
             
@@ -348,6 +355,7 @@ exports.reprogramarVencimiento = async (req, res) => {
 
             if (!op) {
                 // NUNCA actualizar por defecto. Abortar por seguridad financiera.
+                console.warn('Rechazo de seguridad: Operación exacta no encontrada', { id, opId });
                 return res.status(404).json({ ok: false, msg: 'Operación exacta no encontrada. No se realizaron cambios por seguridad.' });
             }
             

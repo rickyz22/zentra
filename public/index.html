@@ -14,7 +14,7 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '2.8.8'; 
+        const APP_VERSION = '2.8.9'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -3539,6 +3539,9 @@
                 
                 if (!res) return;
                 const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.msg || data.message || `Error HTTP ${res.status}`);
+                }
                 
                 if (data.ok) {
                     showToast('Éxito', 'Vencimiento reprogramado', 'emerald');
@@ -3549,7 +3552,7 @@
                 }
             } catch (error) {
                 console.error(error);
-                showToast('Error', 'Fallo de conexión.', 'rose');
+                showToast('Error', error.message || 'Fallo de conexión.', 'rose');
             }
         };
 
