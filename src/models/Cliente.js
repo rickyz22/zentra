@@ -9,6 +9,22 @@ const clienteSchema = new mongoose.Schema({
         type: String,
         required: [true, 'El teléfono/WhatsApp es obligatorio']
     },
+    dni: {
+        type: String,
+        default: ''
+    },
+    direccion: {
+        type: String,
+        default: ''
+    },
+    garante: {
+        type: String,
+        default: ''
+    },
+    legajoToyota: {
+        type: String,
+        default: ''
+    },
     subTipoTramite: {
         type: String,
         required: false
@@ -60,9 +76,10 @@ const clienteSchema = new mongoose.Schema({
     ultimoPago: { type: Date },
     proximoCobro: { type: Date },
     historialPagos: [{
-        monto: Number,
+        monto: { type: Number, required: true },
         fecha: { type: Date, default: Date.now },
-        metodo: String
+        metodo: String,
+        nota: String
     }],
     fechaIngreso: {
         type: Date,

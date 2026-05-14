@@ -5,15 +5,18 @@ const Cliente = require('../models/Cliente');
 exports.registrarPago = async (req, res) => {
     try {
         const { id } = req.params;
-        const { monto, metodo } = req.body;
+        const { monto, metodo, fechaPago } = req.body;
         
         const cliente = await Cliente.findById(id);
         if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
 
+        const fechaEfectiva = fechaPago ? new Date(fechaPago) : new Date();
+
         const nuevoPago = {
             monto: Number(monto),
             metodo: metodo || 'Efectivo',
-            fecha: new Date()
+            fecha: fechaEfectiva,
+            nota: `Pago de $${Number(monto).toLocaleString('es-AR')} vía ${metodo || 'Efectivo'}`
         };
 
         cliente.historialPagos.push(nuevoPago);

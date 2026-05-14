@@ -14,7 +14,7 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ==========================================
-        const APP_VERSION = '2.1.1'; 
+        const APP_VERSION = '2.1.2'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -1128,6 +1128,9 @@
                             <input type="tel" name="telefono" required 
                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');"
                                    placeholder="WhatsApp (Solo números)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                            <input type="text" name="dni" id="fDni" placeholder="DNI (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                            <input type="text" name="direccion" id="fDireccion" placeholder="Dirección (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                            <input type="text" name="garante" id="fGarante" placeholder="Garante - Nombre y Teléfono (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
                             
                             <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mt-6">Tipo de Negocio</p>
                             <select name="categoria" id="categoriaSelect" onchange="toggleCategoriaFields()" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-black text-slate-300 outline-none focus:ring-2 focus:ring-orange-500 transition-all">
@@ -1147,7 +1150,15 @@
                                     <option value="Deducción Impuesto a las Ganancias">Deducción Impuesto a las Ganancias</option>
                                     <option value="Otro">Otro</option>
                                 </select>
-                                <input type="text" name="empresa" id="fEmpresa" placeholder="Empresa / Empleador (Ej: Toyota, Casasco)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                <select name="empresa" id="fEmpresa" onchange="toggleLegajoToyota()" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+                                    <option value="" disabled selected>Seleccione Empresa / Empleador</option>
+                                    <option value="Toyota">Toyota</option>
+                                    <option value="Casasco">Casasco</option>
+                                    <option value="Otra">Otra</option>
+                                </select>
+                                <div id="legajoToyotaContainer" class="hidden">
+                                    <input type="text" name="legajoToyota" id="fLegajoToyota" placeholder="Legajo Toyota" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                </div>
                                 <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="honorarios" id="fHonorarios" placeholder="Honorarios Sugeridos ($) (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
                             </div>
 
@@ -1442,6 +1453,11 @@
                     <div>
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Método de Pago / Detalle</label>
                         <input type="text" name="metodo" id="pago-metodo" required placeholder="Ej: MercadoPago, Efectivo..." class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-slate-600">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Fecha del Pago (Opcional - para pagos atrasados)</label>
+                        <input type="date" name="fechaPago" id="pago-fechaPago" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500">
+                        <p class="text-[10px] text-slate-600 pl-1 mt-1">Dejalo vacío para usar la fecha de hoy.</p>
                     </div>
                     <p class="text-xs text-slate-500 italic block -mt-2">Se sumará al total pagado y renovará el vencimiento por 30 días.</p>
                     <div class="flex gap-4 pt-4">
@@ -2408,6 +2424,19 @@
             }
         }
 
+        function toggleLegajoToyota() {
+            const empresaInput = document.getElementById('fEmpresa');
+            const legajoContainer = document.getElementById('legajoToyotaContainer');
+            if (!empresaInput || !legajoContainer) return;
+            if (empresaInput.value === 'Toyota') {
+                legajoContainer.classList.remove('hidden');
+            } else {
+                legajoContainer.classList.add('hidden');
+                const legajoInput = document.getElementById('fLegajoToyota');
+                if (legajoInput) legajoInput.value = '';
+            }
+        }
+
         function prepararEdicion(id) {
             const c = allClientes.find(x => x._id === id);
             editingClientId = id;
@@ -2419,10 +2448,30 @@
             
             toggleCategoriaFields();
             
+            // Prellenar campos nuevos
+            const fDni = document.getElementById('fDni');
+            if (fDni) fDni.value = c.dni || '';
+            const fDir = document.getElementById('fDireccion');
+            if (fDir) fDir.value = c.direccion || '';
+            const fGar = document.getElementById('fGarante');
+            if (fGar) fGar.value = c.garante || '';
+
             if (f.categoria.value === 'Trámites') {
                 f.subTipoTramite.value = c.subTipoTramite || c.tramite || '';
                 document.getElementById('fEmpresa').value = c.empresa || '';
                 f.honorarios.value = c.honorarios || '';
+                // Mostrar Legajo Toyota si empresa incluye Toyota
+                const legajoCont = document.getElementById('legajoToyotaContainer');
+                const legajoInput = document.getElementById('fLegajoToyota');
+                if (legajoCont && legajoInput) {
+                    if ((c.empresa || '').toLowerCase().includes('toyota')) {
+                        legajoCont.classList.remove('hidden');
+                        legajoInput.value = c.legajoToyota || '';
+                    } else {
+                        legajoCont.classList.add('hidden');
+                        legajoInput.value = '';
+                    }
+                }
             } else if (f.categoria.value === 'Préstamos') {
                 f.montoPrestado.value = c.montoPrestado || '';
                 f.montoDevolver.value = c.montoDevolver || '';
@@ -2518,6 +2567,8 @@
             document.getElementById('modalPagoName').textContent = `Cliente: ${nombre}`;
             document.getElementById('pago-monto').value = '';
             document.getElementById('pago-metodo').value = '';
+            const fechaPagoInput = document.getElementById('pago-fechaPago');
+            if (fechaPagoInput) fechaPagoInput.value = '';
             document.getElementById('modalPago').classList.remove('hidden');
         }
 
@@ -2530,13 +2581,16 @@
             const clienteId = document.getElementById('pago-clienteId').value;
             const montoStr = document.getElementById('pago-monto').value;
             const metodo = document.getElementById('pago-metodo').value;
+            const fechaPago = document.getElementById('pago-fechaPago')?.value || '';
             const montoLimpio = unmaskCurrency(montoStr);
             
             try {
+                const payloadPago = { monto: montoLimpio, metodo };
+                if (fechaPago) payloadPago.fechaPago = fechaPago;
                 const res = await authFetch(`/api/clientes/${clienteId}/pago`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ monto: montoLimpio, metodo })
+                    body: JSON.stringify(payloadPago)
                 });
                 if (!res) return; // authFetch ya redirigió al login
                 const resData = await res.json();
