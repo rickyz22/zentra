@@ -14,7 +14,7 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '2.6.1'; 
+        const APP_VERSION = '2.7.0'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -2288,11 +2288,28 @@
                     subtitulo += ` • ${dayText}`;
                 }
 
+                // Calcular próximo vencimiento
+                let proximoVtoStr = '';
+                if (c.operaciones && c.operaciones.length > 0) {
+                    const opsActivas = c.operaciones.filter(o => !['Cerrado', 'Cancelado', 'Pagado'].includes(o.estado) && o.fechaVencimiento);
+                    if (opsActivas.length > 0) {
+                        const fechas = opsActivas.map(o => new Date(o.fechaVencimiento)).filter(d => !isNaN(d.getTime()));
+                        if (fechas.length > 0) {
+                            const minFecha = new Date(Math.min(...fechas));
+                            proximoVtoStr = minFecha.toLocaleDateString('es-AR');
+                        }
+                    }
+                }
+
                 let badgeHtml = c.estado === 'Cerrado' 
                     ? `<span class="px-3 py-1 bg-slate-800/50 text-slate-500 text-[9px] font-black rounded-full uppercase tracking-widest border border-slate-700">CERRADO</span>`
                     : (moroso
                         ? `<span class="px-3 py-1 bg-rose-500/10 text-rose-500 text-[9px] font-black rounded-full uppercase tracking-widest border border-rose-500/20">MOROSO</span>`
                         : `<span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[9px] font-black rounded-full uppercase tracking-widest border border-emerald-500/20">ACTIVO</span>`);
+
+                if (proximoVtoStr) {
+                    badgeHtml += `<span class="ml-4 text-[10px] text-slate-500 font-bold tracking-widest uppercase">🗓️ Vto: ${proximoVtoStr}</span>`;
+                }
 
                 // Template Options
                 let optionsTpl = '<option value="">Plantilla...</option>';
