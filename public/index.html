@@ -1666,6 +1666,7 @@
     </main>
 
     <script>
+        console.log('%c Zentra v3.3.0: Buscador Multicampo y Fix Vencimiento Activo %c', 'background: #7c3aed; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
         let allClientes = [];
         let allRecordatorios = [];
         let editingClientId = null;
@@ -2277,9 +2278,12 @@
         }
 
         function filtrarClientes() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const queryRaw = document.getElementById('searchInput').value.toLowerCase();
+            const query = queryRaw.trim();
+            // Para búsqueda numérica: limpiar TODOS los espacios (Jony pega números con espacios)
+            const queryNumeric = queryRaw.replace(/\s+/g, ''); 
             
-            // Si no hay query, mostrar todos según filtros de pestaña (v3.3.0 UX)
+            // Si no hay query, mostrar todos según filtros de pestaña
             if (!query) {
                 let allItems = [...allClientes];
                 if (filtroCategoriaActual !== 'Todos') {
@@ -2294,6 +2298,7 @@
             let filtered = allClientes.filter(c => {
                 // Normalización de campos para búsqueda flexible
                 const nombre = (c.nombre || '').toLowerCase();
+                const apellido = (c.apellido || '').toLowerCase(); // Soportar campo apellido si existe
                 const empresa = (c.empresa || '').toLowerCase();
                 const dni = String(c.dni || '').toLowerCase();
                 const telefono = String(c.telefono || '').toLowerCase();
@@ -2302,13 +2307,15 @@
                 const tramite = (c.tramite || '').toLowerCase();
                 const producto = (c.producto || '').toLowerCase();
                 
-                // Prioridad Numérica (DNI o Teléfono)
-                if (/^\d+$/.test(query)) {
-                    if (dni.includes(query) || telefono.includes(query)) return true;
+                // Prioridad Numérica Fluida (DNI o Teléfono sin espacios)
+                if (/^\d+$/.test(queryNumeric) && queryNumeric.length > 2) {
+                    if (dni.replace(/\s+/g, '').includes(queryNumeric) || 
+                        telefono.replace(/\s+/g, '').includes(queryNumeric)) return true;
                 }
 
                 // Búsqueda General (Includes)
                 return nombre.includes(query) || 
+                       apellido.includes(query) ||
                        empresa.includes(query) || 
                        dni.includes(query) || 
                        telefono.includes(query) ||
@@ -2318,18 +2325,13 @@
                        producto.includes(query);
             });
             
-            // Aplicar filtros de contexto (Categoría/Morosos) sobre el resultado de búsqueda
+            // Filtros de pestaña aplicados sobre el resultado
             if (filtroCategoriaActual !== 'Todos') {
-                filtered = filtered.filter(c => {
-                    const cat = c.categoria || 'Trámites';
-                    return cat === filtroCategoriaActual;
-                });
+                filtered = filtered.filter(c => (c.categoria || 'Trámites') === filtroCategoriaActual);
             }
-
             if (filtroSoloMorosos) {
                 filtered = filtered.filter(c => isMoroso(c));
             }
-            
             renderClientes(filtered);
         }
 
@@ -2753,7 +2755,13 @@
         document.getElementById('clienteForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const data = Object.fromEntries(new FormData(e.target));
-            console.log('DEBUG: Datos enviados desde el form:', data);
+            
+            // FIX: Capturar fechaVencimiento de cualquier paso del wizard (v3.3.0)
+            const vtoInput = e.target.querySelector('input[name="fechaVencimiento"]:not([value=""])') || 
+                             e.target.querySelector('input[name="fechaVencimiento"]');
+            if (vtoInput && vtoInput.value) data.fechaVencimiento = vtoInput.value;
+
+            console.log('DEBUG: Datos procesados para enviar:', data);
             
             if (data.cuotasTotales) data.cuotasTotales = parseInt(data.cuotasTotales) || 1;
             
