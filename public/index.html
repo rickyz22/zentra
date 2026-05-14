@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -628,7 +628,8 @@
            BOTTOM NAV PRO & CLIENT FAB
            ======================== */
         nav.md\:hidden {
-            height: 5rem;
+            height: calc(5rem + env(safe-area-inset-bottom, 0px));
+            padding-bottom: env(safe-area-inset-bottom, 0px);
             background: rgba(10, 15, 30, 0.98) !important;
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
@@ -654,7 +655,7 @@
         /* FAB Simple para Clientes */
         #fab-clientes {
             position: fixed;
-            bottom: 6.5rem;
+            bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
             right: 1.5rem;
             width: 3.5rem;
             height: 3.5rem;
@@ -733,7 +734,7 @@
                 z-index: 100 !important;
             }
             main {
-                padding-bottom: 7rem !important; /* Espacio para Bottom Nav */
+                padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px)) !important; /* Espacio para Bottom Nav + safe area iPhone */
             }
             #fab-clientes {
                 display: flex !important;
@@ -1596,13 +1597,23 @@
             document.getElementById('icon-moon-mob')?.classList.toggle('hidden', isDark);
         }
 
-        // --- FORCE LOGOUT (sin confirm, para sesiones expiradas) ---
+        // --- FORCE LOGOUT (con aviso visual para sesiones expiradas) ---
         function forceLogout() {
             console.warn('🔒 Sesión expirada. Redirigiendo a login...');
+            // Preservar borrador del formulario si estaba abierto
+            const formContainer = document.getElementById('formContainer');
+            const form = document.getElementById('clienteForm');
+            if (form && formContainer && !formContainer.classList.contains('hidden')) {
+                try {
+                    const borrador = Object.fromEntries(new FormData(form));
+                    localStorage.setItem('zentra_form_draft', JSON.stringify(borrador));
+                } catch(e) { /* silencioso */ }
+            }
             localStorage.removeItem('jony_token');
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             sessionStorage.removeItem('jony_retry_session');
+            alert('Tu sesión ha expirado. Por favor, volvé a iniciar sesión.');
             window.location.href = '/login.html';
         }
 
@@ -2471,11 +2482,22 @@
             const method = editingClientId ? 'PUT' : 'POST';
             const url = editingClientId ? `/api/clientes/${editingClientId}` : '/api/clientes';
             
+            // Validación frontend de montos obligatorios (Audit Pre-Entrega)
+            if (data.categoria === 'Préstamos' && (!data.montoPrestado || !data.montoDevolver)) {
+                showToast('Error', 'Completá Monto Prestado y Monto a Devolver', 'rose');
+                return;
+            }
+            if (data.categoria === 'Electrodomésticos' && (!data.costoCompra || !data.precioVenta)) {
+                showToast('Error', 'Completá Costo de Compra y Precio de Venta', 'rose');
+                return;
+            }
+
             try {
                 const res = await authFetch(url, {
                     method, headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
+                if (!res) return; // authFetch ya redirigió al login
                 const resData = await res.json();
                 if (resData.ok) {
                     toggleForm(); 
@@ -2516,6 +2538,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ monto: montoLimpio, metodo })
                 });
+                if (!res) return; // authFetch ya redirigió al login
                 const resData = await res.json();
                 if (resData.ok) {
                     closePagoModal();
@@ -2526,6 +2549,7 @@
                 }
             } catch(err) {
                 console.error(err);
+                showToast('Error', 'Fallo de conexión al registrar pago.', 'rose');
             }
         });
 

@@ -41,6 +41,25 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // API calls: siempre directo al servidor (nunca cachear)
+  if (event.request.url.includes('/api/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  // HTML / Navegación: Network-First (garantiza última versión en iPhone)
+  if (event.request.mode === 'navigate' || event.request.url.endsWith('.html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+  // Otros assets (images, fonts, scripts): Cache-First
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request);

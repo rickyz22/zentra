@@ -21,7 +21,7 @@ const clienteSchema = new mongoose.Schema({
     estado: {
         type: String,
         enum: {
-            values: ['Activo', 'Pendiente', 'Cerrado', 'Moroso'],
+            values: ['Activo', 'Pendiente', 'Cerrado', 'Moroso', 'Pagado'],
             message: '{VALUE} no es un estado válido'
         },
         default: 'Pendiente'

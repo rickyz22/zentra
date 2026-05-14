@@ -14,6 +14,24 @@ exports.crearCliente = async (req, res) => {
         if (data.precioVenta) data.precioVenta = Math.round(data.precioVenta);
         if (data.honorarios) data.honorarios = Math.round(data.honorarios);
 
+        // Validación de montos obligatorios por categoría (Audit Pre-Entrega)
+        if (data.categoria === 'Préstamos') {
+            if (!data.montoPrestado || data.montoPrestado <= 0) {
+                return res.status(400).json({ ok: false, msg: 'El monto prestado es obligatorio para Préstamos' });
+            }
+            if (!data.montoDevolver || data.montoDevolver <= 0) {
+                return res.status(400).json({ ok: false, msg: 'El monto a devolver es obligatorio para Préstamos' });
+            }
+        }
+        if (data.categoria === 'Electrodomésticos') {
+            if (!data.costoCompra || data.costoCompra <= 0) {
+                return res.status(400).json({ ok: false, msg: 'El costo de compra es obligatorio para Electrodomésticos' });
+            }
+            if (!data.precioVenta || data.precioVenta <= 0) {
+                return res.status(400).json({ ok: false, msg: 'El precio de venta es obligatorio para Electrodomésticos' });
+            }
+        }
+
         // Si se provee fecha manual, usarla. Si no, hoy.
         const fechaBase = data.fechaIngreso ? new Date(data.fechaIngreso) : new Date();
         data.fecha = fechaBase;
@@ -94,7 +112,7 @@ exports.actualizarCliente = async (req, res) => {
         if (data.montoDevolver) data.montoDevolver = Math.round(data.montoDevolver);
         if (data.honorarios) data.honorarios = Math.round(data.honorarios);
 
-        const clienteActualizado = await Cliente.findByIdAndUpdate(id, data, { new: true });
+        const clienteActualizado = await Cliente.findByIdAndUpdate(id, data, { new: true, runValidators: true });
         
         if (!clienteActualizado) {
             return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
