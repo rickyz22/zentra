@@ -92,7 +92,12 @@ exports.crearCliente = async (req, res) => {
         if (cliente) {
             // Actualizar cliente existente
             cliente.operaciones.push(nuevaOperacion);
-            if (esTramite && nuevaOperacion.estado === 'Pagado') cliente.estado = 'Pagado';
+            if (esTramite && nuevaOperacion.estado === 'Pagado') {
+                cliente.estado = 'Pagado';
+                // Compatibilidad Legacy: Si el frontend usa campos root, los limpiamos
+                cliente.saldoPendiente = 0;
+                cliente.proximoCobro = null;
+            }
             
             // Si NO es trámite y hay pago inicial, aplicar descuento normal
             if (!esTramite && pagoInicial > 0) {
@@ -135,6 +140,8 @@ exports.crearCliente = async (req, res) => {
                     op.saldoPendiente = 0;
                     op.estado = 'Pagado';
                     nuevoCliente.estado = 'Pagado';
+                    nuevoCliente.saldoPendiente = 0; // Fix v3.1.2
+                    nuevoCliente.proximoCobro = null;
                 }
                 op.historialPagos.push({
                     monto: pagoInicial,

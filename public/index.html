@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.1.1'; 
-        const CACHE_NAME = 'zentra-v3.1.1';
+        const APP_VERSION = '3.1.2'; 
+        const CACHE_NAME = 'zentra-v3.1.2';
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -2393,9 +2393,11 @@
 
                 let badgeHtml = c.estado === 'Cerrado' 
                     ? `<span class="px-3 py-1 bg-slate-800/50 text-slate-500 text-[9px] font-black rounded-full uppercase tracking-widest border border-slate-700">CERRADO</span>`
-                    : (moroso
-                        ? `<span class="px-3 py-1 bg-rose-500/10 text-rose-500 text-[9px] font-black rounded-full uppercase tracking-widest border border-rose-500/20">MOROSO</span>`
-                        : `<span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[9px] font-black rounded-full uppercase tracking-widest border border-emerald-500/20">ACTIVO</span>`);
+                    : (c.estado === 'Pagado'
+                        ? `<span class="px-3 py-1 bg-emerald-500 text-white text-[9px] font-black rounded-full uppercase tracking-widest border border-emerald-400 shadow-lg shadow-emerald-500/20">PAGADO</span>`
+                        : (moroso
+                            ? `<span class="px-3 py-1 bg-rose-500/10 text-rose-500 text-[9px] font-black rounded-full uppercase tracking-widest border border-rose-500/20">MOROSO</span>`
+                            : `<span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[9px] font-black rounded-full uppercase tracking-widest border border-emerald-500/20">ACTIVO</span>`));
 
                 if (proximoVtoStr) {
                     badgeHtml += `<span class="ml-4 text-[10px] text-slate-500 font-bold tracking-widest uppercase">🗓️ Vto: ${proximoVtoStr}</span>`;
