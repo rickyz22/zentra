@@ -14,7 +14,7 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '2.7.0'; 
+        const APP_VERSION = '2.7.1'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -2718,7 +2718,8 @@
                 tramite: document.getElementById('no-tramite').value,
                 subTipoTramite: document.getElementById('no-subTipoTramite').value,
                 honorarios: unmaskCurrency(document.getElementById('no-honorarios').value),
-                cuotasTotales: document.getElementById('no-cuotasTotales').value
+                cuotasTotales: document.getElementById('no-cuotasTotales').value,
+                fechaVencimiento: document.getElementById('no-fechaVencimiento').value
             };
             
             try {
