@@ -43,10 +43,11 @@ exports.crearCliente = async (req, res) => {
         
         const fechaBase = (data.fechaIngreso && data.fechaIngreso.length > 5) ? new Date(data.fechaIngreso + 'T12:00:00') : new Date();
 
-        // 1. Lógica de Cliente Único (Upsert por DNI)
+        // 1. Lógica de Cliente Único (Upsert por DNI solo si existe)
         let cliente = null;
-        if (data.dni && data.dni.length > 5) {
-            cliente = await Cliente.findOne({ dni: data.dni });
+        const dniLimpio = (data.dni || '').toString().trim();
+        if (dniLimpio && dniLimpio.length > 5) {
+            cliente = await Cliente.findOne({ dni: dniLimpio });
         }
 
         // 2. Estructura de la operación base
@@ -64,7 +65,6 @@ exports.crearCliente = async (req, res) => {
 
         const nuevaOperacion = {
             tipo: data.categoria || 'Trámites',
-            estado: esTramite ? 'Pagado' : 'Activo',
             fechaAlta: fechaBase,
             montoPrestado: data.montoPrestado,
             montoDevolver: data.montoDevolver,
@@ -183,7 +183,7 @@ exports.crearCliente = async (req, res) => {
                 titulo: `Vence: ${data.nombre} (${data.categoria})`,
                 fecha: fechaVencimiento,
                 clienteId: clienteGuardado._id,
-                tipo: data.categoria,
+                tipo: 'vencimiento', // Usar tipo válido del enum
                 categoria: data.categoria
             });
         }

@@ -24,7 +24,7 @@ const agendaSchema = new mongoose.Schema({
     },
     tipo: {
         type: String,
-        enum: ['Trámite', 'Cobro', 'personal', 'vencimiento'],
+        enum: ['Trámite', 'Cobro', 'personal', 'vencimiento', 'Préstamos', 'Electrodomésticos'],
         default: 'Trámite'
     },
     // Campo faltante detectado en auditoría para filtros consistentes
