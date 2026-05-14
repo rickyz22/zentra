@@ -14,7 +14,7 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '2.3.0'; 
+        const APP_VERSION = '2.3.1'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -2345,22 +2345,22 @@
                                         </button>
                                     ` : ''}
                                 </div>
-                                <div class="finance-panel bg-slate-50 border border-slate-100 rounded-xl p-3 grid grid-cols-4 gap-2">
-                                    <div class="finance-col flex flex-col items-start">
+                                <div class="finance-panel bg-slate-50 border border-slate-100 rounded-xl p-3 grid grid-cols-2 md:grid-cols-4 gap-y-4 md:gap-y-0 gap-x-2">
+                                    <div class="finance-col flex flex-col items-center md:items-start text-center md:text-left">
                                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                                             ${op.tipo === 'Préstamos' ? 'Capital' : (op.tipo === 'Electrodomésticos' ? 'Costo' : 'Honorarios')}
                                         </p>
                                         <p class="text-xs font-black text-slate-700">${formatCurrency(montoP || montoD)}</p>
                                     </div>
-                                    <div class="finance-col flex flex-col items-center border-l border-slate-200 px-2">
+                                    <div class="finance-col flex flex-col items-center border-l border-slate-200 px-2 text-center">
                                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total</p>
                                         <p class="text-xs font-black text-slate-700">${formatCurrency(montoD)}</p>
                                     </div>
-                                    <div class="finance-col flex flex-col items-center border-l border-slate-200 px-2">
+                                    <div class="finance-col flex flex-col items-center md:border-l border-slate-200 px-2 text-center">
                                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Cuotas</p>
                                         <p class="text-xs font-black text-slate-700">${op.cuotasTotales || 1}</p>
                                     </div>
-                                    <div class="finance-col flex flex-col items-end border-l border-slate-200 pl-2">
+                                    <div class="finance-col flex flex-col items-center md:items-end border-l border-slate-200 pl-2 text-center md:text-right">
                                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Saldo</p>
                                         <p class="text-xs font-black ${saldoPend > 0 ? 'text-rose-500' : 'text-emerald-500'}">${formatCurrency(saldoPend)}</p>
                                     </div>
