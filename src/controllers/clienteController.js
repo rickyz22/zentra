@@ -81,9 +81,17 @@ exports.crearCliente = async (req, res) => {
             // Si sigue usando campos root por compatibilidad, actualizalos también
             if (nuevoCliente.saldoPendiente !== undefined) {
                 nuevoCliente.saldoPendiente -= pagoInicial;
+                if (nuevoCliente.saldoPendiente <= 0) {
+                    nuevoCliente.estado = 'Pagado';
+                }
             }
             // Compatibilidad estricta con legacy:
             nuevoCliente.montoPagado = (nuevoCliente.montoPagado || 0) + pagoInicial;
+            
+            // Si no tiene saldoPendiente root explícito pero la operación sí se saldó, garantizamos el estado
+            if (nuevaOp.estado === 'Pagado') {
+                nuevoCliente.estado = 'Pagado';
+            }
         }
 
         const clienteGuardado = await nuevoCliente.save();

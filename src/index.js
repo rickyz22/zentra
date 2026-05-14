@@ -3,7 +3,7 @@ require('dotenv').config();
 // VERSIÓN CANÓNICA DEL SERVIDOR
 // Actualizá este número con cada deploy
 // ==========================================
-const APP_VERSION = '2.9.4';
+const APP_VERSION = '2.9.6';
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -97,7 +97,7 @@ async function seedUser() {
 
 // Ruta pública de versión (sin auth, para chequeo de caché en el frontend)
 app.get('/api/version', (req, res) => {
-    const CACHE_NAME = 'zentra-v2.9.4'; // Incrementar esto junto con APP_VERSION
+    const CACHE_NAME = 'zentra-v2.9.6'; // Incrementar esto junto con APP_VERSION
     res.json({ version: APP_VERSION, cache: CACHE_NAME, ok: true });
 });
 
