@@ -14,7 +14,7 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '2.9.6'; 
+        const APP_VERSION = '2.9.8'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -1122,84 +1122,172 @@
 
                 <div id="formContainer" class="hidden bg-slate-900 p-10 rounded-[2.5rem] border border-white/10 shadow-2xl shadow-black">
                     <h4 id="formTitle" class="text-xl font-black text-white mb-8 flex items-center"><i data-lucide="user-plus" class="w-6 h-6 mr-3 text-orange-500"></i>Ingresar Datos del Cliente</h4>
-                    <form id="clienteForm" class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="space-y-6">
-                            <input type="text" name="nombre" required placeholder="Nombre Completo" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
-                            <input type="tel" name="telefono" required 
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');"
-                                   placeholder="WhatsApp (Solo números)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
-                            <input type="text" name="dni" id="fDni" placeholder="DNI (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
-                            <input type="text" name="direccion" id="fDireccion" placeholder="Dirección (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
-                            <input type="text" name="garante" id="fGarante" placeholder="Garante - Nombre y Teléfono (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
-                            
-                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mt-6">Tipo de Negocio</p>
-                            <select name="categoria" id="categoriaSelect" onchange="toggleCategoriaFields()" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-black text-slate-300 outline-none focus:ring-2 focus:ring-orange-500 transition-all">
-                                <option value="Trámites">⚡ Trámites</option>
-                                <option value="Préstamos">💵 Préstamos</option>
-                                <option value="Electrodomésticos">📦 Electrodomésticos</option>
-                            </select>
-                        </div>
-                        <div class="space-y-6">
-                            <!-- Trámites -->
-                            <div id="fieldsTramites" class="hidden space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <select name="subTipoTramite" id="fSubTipoTramite" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all text-white">
-                                    <option value="" disabled selected>Seleccione el Tipo de Trámite</option>
-                                    <option value="ARCA / AFIP">ARCA / AFIP</option>
-                                    <option value="Monotributo">Monotributo</option>
-                                    <option value="Devolución">Devolución</option>
-                                    <option value="Deducción Impuesto a las Ganancias">Deducción Impuesto a las Ganancias</option>
-                                    <option value="Otro">Otro</option>
-                                </select>
-                                <select name="empresa" id="fEmpresa" onchange="toggleLegajoToyota()" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all">
-                                    <option value="" disabled selected>Seleccione Empresa / Empleador</option>
-                                    <option value="Toyota">Toyota</option>
-                                    <option value="Casasco">Casasco</option>
-                                    <option value="Otra">Otra</option>
-                                </select>
-                                <div id="legajoToyotaContainer" class="hidden">
-                                    <input type="text" name="legajoToyota" id="fLegajoToyota" placeholder="Legajo Toyota" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                    <form id="clienteForm" class="flex flex-col gap-6">
+                        <input type="hidden" name="categoria" id="categoriaSelect" value="Trámites">
+
+                        <!-- STEP 1: SELECTOR -->
+                        <div id="step-selector" class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in duration-300">
+                            <button type="button" onclick="mostrarPaso('step-datos-tramite', 'Trámites')" class="flex flex-col items-center justify-center p-8 bg-slate-950 border border-white/5 rounded-3xl hover:border-orange-500 hover:shadow-[0_0_30px_rgba(249,115,22,0.2)] transition-all group">
+                                <div class="w-16 h-16 bg-orange-500/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <i data-lucide="zap" class="w-8 h-8 text-orange-500"></i>
                                 </div>
-                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="honorarios" id="fHonorarios" placeholder="Honorarios Sugeridos ($) (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
-                                
-                                <div id="contenedorPagoInicial" class="hidden animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest pl-1 mb-2">Monto Abonado Ahora (Opcional)</p>
-                                    <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="pagoInicial" id="montoAbonadoInicial" placeholder="Ej: 5000" class="w-full p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-2xl text-sm font-bold text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-emerald-700/50">
+                                <h5 class="text-white font-black text-lg">Trámite</h5>
+                                <p class="text-slate-500 text-xs text-center mt-2">Monotributo, AFIP, etc.</p>
+                            </button>
+                            <button type="button" onclick="mostrarPaso('step-datos-prestamo', 'Préstamos')" class="flex flex-col items-center justify-center p-8 bg-slate-950 border border-white/5 rounded-3xl hover:border-emerald-500 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] transition-all group">
+                                <div class="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <i data-lucide="banknote" class="w-8 h-8 text-emerald-500"></i>
+                                </div>
+                                <h5 class="text-white font-black text-lg">Préstamo</h5>
+                                <p class="text-slate-500 text-xs text-center mt-2">Dinero en efectivo</p>
+                            </button>
+                            <button type="button" onclick="mostrarPaso('step-datos-electro', 'Electrodomésticos')" class="flex flex-col items-center justify-center p-8 bg-slate-950 border border-white/5 rounded-3xl hover:border-blue-500 hover:shadow-[0_0_30px_rgba(59,130,246,0.2)] transition-all group">
+                                <div class="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <i data-lucide="tv" class="w-8 h-8 text-blue-500"></i>
+                                </div>
+                                <h5 class="text-white font-black text-lg">Venta Electro</h5>
+                                <p class="text-slate-500 text-xs text-center mt-2">Electrodomésticos</p>
+                            </button>
+                            <div class="col-span-1 md:col-span-3 flex justify-end mt-4">
+                                <button type="button" onclick="cancelarEdicion()" class="px-6 py-3 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors">Cerrar</button>
+                            </div>
+                        </div>
+
+                        <!-- STEP 2: TRÁMITES -->
+                        <div id="step-datos-tramite" class="hidden wizard-step animate-in fade-in slide-in-from-right-8 duration-300">
+                            <div class="flex justify-between items-center mb-6">
+                                <button type="button" onclick="mostrarPaso('step-selector')" class="flex items-center text-slate-400 hover:text-white transition-colors text-sm font-bold"><i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Volver</button>
+                                <span class="px-3 py-1 bg-orange-500/20 text-orange-500 text-xs font-black uppercase tracking-widest rounded-lg">Trámite</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="space-y-4">
+                                    <h5 class="text-white font-black text-sm flex items-center"><i data-lucide="file-text" class="w-4 h-4 mr-2 text-slate-400"></i>Detalles del Trámite</h5>
+                                    <select name="subTipoTramite" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all text-white">
+                                        <option value="" disabled selected>Seleccione el Tipo de Trámite</option>
+                                        <option value="ARCA / AFIP">ARCA / AFIP</option>
+                                        <option value="Monotributo">Monotributo</option>
+                                        <option value="Devolución">Devolución</option>
+                                        <option value="Deducción Impuesto a las Ganancias">Deducción Impuesto a las Ganancias</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                    <select name="empresa" onchange="const c = this.parentElement.querySelector('.legajo'); if(this.value==='Toyota') c.classList.remove('hidden'); else {c.classList.add('hidden'); c.querySelector('input').value='';}" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+                                        <option value="" disabled selected>Seleccione Empresa / Empleador</option>
+                                        <option value="Toyota">Toyota</option>
+                                        <option value="Casasco">Casasco</option>
+                                        <option value="Otra">Otra</option>
+                                    </select>
+                                    <div class="legajo hidden">
+                                        <input type="text" name="legajoToyota" placeholder="Legajo Toyota" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                    </div>
+                                    <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="honorarios" placeholder="Honorarios Sugeridos ($) (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                    
+                                    <div class="mt-4">
+                                        <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest pl-1 mb-2">Monto Abonado Ahora (Opcional)</p>
+                                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="pagoInicial" placeholder="Ej: 5000" class="w-full p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-2xl text-sm font-bold text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-emerald-700/50">
+                                    </div>
+                                </div>
+                                <div class="space-y-4">
+                                    <h5 class="text-white font-black text-sm flex items-center"><i data-lucide="user" class="w-4 h-4 mr-2 text-slate-400"></i>Datos Personales</h5>
+                                    <input type="text" name="nombre" required placeholder="Nombre Completo" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                    <input type="tel" name="telefono" required oninput="this.value = this.value.replace(/[^0-9]/g, '');" placeholder="WhatsApp (Solo números)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                    <input type="text" name="dni" placeholder="DNI (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                    
+                                    <div class="pt-2">
+                                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-2">Fecha de Ingreso</p>
+                                        <input type="date" name="fechaIngreso" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+                                    </div>
+                                    <div class="pt-2">
+                                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-2">Primer Vencimiento (Opcional)</p>
+                                        <input type="date" name="fechaVencimiento" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+                                    </div>
                                 </div>
                             </div>
-
-                             <!-- Préstamos -->
-                            <div id="fieldsPrestamos" class="hidden grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="montoPrestado" id="fMontoPrestado" placeholder="Monto Prestado ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
-                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) >= unmaskCurrency(document.getElementById('fMontoPrestado').value)) ? '' : '#ef4444';" name="montoDevolver" id="fMontoDevolver" placeholder="Monto a Devolver ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
-                            </div>
-
-                            <!-- Electrodomésticos -->
-                            <div id="fieldsElectro" class="hidden grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <input type="text" name="producto" id="productoElectro" placeholder="Producto/Modelo (Ej: Heladera Patrick)" class="w-full col-span-2 p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
-                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="costoCompra" id="fCostoCompra" placeholder="Costo de Compra ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
-                                <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) >= unmaskCurrency(document.getElementById('fCostoCompra').value)) ? '' : '#ef4444';" name="precioVenta" id="fPrecioVenta" placeholder="Precio de Venta ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
-                            </div>
-
-                            <div id="fieldsCuotas" class="space-y-6 hidden">
-                                <input type="number" name="cuotasTotales" id="fCuotas" placeholder="Cantidad de Cuotas" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
-                            </div>
-
-                            <div id="fieldsVencimiento" class="space-y-2">
-                                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Primer Vencimiento (Opcional)</p>
-                                <input type="date" name="fechaVencimiento" id="fFechaVencimiento" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+                            <div class="flex justify-end gap-4 mt-8 pt-6 border-t border-white/10">
+                                <button type="submit" class="px-12 py-4 bg-orange-500 text-white font-black rounded-2xl hover:bg-orange-600 active:scale-95 transition-all uppercase tracking-widest text-xs">Guardar Trámite</button>
                             </div>
                         </div>
-                        <!-- Fecha de Ingreso -->
-                        <div class="md:col-span-2">
-                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-2">Fecha de Ingreso</p>
-                            <input type="date" name="fechaIngreso" id="fFechaIngreso"
-                                class="w-full md:w-auto p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all">
-                            <p class="text-[10px] text-slate-600 pl-1 mt-1">Por defecto: hoy. Cambiá la fecha para cargar clientes anteriores.</p>
+
+                        <!-- STEP 2: PRÉSTAMOS -->
+                        <div id="step-datos-prestamo" class="hidden wizard-step animate-in fade-in slide-in-from-right-8 duration-300">
+                            <div class="flex justify-between items-center mb-6">
+                                <button type="button" onclick="mostrarPaso('step-selector')" class="flex items-center text-slate-400 hover:text-white transition-colors text-sm font-bold"><i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Volver</button>
+                                <span class="px-3 py-1 bg-emerald-500/20 text-emerald-500 text-xs font-black uppercase tracking-widest rounded-lg">Préstamo</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="space-y-4">
+                                    <h5 class="text-white font-black text-sm flex items-center"><i data-lucide="banknote" class="w-4 h-4 mr-2 text-slate-400"></i>Detalles Financieros</h5>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event);" name="montoPrestado" placeholder="Monto Prestado ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
+                                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event);" name="montoDevolver" placeholder="Monto a Devolver ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
+                                    </div>
+                                    <input type="number" name="cuotasTotales" placeholder="Cantidad de Cuotas" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
+                                </div>
+                                <div class="space-y-4">
+                                    <h5 class="text-white font-black text-sm flex items-center"><i data-lucide="user" class="w-4 h-4 mr-2 text-slate-400"></i>Datos Personales</h5>
+                                    <input type="text" name="nombre" required placeholder="Nombre Completo" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
+                                    <input type="tel" name="telefono" required oninput="this.value = this.value.replace(/[^0-9]/g, '');" placeholder="WhatsApp (Solo números)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
+                                    <input type="text" name="dni" placeholder="DNI (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
+                                    <input type="text" name="direccion" placeholder="Dirección (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
+                                    <input type="text" name="garante" placeholder="Garante (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
+                                    
+                                    <div class="grid grid-cols-2 gap-4 pt-2">
+                                        <div>
+                                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-2">Ingreso</p>
+                                            <input type="date" name="fechaIngreso" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-2">1° Vencimiento</p>
+                                            <input type="date" name="fechaVencimiento" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-4 mt-8 pt-6 border-t border-white/10">
+                                <button type="submit" class="px-12 py-4 bg-emerald-500 text-white font-black rounded-2xl hover:bg-emerald-600 active:scale-95 transition-all uppercase tracking-widest text-xs">Guardar Préstamo</button>
+                            </div>
                         </div>
-                        <div class="md:col-span-2 flex justify-end gap-4 mt-2">
-                            <button type="button" onclick="cancelarEdicion()" class="px-6 py-3 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancelar</button>
-                            <button type="submit" id="formSubmitBtn" class="px-12 py-4 bg-orange-500 text-white font-black rounded-2xl hover:bg-orange-600 active:scale-95 transition-all uppercase tracking-widest text-xs">Crear Cliente</button>
+
+                        <!-- STEP 2: ELECTRODOMÉSTICOS -->
+                        <div id="step-datos-electro" class="hidden wizard-step animate-in fade-in slide-in-from-right-8 duration-300">
+                            <div class="flex justify-between items-center mb-6">
+                                <button type="button" onclick="mostrarPaso('step-selector')" class="flex items-center text-slate-400 hover:text-white transition-colors text-sm font-bold"><i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Volver</button>
+                                <span class="px-3 py-1 bg-blue-500/20 text-blue-500 text-xs font-black uppercase tracking-widest rounded-lg">Electrodomésticos</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="space-y-4">
+                                    <h5 class="text-white font-black text-sm flex items-center"><i data-lucide="tv" class="w-4 h-4 mr-2 text-slate-400"></i>Detalles del Producto</h5>
+                                    <input type="text" name="producto" placeholder="Producto/Modelo (Ej: Heladera Patrick)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event);" name="costoCompra" placeholder="Costo Compra ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event);" name="precioVenta" placeholder="Precio Venta ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                    </div>
+                                    <input type="number" name="cuotasTotales" placeholder="Cantidad de Cuotas" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                </div>
+                                <div class="space-y-4">
+                                    <h5 class="text-white font-black text-sm flex items-center"><i data-lucide="user" class="w-4 h-4 mr-2 text-slate-400"></i>Datos Personales</h5>
+                                    <input type="text" name="nombre" required placeholder="Nombre Completo" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                    <input type="tel" name="telefono" required oninput="this.value = this.value.replace(/[^0-9]/g, '');" placeholder="WhatsApp (Solo números)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                    <input type="text" name="dni" placeholder="DNI (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                    <input type="text" name="direccion" placeholder="Dirección (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                    <input type="text" name="garante" placeholder="Garante (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                    
+                                    <div class="grid grid-cols-2 gap-4 pt-2">
+                                        <div>
+                                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-2">Ingreso</p>
+                                            <input type="date" name="fechaIngreso" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-2">1° Vencimiento</p>
+                                            <input type="date" name="fechaVencimiento" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-4 mt-8 pt-6 border-t border-white/10">
+                                <button type="submit" class="px-12 py-4 bg-blue-500 text-white font-black rounded-2xl hover:bg-blue-600 active:scale-95 transition-all uppercase tracking-widest text-xs">Guardar Electro</button>
+                            </div>
                         </div>
+
                     </form>
                 </div>
 
@@ -2528,36 +2616,7 @@
             lucide.createIcons();
         }
 
-        function toggleCategoriaFields() {
-            const cat = document.getElementById('categoriaSelect').value;
-            document.getElementById('fieldsTramites').classList.add('hidden');
-            document.getElementById('fieldsPrestamos').classList.add('hidden');
-            document.getElementById('fieldsElectro').classList.add('hidden');
-            document.getElementById('fieldsCuotas').classList.add('hidden');
-            const subTramite = document.getElementById('fSubTipoTramite');
-            if(subTramite) subTramite.required = false;
 
-            if (cat === 'Trámites') {
-                document.getElementById('fieldsTramites').classList.remove('hidden');
-                if(subTramite) subTramite.required = true;
-                
-                const pagoInicial = document.getElementById('contenedorPagoInicial');
-                if (pagoInicial) pagoInicial.classList.remove('hidden');
-            } else {
-                const pagoInicial = document.getElementById('contenedorPagoInicial');
-                const pagoInput = document.getElementById('montoAbonadoInicial');
-                if (pagoInicial) pagoInicial.classList.add('hidden');
-                if (pagoInput) pagoInput.value = '';
-
-                if (cat === 'Préstamos') {
-                    document.getElementById('fieldsPrestamos').classList.remove('hidden');
-                    document.getElementById('fieldsCuotas').classList.remove('hidden');
-                } else if (cat === 'Electrodomésticos') {
-                    document.getElementById('fieldsElectro').classList.remove('hidden');
-                    document.getElementById('fieldsCuotas').classList.remove('hidden');
-                }
-            }
-        }
 
         function toggleLegajoToyota() {
             const empresaInput = document.getElementById('fEmpresa');
@@ -2577,52 +2636,27 @@
             editingClientId = id;
             document.getElementById('formContainer').classList.remove('hidden');
             const f = document.getElementById('clienteForm');
-            f.nombre.value = c.nombre; 
-            f.telefono.value = c.telefono; 
-            f.categoria.value = c.categoria || 'Trámites';
             
-            toggleCategoriaFields();
+            const categoria = c.categoria || 'Trámites';
+            f.querySelector('#categoriaSelect').value = categoria;
             
-            // Prellenar campos nuevos
-            const fDni = document.getElementById('fDni');
-            if (fDni) fDni.value = c.dni || '';
-            const fDir = document.getElementById('fDireccion');
-            if (fDir) fDir.value = c.direccion || '';
-            const fGar = document.getElementById('fGarante');
-            if (fGar) fGar.value = c.garante || '';
+            let stepId = 'step-datos-tramite';
+            if (categoria === 'Préstamos') stepId = 'step-datos-prestamo';
+            if (categoria === 'Electrodomésticos') stepId = 'step-datos-electro';
+            
+            mostrarPaso(stepId, categoria);
+            
+            // Llenar campos comunes en todos los pasos
+            f.querySelectorAll('[name="nombre"]').forEach(i => i.value = c.nombre || '');
+            f.querySelectorAll('[name="telefono"]').forEach(i => i.value = c.telefono || '');
+            f.querySelectorAll('[name="dni"]').forEach(i => i.value = c.dni || '');
+            f.querySelectorAll('[name="direccion"]').forEach(i => i.value = c.direccion || '');
+            f.querySelectorAll('[name="garante"]').forEach(i => i.value = c.garante || '');
 
-            if (f.categoria.value === 'Trámites') {
-                f.subTipoTramite.value = c.subTipoTramite || c.tramite || '';
-                document.getElementById('fEmpresa').value = c.empresa || '';
-                f.honorarios.value = c.honorarios || '';
-                // Mostrar Legajo Toyota si empresa incluye Toyota
-                const legajoCont = document.getElementById('legajoToyotaContainer');
-                const legajoInput = document.getElementById('fLegajoToyota');
-                if (legajoCont && legajoInput) {
-                    if ((c.empresa || '').toLowerCase().includes('toyota')) {
-                        legajoCont.classList.remove('hidden');
-                        legajoInput.value = c.legajoToyota || '';
-                    } else {
-                        legajoCont.classList.add('hidden');
-                        legajoInput.value = '';
-                    }
-                }
-            } else if (f.categoria.value === 'Préstamos') {
-                f.montoPrestado.value = c.montoPrestado || '';
-                f.montoDevolver.value = c.montoDevolver || '';
-                f.cuotasTotales.value = c.cuotasTotales || 1;
-            } else if (f.categoria.value === 'Electrodomésticos') {
-                f.producto.value = c.producto || '';
-                f.costoCompra.value = c.costoCompra || '';
-                f.precioVenta.value = c.precioVenta || '';
-                f.cuotasTotales.value = c.cuotasTotales || 1;
-            }
-
-            // Prellenar fechaIngreso al editar (manejando correctamente el formato para el input type="date")
+            // Calcular fechaIngreso
             let fiValue = "";
             if (c.fechaIngreso) {
                 const dateObj = new Date(c.fechaIngreso);
-                // Extraer YYYY-MM-DD de forma local para evitar desfases de zona horaria
                 const year = dateObj.getFullYear();
                 const month = String(dateObj.getMonth() + 1).padStart(2, '0');
                 const day = String(dateObj.getDate()).padStart(2, '0');
@@ -2630,10 +2664,42 @@
             } else {
                 fiValue = new Date().toISOString().split('T')[0];
             }
-            document.getElementById('fFechaIngreso').value = fiValue;
+            f.querySelectorAll('[name="fechaIngreso"]').forEach(i => i.value = fiValue);
+
+            // Prellenar específicos según categoría
+            if (categoria === 'Trámites') {
+                const step = document.getElementById('step-datos-tramite');
+                step.querySelector('[name="subTipoTramite"]').value = c.subTipoTramite || c.tramite || '';
+                const empSelect = step.querySelector('[name="empresa"]');
+                empSelect.value = c.empresa || '';
+                
+                const legajoCont = step.querySelector('.legajo');
+                if ((c.empresa || '').toLowerCase().includes('toyota')) {
+                    legajoCont.classList.remove('hidden');
+                    step.querySelector('[name="legajoToyota"]').value = c.legajoToyota || '';
+                } else {
+                    legajoCont.classList.add('hidden');
+                    step.querySelector('[name="legajoToyota"]').value = '';
+                }
+                step.querySelector('[name="honorarios"]').value = c.honorarios || '';
+            } else if (categoria === 'Préstamos') {
+                const step = document.getElementById('step-datos-prestamo');
+                step.querySelector('[name="montoPrestado"]').value = c.montoPrestado || '';
+                step.querySelector('[name="montoDevolver"]').value = c.montoDevolver || '';
+                step.querySelector('[name="cuotasTotales"]').value = c.cuotasTotales || 1;
+            } else if (categoria === 'Electrodomésticos') {
+                const step = document.getElementById('step-datos-electro');
+                step.querySelector('[name="producto"]').value = c.producto || '';
+                step.querySelector('[name="costoCompra"]').value = c.costoCompra || '';
+                step.querySelector('[name="precioVenta"]').value = c.precioVenta || '';
+                step.querySelector('[name="cuotasTotales"]').value = c.cuotasTotales || 1;
+            }
 
             document.getElementById('formTitle').innerHTML = '<i data-lucide="edit" class="w-5 h-5 mr-3 text-blue-500"></i>Editar Cliente';
-            document.getElementById('formSubmitBtn').textContent = 'Guardar Cambios';
+            
+            // Actualizar botones de submit en el wizard
+            f.querySelectorAll('button[type="submit"]').forEach(btn => btn.textContent = 'Guardar Cambios');
+            
             lucide.createIcons();
             document.getElementById('formContainer').scrollIntoView({ behavior: 'smooth' });
         }
@@ -3481,6 +3547,28 @@
             setTimeout(() => t.classList.add('hidden'), 4000);
         }
 
+        function mostrarPaso(stepId, categoriaValor = null) {
+            // Setear la categoría en el input oculto si se provee
+            if (categoriaValor) {
+                document.getElementById('categoriaSelect').value = categoriaValor;
+            }
+
+            // Ocultar todos los pasos y deshabilitar sus inputs para evitar conflictos al enviar FormData
+            document.getElementById('step-selector').classList.add('hidden');
+            document.querySelectorAll('.wizard-step').forEach(el => {
+                el.classList.add('hidden');
+                el.querySelectorAll('input, select').forEach(input => input.disabled = true);
+            });
+
+            // Mostrar el paso solicitado
+            const targetStep = document.getElementById(stepId);
+            if (targetStep) {
+                targetStep.classList.remove('hidden');
+                // Habilitar solo los inputs del paso activo
+                targetStep.querySelectorAll('input, select').forEach(input => input.disabled = false);
+            }
+        }
+
         function toggleForm() { 
             const formContainer = document.getElementById('formContainer');
             formContainer.classList.toggle('hidden'); 
@@ -3488,12 +3576,26 @@
             if (!formContainer.classList.contains('hidden')) {
                 editingClientId = null;
                 document.getElementById('clienteForm').reset();
-                // Default fechaIngreso = hoy
+                
+                // Reiniciar al selector
+                mostrarPaso('step-selector');
+                
+                // Default fechaIngreso = hoy para todos los campos de fechaIngreso
                 const hoy = new Date().toISOString().split('T')[0];
-                document.getElementById('fFechaIngreso').value = hoy;
+                document.querySelectorAll('[name="fechaIngreso"]').forEach(i => i.value = hoy);
+                
                 document.getElementById('formTitle').innerHTML = '<i data-lucide="user-plus" class="w-6 h-6 mr-3 text-orange-500"></i>Ingresar Datos del Cliente';
-                document.getElementById('formSubmitBtn').textContent = 'Crear Cliente';
-                toggleCategoriaFields();
+                
+                // Resetear botones a Crear
+                document.querySelectorAll('#clienteForm button[type="submit"]').forEach(btn => {
+                    const txt = btn.textContent;
+                    if (txt.includes('Cambios')) {
+                        btn.textContent = txt.replace('Guardar Cambios', btn.dataset.original || 'Guardar');
+                    } else {
+                        btn.dataset.original = txt; // Guardar texto original (Guardar Trámite, etc.)
+                    }
+                });
+                
                 lucide.createIcons();
             }
         }
