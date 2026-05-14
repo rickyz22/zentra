@@ -13,7 +13,13 @@ exports.crearCliente = async (req, res) => {
         if (data.montoDevolver) data.montoDevolver = Math.round(data.montoDevolver);
         if (data.costoCompra) data.costoCompra = Math.round(data.costoCompra);
         if (data.precioVenta) data.precioVenta = Math.round(data.precioVenta);
-        if (data.honorarios) data.honorarios = Math.round(data.honorarios);
+        let honorariosCalculados = Math.round(data.honorarios) || 0;
+        const pagoInicial = parseFloat(data.pagoInicial) || 0;
+
+        // Regla Senior: Si es trámite y no hay honorarios pero sí abono, el abono define el total
+        if (data.categoria === 'Trámites' && honorariosCalculados === 0 && pagoInicial > 0) {
+            honorariosCalculados = pagoInicial;
+        }
 
         // Validación de montos obligatorios por categoría
         if (data.categoria === 'Préstamos') {
@@ -26,7 +32,6 @@ exports.crearCliente = async (req, res) => {
         }
         
         const fechaBase = data.fechaIngreso ? new Date(data.fechaIngreso + 'T12:00:00') : new Date();
-        const pagoInicial = parseFloat(data.pagoInicial) || 0;
 
         // 1. Lógica de Cliente Único (Upsert por DNI)
         let cliente = null;
@@ -47,26 +52,39 @@ exports.crearCliente = async (req, res) => {
             producto: data.producto,
             tramite: data.tramite,
             subTipoTramite: data.subTipoTramite,
-            honorarios: data.honorarios,
+            honorarios: honorariosCalculados,
             cuotasTotales: esTramite ? 1 : (data.cuotasTotales ? Number(data.cuotasTotales) : 1),
-            saldoPendiente: esTramite ? 0 : (data.montoDevolver || data.precioVenta || data.honorarios || 0),
+            saldoPendiente: esTramite ? Math.max(0, honorariosCalculados - pagoInicial) : (data.montoDevolver || data.precioVenta || honorariosCalculados || 0),
             historialPagos: [],
-            fechaVencimiento: esTramite ? null : (data.fechaVencimiento ? new Date(data.fechaVencimiento + 'T12:00:00') : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
+            fechaVencimiento: (esTramite && pagoInicial >= honorariosCalculados) ? null : (data.fechaVencimiento ? new Date(data.fechaVencimiento + 'T12:00:00') : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
         };
 
-        // Si es trámite con pago inicial, registrar ganancia inmediata (Caja)
-        if (esTramite && pagoInicial > 0) {
-            await Ganancia.create({
-                monto: pagoInicial,
-                descripcion: `Trámite: ${data.nombre || (cliente ? cliente.nombre : 'Sin Nombre')}`,
-                categoria: 'Trámites',
-                fecha: new Date()
-            });
-            
+        // Forzar estado Pagado si el abono cubre el total (Fix Crítico v3.1.1)
+        if (esTramite && pagoInicial >= honorariosCalculados && honorariosCalculados > 0) {
+            nuevaOperacion.estado = 'Pagado';
+            nuevaOperacion.saldoPendiente = 0;
+        }
+
+        // 3. Fix Dashboard (Ganancias): Registro atómico fuera de lógica de cliente
+        if (pagoInicial > 0) {
+            try {
+                await Ganancia.create({
+                    monto: pagoInicial,
+                    descripcion: `Trámite: ${data.nombre || 'Cliente Nuevo'}`,
+                    categoria: data.categoria || 'Trámites',
+                    fecha: new Date()
+                });
+                console.log('Pago registrado en Dashboard:', pagoInicial);
+            } catch (gErr) {
+                console.error('Error crítico al registrar ganancia:', gErr.message);
+            }
+        }
+
+        if (pagoInicial > 0) {
             nuevaOperacion.historialPagos.push({
                 monto: pagoInicial,
                 fecha: new Date(),
-                nota: 'Pago inicial de trámite (Automático)'
+                nota: 'Abono inicial registrado en creación'
             });
         }
 
@@ -74,7 +92,7 @@ exports.crearCliente = async (req, res) => {
         if (cliente) {
             // Actualizar cliente existente
             cliente.operaciones.push(nuevaOperacion);
-            if (esTramite) cliente.estado = 'Pagado';
+            if (esTramite && nuevaOperacion.estado === 'Pagado') cliente.estado = 'Pagado';
             
             // Si NO es trámite y hay pago inicial, aplicar descuento normal
             if (!esTramite && pagoInicial > 0) {
@@ -103,7 +121,7 @@ exports.crearCliente = async (req, res) => {
                 notas: data.notas,
                 categoria: data.categoria || 'Trámites',
                 fechaIngreso: fechaBase,
-                estado: esTramite ? 'Pagado' : 'Activo',
+                estado: (esTramite && nuevaOperacion.estado === 'Pagado') ? 'Pagado' : (esTramite ? 'Activo' : 'Pendiente'),
                 operaciones: [nuevaOperacion]
             };
 
