@@ -14,7 +14,7 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '2.9.2'; 
+        const APP_VERSION = '2.9.3'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -2373,7 +2373,7 @@
                         operacionesHtml += `
                             <div class="mb-4 border border-slate-200 dark:border-white/10 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-sm">
                                 <div class="flex justify-between items-center mb-3">
-                                    <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1">${icon} ${op.tipo} ${op._id === 'legacy' ? '(Original)' : `#${index + 1}`} - ${op.estado} ${detalleSecundario ? `<span class="text-slate-400 lowercase ml-1">(${detalleSecundario})</span>` : ''} <span class="text-slate-400 ml-2">📅 Vence: ${fechaVenc}</span> <button onclick="editarVencimiento('${c._id}', '${op._id}')" class="ml-1 text-blue-400 hover:text-blue-300 transition-all" title="Reprogramar fecha">✏️</button></p>
+                                    <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1">${icon} ${op.tipo} ${op._id === 'legacy' ? '(Original)' : `#${index + 1}`} - ${op.estado} ${detalleSecundario ? `<span class="text-slate-400 lowercase ml-1">(${detalleSecundario})</span>` : ''} <span class="text-slate-400 ml-2">📅 Vence: ${fechaVenc}</span> <button onclick="abrirModalVencimiento('${c._id}', '${op._id}', '${op.fechaVencimiento || ''}')" class="ml-1 text-blue-400 hover:text-blue-300 transition-all" title="Reprogramar fecha">✏️</button></p>
                                     <div class="flex items-center gap-4">
                                         ${op.tipo !== 'Trámites' ? `<span class="font-black text-slate-400 text-[10px] uppercase tracking-widest">Cuota: ${cuotasPagadas}/${cuotasTotales} (${formatCurrency(valorCuota)})</span>` : ''}
                                         ${op.estado !== 'Cerrado' && op.estado !== 'Cancelado' && op.estado !== 'Pagado' ? `
@@ -2425,7 +2425,7 @@
                     operacionesHtml = `
                         <div class="mb-4 border border-slate-200 dark:border-white/10 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-sm opacity-80">
                             <div class="flex justify-between items-center mb-3">
-                                <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1">${icon} ${c.categoria || 'Servicio'} (Original) - ${c.estado} <span class="text-slate-400 ml-2">📅 Vence: ${fechaVenc}</span> <button onclick="editarVencimiento('${c._id}', 'legacy')" class="ml-1 text-blue-400 hover:text-blue-300 transition-all" title="Migrar y Reprogramar">✏️</button></p>
+                                <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1">${icon} ${c.categoria || 'Servicio'} (Original) - ${c.estado} <span class="text-slate-400 ml-2">📅 Vence: ${fechaVenc}</span> <button onclick="abrirModalVencimiento('${c._id}', 'legacy', '${c.proximoCobro || ''}')" class="ml-1 text-blue-400 hover:text-blue-300 transition-all" title="Migrar y Reprogramar">✏️</button></p>
                                 <span class="text-[9px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">LEGACY</span>
                             </div>
                             <div class="finance-panel bg-slate-50 border border-slate-100 rounded-xl p-3 grid grid-cols-3 gap-x-2 w-full">
@@ -3524,36 +3524,50 @@
             }
         };
 
-        window.editarVencimiento = async function(clienteId, operacionId) {
-            const nuevaFecha = prompt("Ingrese la nueva fecha de vencimiento (AAAA-MM-DD):");
-            if (!nuevaFecha || nuevaFecha.trim() === "") return;
+        window.abrirModalVencimiento = function(clienteId, operacionId, fechaActual) {
+            document.getElementById('vencimientoClienteId').value = clienteId;
+            document.getElementById('vencimientoOperacionId').value = operacionId;
+            
+            // Pre-cargar la fecha actual o la de hoy
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('inputNuevaFecha').value = fechaActual ? fechaActual.split('T')[0] : hoy;
+            
+            document.getElementById('modalVencimiento').classList.remove('hidden');
+        };
 
-            const regex = /^\d{4}-\d{2}-\d{2}$/;
-            if (!regex.test(nuevaFecha)) {
-                showToast('Error', 'Formato inválido. Use AAAA-MM-DD', 'rose');
+        window.cerrarModalVencimiento = function() {
+            document.getElementById('modalVencimiento').classList.add('hidden');
+        };
+
+        window.confirmarVencimiento = async function() {
+            const clienteId = document.getElementById('vencimientoClienteId').value;
+            const operacionId = document.getElementById('vencimientoOperacionId').value;
+            const nuevaFecha = document.getElementById('inputNuevaFecha').value;
+
+            if (!nuevaFecha) {
+                showToast('Error', 'Por favor, selecciona una fecha válida.', 'rose');
                 return;
             }
 
             try {
-                const res = await authFetch(`/api/clientes/${clienteId}/operaciones/${operacionId}/vencimiento`, {
+                const opcionesFetch = {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nuevaFecha })
-                });
+                };
                 
+                const res = await authFetch(`/api/clientes/${clienteId}/operaciones/${operacionId}/vencimiento`, opcionesFetch);
                 if (!res) return;
                 const data = await res.json();
-                if (!res.ok) {
-                    throw new Error(data.msg || data.message || `Error HTTP ${res.status}`);
-                }
                 
-                if (data.ok) {
-                    showToast('Éxito', 'Vencimiento reprogramado', 'emerald');
-                    if (typeof fetchClientes === 'function') await fetchClientes();
-                    else refrescarTodo();
-                } else {
-                    showToast('Error', data.msg || 'No se pudo reprogramar', 'rose');
-                }
+                if (!res.ok) throw new Error(data.msg || data.message || `Error HTTP ${res.status}`);
+                
+                cerrarModalVencimiento();
+                showToast('Éxito', 'Fecha actualizada correctamente', 'emerald');
+                
+                if (typeof fetchClientes === 'function') await fetchClientes();
+                else refrescarTodo();
+                
             } catch (error) {
                 console.error(error);
                 showToast('Error', error.message || 'Fallo de conexión.', 'rose');
@@ -3978,6 +3992,23 @@
             <p class="text-[10px] opacity-70">Actualizá para ver los últimos cambios.</p>
         </div>
         <button id="update-btn">Actualizar ahora</button>
+    </div>
+    <!-- Modal Reprogramar Vencimiento -->
+    <div id="modalVencimiento" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div class="bg-white dark:bg-slate-800 rounded-lg p-6 w-11/12 md:w-1/3 shadow-xl">
+            <h2 class="text-xl font-bold mb-4 text-slate-800 dark:text-white">Reprogramar Vencimiento</h2>
+            <label class="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">Nueva Fecha:</label>
+            <input type="date" id="inputNuevaFecha" class="w-full border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white p-2 rounded mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <!-- Inputs ocultos para mantener los IDs -->
+            <input type="hidden" id="vencimientoClienteId">
+            <input type="hidden" id="vencimientoOperacionId">
+            
+            <div class="flex justify-end space-x-3">
+                <button onclick="cerrarModalVencimiento()" class="bg-slate-400 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded">Cancelar</button>
+                <button onclick="confirmarVencimiento()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Guardar</button>
+            </div>
+        </div>
     </div>
 </body>
 </html>
