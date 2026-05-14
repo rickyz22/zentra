@@ -14,7 +14,7 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '2.9.3'; 
+        const APP_VERSION = '2.9.4'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -1160,6 +1160,11 @@
                                     <input type="text" name="legajoToyota" id="fLegajoToyota" placeholder="Legajo Toyota" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
                                 </div>
                                 <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="honorarios" id="fHonorarios" placeholder="Honorarios Sugeridos ($) (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                
+                                <div id="contenedorPagoInicial" class="hidden animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest pl-1 mb-2">Monto Abonado Ahora (Opcional)</p>
+                                    <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="pagoInicial" id="montoAbonadoInicial" placeholder="Ej: 5000" class="w-full p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-2xl text-sm font-bold text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-emerald-700/50">
+                                </div>
                             </div>
 
                              <!-- Préstamos -->
@@ -2535,12 +2540,22 @@
             if (cat === 'Trámites') {
                 document.getElementById('fieldsTramites').classList.remove('hidden');
                 if(subTramite) subTramite.required = true;
-            } else if (cat === 'Préstamos') {
-                document.getElementById('fieldsPrestamos').classList.remove('hidden');
-                document.getElementById('fieldsCuotas').classList.remove('hidden');
-            } else if (cat === 'Electrodomésticos') {
-                document.getElementById('fieldsElectro').classList.remove('hidden');
-                document.getElementById('fieldsCuotas').classList.remove('hidden');
+                
+                const pagoInicial = document.getElementById('contenedorPagoInicial');
+                if (pagoInicial) pagoInicial.classList.remove('hidden');
+            } else {
+                const pagoInicial = document.getElementById('contenedorPagoInicial');
+                const pagoInput = document.getElementById('montoAbonadoInicial');
+                if (pagoInicial) pagoInicial.classList.add('hidden');
+                if (pagoInput) pagoInput.value = '';
+
+                if (cat === 'Préstamos') {
+                    document.getElementById('fieldsPrestamos').classList.remove('hidden');
+                    document.getElementById('fieldsCuotas').classList.remove('hidden');
+                } else if (cat === 'Electrodomésticos') {
+                    document.getElementById('fieldsElectro').classList.remove('hidden');
+                    document.getElementById('fieldsCuotas').classList.remove('hidden');
+                }
             }
         }
 
@@ -2637,6 +2652,7 @@
             // Clean up unrelated fields based on category
             if (data.categoria === 'Trámites') {
                 if (data.honorarios) data.honorarios = unmaskCurrency(data.honorarios);
+                if (data.pagoInicial) data.pagoInicial = unmaskCurrency(data.pagoInicial);
                 delete data.montoPrestado; delete data.montoDevolver; delete data.costoCompra; delete data.precioVenta; delete data.cuotasTotales; delete data.producto;
             } else if (data.categoria === 'Préstamos') {
                 if (data.montoPrestado) data.montoPrestado = unmaskCurrency(data.montoPrestado);

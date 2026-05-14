@@ -60,6 +60,32 @@ exports.crearCliente = async (req, res) => {
         };
 
         const nuevoCliente = new Cliente(clienteData);
+
+        const pagoInicial = parseFloat(req.body.pagoInicial);
+        if (pagoInicial > 0) {
+            // Obtener la operación recién creada (la última del array)
+            const nuevaOp = nuevoCliente.operaciones[nuevoCliente.operaciones.length - 1];
+            
+            // Descontar el saldo
+            nuevaOp.saldoPendiente -= pagoInicial;
+            if (nuevaOp.saldoPendiente < 0) nuevaOp.saldoPendiente = 0;
+            if (nuevaOp.saldoPendiente === 0) nuevaOp.estado = 'Pagado';
+            
+            // Registrar en el historial
+            nuevaOp.historialPagos.push({
+                monto: pagoInicial,
+                fecha: new Date(),
+                nota: 'Abono en el momento de creación'
+            });
+            
+            // Si sigue usando campos root por compatibilidad, actualizalos también
+            if (nuevoCliente.saldoPendiente !== undefined) {
+                nuevoCliente.saldoPendiente -= pagoInicial;
+            }
+            // Compatibilidad estricta con legacy:
+            nuevoCliente.montoPagado = (nuevoCliente.montoPagado || 0) + pagoInicial;
+        }
+
         const clienteGuardado = await nuevoCliente.save();
 
         if (nuevaOperacion.tipo === 'Trámites') {
