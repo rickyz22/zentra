@@ -81,6 +81,19 @@ const clienteSchema = new mongoose.Schema({
         metodo: String,
         nota: String
     }],
+    prestamos: [{
+        montoPrestado: { type: Number, required: true },
+        montoDevolver: { type: Number, required: true },
+        saldoPendiente: { type: Number, required: true },
+        fechaAlta: { type: Date, default: Date.now },
+        estado: { type: String, enum: ['Activo', 'Cancelado', 'Moroso'], default: 'Activo' },
+        historialPagos: [{
+            monto: { type: Number, required: true },
+            fecha: { type: Date, default: Date.now },
+            metodo: String,
+            nota: String
+        }]
+    }],
     fechaIngreso: {
         type: Date,
         default: Date.now

@@ -186,3 +186,31 @@ exports.exportarDatos = async (req, res) => {
         res.status(500).send('Error generando Excel');
     }
 };
+
+// Agregar un nuevo préstamo a un cliente existente
+exports.agregarPrestamo = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { montoPrestado, montoDevolver } = req.body;
+        
+        const cliente = await Cliente.findById(id);
+        if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
+
+        const nuevoPrestamo = {
+            montoPrestado: Math.round(montoPrestado),
+            montoDevolver: Math.round(montoDevolver),
+            saldoPendiente: Math.round(montoDevolver),
+            fechaAlta: new Date(),
+            estado: 'Activo',
+            historialPagos: []
+        };
+
+        cliente.prestamos.push(nuevoPrestamo);
+        cliente.estado = 'Activo';
+
+        await cliente.save();
+        res.status(200).json({ ok: true, msg: 'Préstamo agregado con éxito', cliente });
+    } catch (error) {
+        res.status(500).json({ ok: false, msg: 'Error al agregar préstamo', error: error.message });
+    }
+};

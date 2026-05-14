@@ -14,7 +14,7 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ==========================================
-        const APP_VERSION = '2.1.2'; 
+        const APP_VERSION = '2.1.3'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -1446,6 +1446,7 @@
                 <p id="modalPagoName" class="text-xs text-slate-500 font-bold uppercase tracking-widest mb-8">Nombre Cliente</p>
                 <form id="pagoForm" class="space-y-6">
                     <input type="hidden" name="clienteId" id="pago-clienteId">
+                    <input type="hidden" name="prestamoId" id="pago-prestamoId">
                     <div>
                         <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Monto a Abonar</h4>
                         <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="monto" id="pago-monto" required placeholder="Ej: 50000" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-2xl font-black text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-slate-700">
@@ -1463,6 +1464,25 @@
                     <div class="flex gap-4 pt-4">
                         <button type="button" onclick="closePagoModal()" class="flex-1 font-bold text-slate-500">Cancelar</button>
                         <button type="submit" class="flex-[2] py-4 bg-emerald-500 text-white font-black rounded-2xl hover:bg-emerald-600 transition-all">CONFIRMAR PAGO</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- MODAL NUEVO PRÉSTAMO -->
+        <div id="modalNuevoPrestamo" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+            <div class="bg-slate-900 w-full max-w-md rounded-[2.5rem] p-10 border border-white/10 shadow-2xl">
+                <h4 class="text-2xl font-black text-white mb-2">Otorgar Préstamo</h4>
+                <p id="modalNuevoPrestamoName" class="text-xs text-slate-500 font-bold uppercase tracking-widest mb-8">Cliente</p>
+                <form id="nuevoPrestamoForm" class="space-y-6">
+                    <input type="hidden" name="clienteId" id="np-clienteId">
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="montoPrestado" id="np-montoPrestado" required placeholder="Monto ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) >= unmaskCurrency(document.getElementById('np-montoPrestado').value)) ? '' : '#ef4444';" name="montoDevolver" id="np-montoDevolver" required placeholder="A Devolver ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" onclick="closeNuevoPrestamoModal()" class="flex-1 font-bold text-slate-500">Cancelar</button>
+                        <button type="submit" class="flex-[2] py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all">CREAR</button>
                     </div>
                 </form>
             </div>
@@ -2235,100 +2255,111 @@
                     optionsTpl += `<option value="${t._id}">${t.titulo}</option>`;
                 });
 
-                // Pago Progress HTML
-                let pagosInfoHtml = '';
-                let historialHtml = '';
+                let prestamosHtml = '';
                 if (c.categoria !== 'Trámites') {
-                    const proxCobroStr = c.proximoCobro && c.estado !== 'Cerrado' && c.estado !== 'Pagado' 
-                        ? new Date(c.proximoCobro).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', year: 'numeric' })
-                        : '-';
+                    let prestamosARenderizar = [];
+                    if (c.montoDevolver || c.precioVenta) {
+                        prestamosARenderizar.push({
+                            _id: 'legacy',
+                            montoPrestado: c.montoPrestado || c.costoCompra || 0,
+                            montoDevolver: c.montoDevolver || c.precioVenta || 0,
+                            saldoPendiente: (c.montoDevolver || c.precioVenta || 0) - (c.montoPagado || 0),
+                            estado: c.estado,
+                            historialPagos: c.historialPagos || [],
+                            proximoCobro: c.proximoCobro
+                        });
+                    }
+                    if (c.prestamos && c.prestamos.length > 0) {
+                        prestamosARenderizar = prestamosARenderizar.concat(c.prestamos.map(p => {
+                            const totalPagado = (p.historialPagos || []).reduce((sum, pago) => sum + pago.monto, 0);
+                            return {
+                                _id: p._id,
+                                montoPrestado: p.montoPrestado,
+                                montoDevolver: p.montoDevolver,
+                                saldoPendiente: p.saldoPendiente,
+                                estado: p.estado,
+                                historialPagos: p.historialPagos || [],
+                                proximoCobro: p.fechaAlta // Placeholder for new loans
+                            };
+                        }));
+                    }
 
-                    const capital = c.montoPrestado || c.costoCompra || 0;
-                    const totalDevolver = c.montoDevolver || c.precioVenta || 0;
-                    const saldoRestante = totalDevolver - (c.montoPagado || 0);
+                    if (prestamosARenderizar.length === 0) {
+                        prestamosHtml = '<p class="text-[10px] text-slate-400 italic">No hay préstamos registrados.</p>';
+                    } else {
+                        prestamosARenderizar.forEach((prestamo, index) => {
+                            const capital = prestamo.montoPrestado;
+                            const totalDevolver = prestamo.montoDevolver;
+                            const saldoRestante = prestamo.saldoPendiente;
 
-                    pagosInfoHtml = `
-                        <div class="mt-4 finance-panel bg-slate-100/50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/5 rounded-2xl p-4">
-                            <div class="finance-col">
-                                <p class="finance-label text-[9px] font-black text-slate-500 uppercase tracking-widest">Capital Original</p>
-                                <p class="finance-value text-xs font-black text-slate-700 dark:text-slate-300">${formatCurrency(capital)}</p>
-                            </div>
-                            <div class="finance-col border-x border-slate-200/50 dark:border-white/5 px-1">
-                                <p class="finance-label text-[9px] font-black text-slate-500 uppercase tracking-widest">Total a Devolver</p>
-                                <p class="finance-value text-xs font-black text-slate-700 dark:text-slate-200">${formatCurrency(totalDevolver)}</p>
-                            </div>
-                            <div class="finance-col">
-                                <p class="finance-label text-[9px] font-black text-slate-500 uppercase tracking-widest">Saldo Restante</p>
-                                <p class="finance-value saldo-highlight text-xs md:text-sm font-black rounded-lg">${formatCurrency(saldoRestante)}</p>
-                            </div>
-                        </div>
+                            let itemsHtml = '<p class="text-[10px] text-slate-400 italic mt-2">Sin pagos registrados</p>';
+                            if (prestamo.historialPagos && prestamo.historialPagos.length > 0) {
+                                const reversos = [...prestamo.historialPagos].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+                                itemsHtml = '<div class="mt-2 space-y-1.5 max-h-32 overflow-y-auto pr-2 custom-scrollbar">';
+                                reversos.forEach(p => {
+                                    const opciones = { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
+                                    let dStr = new Date(p.fecha).toLocaleString('es-AR', opciones);
+                                    dStr = dStr.replace(',', ' -') + ' hs';
+                                    
+                                    const mntStr = formatCurrency(p.monto || 0);
+                                    const saldoActual = formatCurrency(saldoRestante);
+                                    const diaRecorte = dStr.split(' - ')[0]; 
+                                    const horaRecorte = dStr.split(' - ')[1].replace(' hs', ''); 
+                                    const msj = `Hola ${c.nombre}! Confirmo que recibí tu pago de ${mntStr} el día ${diaRecorte} a las ${horaRecorte} hs. Tu saldo pendiente es ${saldoActual}. ¡Muchas gracias!`;
+                                    const waLink = generarLinkWhatsApp(c.telefono, msj);
 
-                        <div class="mt-4 flex justify-between items-end border-b border-slate-100 pb-3">
-                            <div>
-                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Progreso de Pagos</p>
-                                <div class="flex items-center space-x-2 mt-1">
-                                    <span class="text-sm font-bold text-slate-700">Cuota ${c.pagosRegistrados} de ${c.cuotasTotales}</span>
-                                    <span class="text-xs text-slate-400">(${formatCurrency(c.montoPagado)})</span>
-                                </div>
-                            </div>
-                            <div class="text-right space-y-1">
-                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Próximo Cobro</p>
-                                <span class="text-sm font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">${proxCobroStr}</span>
-                            </div>
-                        </div>
-                    `;
+                                    itemsHtml += `
+                                        <div class="flex justify-between items-center bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100/50 hover:border-slate-200 transition-colors group/wa">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[9px] font-bold text-slate-500">${dStr} - <span class="text-emerald-600">${mntStr}</span></span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[9px] font-bold text-slate-400 italic truncate max-w-[80px]" title="${p.metodo || ''}">(${p.metodo || ''})</span>
+                                                <a href="${waLink}" target="_blank" class="opacity-0 group-hover/wa:opacity-100 text-emerald-500 hover:text-emerald-600 p-0.5 flex items-center justify-center rounded hover:bg-emerald-100 transition-all border border-emerald-200 shadow-sm">
+                                                    <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                                                </a>
+                                                <button onclick="borrarPago('${c._id}', '${p._id}', '${prestamo._id}'); event.stopPropagation();" class="opacity-0 group-hover/wa:opacity-100 text-rose-500 hover:text-rose-600 p-0.5 flex items-center justify-center rounded hover:bg-rose-100 transition-all border border-rose-200 shadow-sm">
+                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `;
+                                });
+                                itemsHtml += '</div>';
+                            }
 
-                    let itemsHtml = '<p class="text-[10px] text-slate-400 italic mt-2">Sin pagos registrados</p>';
-                    if (c.historialPagos && c.historialPagos.length > 0) {
-                        const reversos = [...c.historialPagos].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
-                        itemsHtml = '<div class="mt-2 space-y-1.5 max-h-32 overflow-y-auto pr-2 custom-scrollbar">';
-                        reversos.forEach(p => {
-                            const opciones = { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
-                            let dStr = new Date(p.fecha).toLocaleString('es-AR', opciones);
-                            dStr = dStr.replace(',', ' -') + ' hs';
-                            
-                            const mntStr = formatCurrency(p.monto || 0);
-                            const saldoActual = formatCurrency((c.montoDevolver || c.precioVenta || 0) - (c.montoPagado || 0));
-                            const diaRecorte = dStr.split(' - ')[0]; 
-                            const horaRecorte = dStr.split(' - ')[1].replace(' hs', ''); 
-                            const msj = `Hola ${c.nombre}! Confirmo que recibí tu pago de ${mntStr} el día ${diaRecorte} a las ${horaRecorte} hs. Tu saldo pendiente es ${saldoActual}. ¡Muchas gracias!`;
-                            const waLink = generarLinkWhatsApp(c.telefono, msj);
-
-                            itemsHtml += `
-                                <div class="flex justify-between items-center bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100/50 hover:border-slate-200 transition-colors group/wa">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-[9px] font-bold text-slate-500">${dStr} - <span class="text-emerald-600">${mntStr}</span></span>
+                            prestamosHtml += `
+                                <div class="mb-4 border border-slate-200 dark:border-white/10 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-sm">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Préstamo ${prestamo._id === 'legacy' ? '(Original)' : `#${index + 1}`} - ${prestamo.estado}</p>
+                                        ${prestamo.estado !== 'Cerrado' && prestamo.estado !== 'Cancelado' && prestamo.estado !== 'Pagado' ? `
+                                            <button onclick="openPagoModal('${c._id}', '${c.nombre}', '${prestamo._id}')" class="py-1 px-3 bg-emerald-500 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center">
+                                                <i data-lucide="dollar-sign" class="w-3 h-3 mr-1"></i> Cobrar
+                                            </button>
+                                        ` : ''}
                                     </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-[9px] font-bold text-slate-400 italic truncate max-w-[80px]" title="${p.metodo || ''}">(${p.metodo || ''})</span>
-                                        <a href="${waLink}" target="_blank" class="opacity-0 group-hover/wa:opacity-100 text-emerald-500 hover:text-emerald-600 p-0.5 flex items-center justify-center rounded hover:bg-emerald-100 transition-all border border-emerald-200 shadow-sm" title="Enviar recibo de WhatsApp">
-                                            <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
-                                        </a>
-                                        <button onclick="borrarPago('${c._id}', '${p._id}'); event.stopPropagation();" class="opacity-0 group-hover/wa:opacity-100 text-rose-500 hover:text-rose-600 p-0.5 flex items-center justify-center rounded hover:bg-rose-100 transition-all border border-rose-200 shadow-sm" title="Eliminar pago">
-                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                        </button>
+                                    <div class="finance-panel bg-slate-50 border border-slate-100 rounded-xl p-3 flex justify-between">
+                                        <div class="finance-col flex flex-col items-start">
+                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Capital</p>
+                                            <p class="text-xs font-black text-slate-700">${formatCurrency(capital)}</p>
+                                        </div>
+                                        <div class="finance-col flex flex-col items-center border-x border-slate-200 px-3">
+                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">A Devolver</p>
+                                            <p class="text-xs font-black text-slate-700">${formatCurrency(totalDevolver)}</p>
+                                        </div>
+                                        <div class="finance-col flex flex-col items-end">
+                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Saldo</p>
+                                            <p class="text-xs font-black ${saldoRestante > 0 ? 'text-rose-500' : 'text-emerald-500'}">${formatCurrency(saldoRestante)}</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 border-t border-slate-100 pt-3">
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Historial</p>
+                                        ${itemsHtml}
                                     </div>
                                 </div>
                             `;
                         });
-                        itemsHtml += '</div>';
                     }
-                    historialHtml = `
-                        <div class="mt-4 border-t border-slate-100 pt-3">
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Historial de Pagos</p>
-                            ${itemsHtml}
-                        </div>
-                    `;
-                }
-
-                let botonPagoHtml = '';
-                if (c.categoria !== 'Trámites' && c.estado !== 'Cerrado') {
-                    botonPagoHtml = `
-                        <button onclick="openPagoModal('${c._id}', '${c.nombre}')" class="flex items-center justify-center space-x-2 flex-1 md:flex-none py-2 px-4 bg-emerald-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all">
-                            <i data-lucide="dollar-sign" class="w-3.5 h-3.5"></i>
-                            <span>Registrar Pago</span>
-                        </button>
-                    `;
                 }
 
                 row.innerHTML = `
@@ -2383,15 +2414,19 @@
                             </div>
                             <div class="col-span-2 md:border-l border-slate-100 md:pl-8 flex flex-col justify-between">
                                 <div>
-                                    ${pagosInfoHtml}
-                                    ${historialHtml}
+                                    ${prestamosHtml}
                                 </div>
                                 <div class="pt-6 flex flex-wrap gap-3">
                                     <button onclick="openAgendaModal('${c._id}', '${c.nombre}')" class="flex items-center justify-center space-x-2 flex-1 md:flex-none px-4 py-2 bg-violet-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-violet-700 transition-all">
                                         <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
                                         <span>Nueva Tarea/Cita</span>
                                     </button>
-                                    ${botonPagoHtml}
+                                    ${c.categoria !== 'Trámites' ? `
+                                    <button onclick="openNuevoPrestamoModal('${c._id}', '${c.nombre}')" class="flex items-center justify-center space-x-2 flex-1 md:flex-none px-4 py-2 bg-blue-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all">
+                                        <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                                        <span>Otorgar Nuevo Préstamo</span>
+                                    </button>
+                                    ` : ''}
                                 </div>
                             </div>
                         </div>
@@ -2562,8 +2597,9 @@
         });
 
         // --- PAGO MODAL ---
-        function openPagoModal(id, nombre) {
+        function openPagoModal(id, nombre, prestamoId = 'legacy') {
             document.getElementById('pago-clienteId').value = id;
+            document.getElementById('pago-prestamoId').value = prestamoId;
             document.getElementById('modalPagoName').textContent = `Cliente: ${nombre}`;
             document.getElementById('pago-monto').value = '';
             document.getElementById('pago-metodo').value = '';
@@ -2576,16 +2612,57 @@
             document.getElementById('modalPago').classList.add('hidden');
         }
 
+        // --- NUEVO PRESTAMO MODAL ---
+        function openNuevoPrestamoModal(id, nombre) {
+            document.getElementById('np-clienteId').value = id;
+            document.getElementById('modalNuevoPrestamoName').textContent = `Cliente: ${nombre}`;
+            document.getElementById('np-montoPrestado').value = '';
+            document.getElementById('np-montoDevolver').value = '';
+            document.getElementById('modalNuevoPrestamo').classList.remove('hidden');
+        }
+
+        function closeNuevoPrestamoModal() {
+            document.getElementById('modalNuevoPrestamo').classList.add('hidden');
+        }
+
+        document.getElementById('nuevoPrestamoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const clienteId = document.getElementById('np-clienteId').value;
+            const montoPrestado = unmaskCurrency(document.getElementById('np-montoPrestado').value);
+            const montoDevolver = unmaskCurrency(document.getElementById('np-montoDevolver').value);
+            
+            try {
+                const res = await authFetch(`/api/clientes/${clienteId}/prestamos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ montoPrestado, montoDevolver })
+                });
+                if (!res) return;
+                const data = await res.json();
+                if (data.ok) {
+                    closeNuevoPrestamoModal();
+                    await refrescarTodo();
+                    showToast('¡Éxito!', 'Nuevo préstamo agregado', 'emerald');
+                } else {
+                    showToast('Error', data.msg || 'Error al agregar préstamo', 'rose');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Error', 'Fallo de conexión.', 'rose');
+            }
+        });
+
         document.getElementById('pagoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const clienteId = document.getElementById('pago-clienteId').value;
+            const prestamoId = document.getElementById('pago-prestamoId').value;
             const montoStr = document.getElementById('pago-monto').value;
             const metodo = document.getElementById('pago-metodo').value;
             const fechaPago = document.getElementById('pago-fechaPago')?.value || '';
             const montoLimpio = unmaskCurrency(montoStr);
             
             try {
-                const payloadPago = { monto: montoLimpio, metodo };
+                const payloadPago = { monto: montoLimpio, metodo, prestamoId };
                 if (fechaPago) payloadPago.fechaPago = fechaPago;
                 const res = await authFetch(`/api/clientes/${clienteId}/pago`, {
                     method: 'POST',
@@ -2744,11 +2821,13 @@
         }
 
 
-        async function borrarPago(clienteId, pagoId) {
+        async function borrarPago(clienteId, pagoId, prestamoId = 'legacy') {
             if (!confirm('⚠️ ¿Seguro quieres eliminar este pago? Eso recalculará el saldo restante y las ganancias.')) return;
             try {
                 const res = await authFetch(`/api/clientes/${clienteId}/pago/${pagoId}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prestamoId })
                 });
                 if (!res) return;
                 const data = await res.json();

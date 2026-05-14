@@ -5,7 +5,7 @@ const Cliente = require('../models/Cliente');
 exports.registrarPago = async (req, res) => {
     try {
         const { id } = req.params;
-        const { monto, metodo, fechaPago } = req.body;
+        const { monto, metodo, fechaPago, prestamoId } = req.body;
         
         const cliente = await Cliente.findById(id);
         if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
@@ -19,19 +19,32 @@ exports.registrarPago = async (req, res) => {
             nota: `Pago de $${Number(monto).toLocaleString('es-AR')} vía ${metodo || 'Efectivo'}`
         };
 
-        cliente.historialPagos.push(nuevoPago);
-        
-        // Recalcular monto pagado total
-        cliente.montoPagado = cliente.historialPagos.reduce((total, p) => total + p.monto, 0);
+        if (prestamoId && prestamoId !== 'legacy') {
+            const prestamo = cliente.prestamos.id(prestamoId);
+            if (!prestamo) return res.status(404).json({ ok: false, msg: 'Préstamo no encontrado' });
 
-        // Actualización automática de estado para Préstamos y Electro
-        if (cliente.categoria === 'Préstamos' || cliente.categoria === 'Electrodomésticos') {
-            const totalADevolver = cliente.categoria === 'Préstamos' ? cliente.montoDevolver : cliente.precioVenta;
-            
-            if (cliente.montoPagado >= totalADevolver) {
-                cliente.estado = 'Pagado';
+            prestamo.historialPagos.push(nuevoPago);
+            const totalPagado = prestamo.historialPagos.reduce((total, p) => total + p.monto, 0);
+            prestamo.saldoPendiente = prestamo.montoDevolver - totalPagado;
+
+            if (prestamo.saldoPendiente <= 0) {
+                prestamo.estado = 'Cancelado';
+                prestamo.saldoPendiente = 0;
             } else {
-                cliente.estado = 'Activo';
+                prestamo.estado = 'Activo';
+            }
+        } else {
+            // Lógica legacy
+            cliente.historialPagos.push(nuevoPago);
+            cliente.montoPagado = cliente.historialPagos.reduce((total, p) => total + p.monto, 0);
+
+            if (cliente.categoria === 'Préstamos' || cliente.categoria === 'Electrodomésticos') {
+                const totalADevolver = cliente.categoria === 'Préstamos' ? cliente.montoDevolver : cliente.precioVenta;
+                if (cliente.montoPagado >= totalADevolver) {
+                    cliente.estado = 'Pagado';
+                } else {
+                    cliente.estado = 'Activo';
+                }
             }
         }
 
@@ -46,19 +59,34 @@ exports.registrarPago = async (req, res) => {
 exports.eliminarPago = async (req, res) => {
     try {
         const { id, pagoId } = req.params;
+        const { prestamoId } = req.body; // Requiere que el body envíe prestamoId si es nuevo formato
+
         const cliente = await Cliente.findById(id);
         if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
 
-        cliente.historialPagos = cliente.historialPagos.filter(p => p._id.toString() !== pagoId);
-        
-        // Recalcular monto pagado total
-        cliente.montoPagado = cliente.historialPagos.reduce((total, p) => total + p.monto, 0);
+        if (prestamoId && prestamoId !== 'legacy') {
+            const prestamo = cliente.prestamos.id(prestamoId);
+            if (!prestamo) return res.status(404).json({ ok: false, msg: 'Préstamo no encontrado' });
 
-        // Re-evaluar estado
-        if (cliente.categoria === 'Préstamos' || cliente.categoria === 'Electrodomésticos') {
-            const totalADevolver = cliente.categoria === 'Préstamos' ? cliente.montoDevolver : cliente.precioVenta;
-            if (cliente.montoPagado < totalADevolver) {
-                cliente.estado = 'Activo';
+            prestamo.historialPagos = prestamo.historialPagos.filter(p => p._id.toString() !== pagoId);
+            const totalPagado = prestamo.historialPagos.reduce((total, p) => total + p.monto, 0);
+            prestamo.saldoPendiente = prestamo.montoDevolver - totalPagado;
+
+            if (prestamo.saldoPendiente > 0) {
+                prestamo.estado = 'Activo';
+            } else {
+                prestamo.estado = 'Cancelado';
+            }
+        } else {
+            // Lógica legacy
+            cliente.historialPagos = cliente.historialPagos.filter(p => p._id.toString() !== pagoId);
+            cliente.montoPagado = cliente.historialPagos.reduce((total, p) => total + p.monto, 0);
+
+            if (cliente.categoria === 'Préstamos' || cliente.categoria === 'Electrodomésticos') {
+                const totalADevolver = cliente.categoria === 'Préstamos' ? cliente.montoDevolver : cliente.precioVenta;
+                if (cliente.montoPagado < totalADevolver) {
+                    cliente.estado = 'Activo';
+                }
             }
         }
 
