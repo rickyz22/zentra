@@ -12,7 +12,7 @@ router.post('/', clienteController.crearCliente);
 router.get('/', clienteController.obtenerClientes);
 router.put('/:id', clienteController.actualizarCliente);
 router.delete('/:id', clienteController.eliminarCliente);
-router.post('/:id/prestamos', clienteController.agregarPrestamo);
+router.post('/:id/operaciones', clienteController.agregarOperacion);
 
 // --- ESTADÍSTICAS ---
 router.get('/stats', statsController.obtenerEstadisticas);

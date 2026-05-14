@@ -7,40 +7,59 @@ exports.crearCliente = async (req, res) => {
     try {
         const data = req.body;
         
-        // Redondeo de montos para evitar decimales infinitos
+        // Redondeo de montos
         if (data.montoPrestado) data.montoPrestado = Math.round(data.montoPrestado);
         if (data.montoDevolver) data.montoDevolver = Math.round(data.montoDevolver);
         if (data.costoCompra) data.costoCompra = Math.round(data.costoCompra);
         if (data.precioVenta) data.precioVenta = Math.round(data.precioVenta);
         if (data.honorarios) data.honorarios = Math.round(data.honorarios);
 
-        // Validación de montos obligatorios por categoría (Audit Pre-Entrega)
+        // Validación de montos obligatorios por categoría
         if (data.categoria === 'Préstamos') {
-            if (!data.montoPrestado || data.montoPrestado <= 0) {
-                return res.status(400).json({ ok: false, msg: 'El monto prestado es obligatorio para Préstamos' });
-            }
-            if (!data.montoDevolver || data.montoDevolver <= 0) {
-                return res.status(400).json({ ok: false, msg: 'El monto a devolver es obligatorio para Préstamos' });
-            }
+            if (!data.montoPrestado || data.montoPrestado <= 0) return res.status(400).json({ ok: false, msg: 'El monto prestado es obligatorio para Préstamos' });
+            if (!data.montoDevolver || data.montoDevolver <= 0) return res.status(400).json({ ok: false, msg: 'El monto a devolver es obligatorio para Préstamos' });
         }
         if (data.categoria === 'Electrodomésticos') {
-            if (!data.costoCompra || data.costoCompra <= 0) {
-                return res.status(400).json({ ok: false, msg: 'El costo de compra es obligatorio para Electrodomésticos' });
-            }
-            if (!data.precioVenta || data.precioVenta <= 0) {
-                return res.status(400).json({ ok: false, msg: 'El precio de venta es obligatorio para Electrodomésticos' });
-            }
+            if (!data.costoCompra || data.costoCompra <= 0) return res.status(400).json({ ok: false, msg: 'El costo de compra es obligatorio para Electrodomésticos' });
+            if (!data.precioVenta || data.precioVenta <= 0) return res.status(400).json({ ok: false, msg: 'El precio de venta es obligatorio para Electrodomésticos' });
         }
 
-        // Si se provee fecha manual, usarla. Si no, hoy.
         const fechaBase = data.fechaIngreso ? new Date(data.fechaIngreso) : new Date();
-        data.fecha = fechaBase;
 
-        const nuevoCliente = new Cliente(data);
+        // Estructura de la operación base
+        const nuevaOperacion = {
+            tipo: data.categoria || 'Trámites',
+            estado: 'Activo',
+            fechaAlta: fechaBase,
+            montoPrestado: data.montoPrestado,
+            montoDevolver: data.montoDevolver,
+            costoCompra: data.costoCompra,
+            precioVenta: data.precioVenta,
+            producto: data.producto,
+            tramite: data.tramite,
+            subTipoTramite: data.subTipoTramite,
+            honorarios: data.honorarios,
+            saldoPendiente: (data.montoDevolver || data.precioVenta || data.honorarios || 0),
+            historialPagos: []
+        };
+
+        const clienteData = {
+            nombre: data.nombre,
+            telefono: data.telefono,
+            dni: data.dni,
+            direccion: data.direccion,
+            garante: data.garante,
+            empresa: data.empresa,
+            legajoToyota: data.legajoToyota,
+            notas: data.notas,
+            fechaIngreso: fechaBase,
+            operaciones: [nuevaOperacion]
+        };
+
+        const nuevoCliente = new Cliente(clienteData);
         const clienteGuardado = await nuevoCliente.save();
 
-        // Lógica de Agenda Automática para Trámites
-        if (data.categoria === 'Trámites' || !data.categoria) {
+        if (nuevaOperacion.tipo === 'Trámites') {
             const fechaVencimiento = new Date(fechaBase);
             fechaVencimiento.setDate(fechaVencimiento.getDate() + 31);
             
@@ -76,10 +95,48 @@ exports.obtenerClientes = async (req, res) => {
         const skip = (page - 1) * limit;
 
         // Optimización: Excluir historialPagos del listado general
-        const clientes = await Cliente.find()
+        const clientesRaw = await Cliente.find()
             .sort({ fecha: -1 })
             .skip(skip)
             .limit(limit);
+
+        const clientes = clientesRaw.map(c => {
+            const cliente = c.toObject();
+            if (!cliente.operaciones) cliente.operaciones = [];
+
+            // Compatibilidad legacy: Mapear datos viejos de la raíz a una operación
+            if (cliente.categoria && (cliente.montoDevolver || cliente.precioVenta || cliente.honorarios || cliente.tramite)) {
+                const legacyOp = {
+                    _id: 'legacy',
+                    tipo: cliente.categoria === 'Préstamos' ? 'Préstamos' : (cliente.categoria === 'Electrodomésticos' ? 'Electrodomésticos' : 'Trámites'),
+                    estado: cliente.estado || 'Activo',
+                    fechaAlta: cliente.fechaIngreso || cliente.fecha || new Date(),
+                    historialPagos: cliente.historialPagos || [],
+                    saldoPendiente: (cliente.montoDevolver || cliente.precioVenta || cliente.honorarios || 0) - (cliente.montoPagado || 0),
+                    montoPrestado: cliente.montoPrestado,
+                    montoDevolver: cliente.montoDevolver,
+                    costoCompra: cliente.costoCompra,
+                    precioVenta: cliente.precioVenta,
+                    producto: cliente.producto,
+                    tramite: cliente.tramite,
+                    subTipoTramite: cliente.subTipoTramite,
+                    honorarios: cliente.honorarios,
+                    cuotasTotales: cliente.cuotasTotales,
+                    proximoCobro: cliente.proximoCobro
+                };
+                cliente.operaciones.unshift(legacyOp);
+            }
+
+            // Transición del paso anterior (prestamos -> operaciones)
+            if (cliente.prestamos && cliente.prestamos.length > 0) {
+                cliente.operaciones.push(...cliente.prestamos.map(p => ({
+                    ...p,
+                    tipo: 'Préstamos'
+                })));
+            }
+
+            return cliente;
+        });
 
         const total = await Cliente.countDocuments();
 
@@ -186,30 +243,37 @@ exports.exportarDatos = async (req, res) => {
     }
 };
 
-// Agregar un nuevo préstamo a un cliente existente
-exports.agregarPrestamo = async (req, res) => {
+// Agregar una nueva operación a un cliente existente
+exports.agregarOperacion = async (req, res) => {
     try {
         const { id } = req.params;
-        const { montoPrestado, montoDevolver } = req.body;
+        const data = req.body;
         
         const cliente = await Cliente.findById(id);
         if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
 
-        const nuevoPrestamo = {
-            montoPrestado: Math.round(montoPrestado),
-            montoDevolver: Math.round(montoDevolver),
-            saldoPendiente: Math.round(montoDevolver),
-            fechaAlta: new Date(),
+        const nuevaOperacion = {
+            tipo: data.tipo || 'Préstamos',
             estado: 'Activo',
+            fechaAlta: new Date(),
+            montoPrestado: data.montoPrestado ? Math.round(data.montoPrestado) : undefined,
+            montoDevolver: data.montoDevolver ? Math.round(data.montoDevolver) : undefined,
+            costoCompra: data.costoCompra ? Math.round(data.costoCompra) : undefined,
+            precioVenta: data.precioVenta ? Math.round(data.precioVenta) : undefined,
+            producto: data.producto,
+            tramite: data.tramite,
+            subTipoTramite: data.subTipoTramite,
+            honorarios: data.honorarios ? Math.round(data.honorarios) : undefined,
+            saldoPendiente: Math.round(data.montoDevolver || data.precioVenta || data.honorarios || 0),
             historialPagos: []
         };
 
-        cliente.prestamos.push(nuevoPrestamo);
-        cliente.estado = 'Activo';
-
+        if (!cliente.operaciones) cliente.operaciones = [];
+        cliente.operaciones.push(nuevaOperacion);
+        
         await cliente.save();
-        res.status(200).json({ ok: true, msg: 'Préstamo agregado con éxito', cliente });
+        res.status(200).json({ ok: true, msg: 'Operación agregada exitosamente', cliente });
     } catch (error) {
-        res.status(500).json({ ok: false, msg: 'Error al agregar préstamo', error: error.message });
+        res.status(500).json({ ok: false, msg: 'Error al agregar operación', error: error.message });
     }
 };

@@ -13,8 +13,8 @@
         // ==========================================
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
-        // ==========================================
-        const APP_VERSION = '2.1.3'; 
+        // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
+        const APP_VERSION = '2.2.0'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -1469,24 +1469,53 @@
             </div>
         </div>
 
-        <!-- MODAL NUEVO PRÉSTAMO -->
-        <div id="modalNuevoPrestamo" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-            <div class="bg-slate-900 w-full max-w-md rounded-[2.5rem] p-10 border border-white/10 shadow-2xl">
-                <h4 class="text-2xl font-black text-white mb-2">Otorgar Préstamo</h4>
-                <p id="modalNuevoPrestamoName" class="text-xs text-slate-500 font-bold uppercase tracking-widest mb-8">Cliente</p>
-                <form id="nuevoPrestamoForm" class="space-y-6">
-                    <input type="hidden" name="clienteId" id="np-clienteId">
-                    <div class="grid grid-cols-2 gap-4">
-                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="montoPrestado" id="np-montoPrestado" required placeholder="Monto ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
-                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) >= unmaskCurrency(document.getElementById('np-montoPrestado').value)) ? '' : '#ef4444';" name="montoDevolver" id="np-montoDevolver" required placeholder="A Devolver ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
+        <!-- MODAL NUEVO SERVICIO / OPERACION -->
+        <div id="modalNuevaOperacion" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+            <div class="bg-slate-900 w-full max-w-md rounded-[2.5rem] p-10 border border-white/10 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
+                <h4 class="text-2xl font-black text-white mb-2">Nuevo Servicio</h4>
+                <p id="modalNuevaOperacionName" class="text-xs text-slate-500 font-bold uppercase tracking-widest mb-8">Cliente</p>
+                <form id="nuevaOperacionForm" class="space-y-6">
+                    <input type="hidden" name="clienteId" id="no-clienteId">
+                    
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Tipo de Servicio</label>
+                        <select name="tipo" id="no-tipo" required onchange="toggleNuevaOperacionCampos()" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="Préstamos">Préstamo</option>
+                            <option value="Electrodomésticos">Electrodoméstico</option>
+                            <option value="Trámites">Trámite</option>
+                        </select>
                     </div>
+
+                    <!-- Campos Préstamo -->
+                    <div id="no-campos-prestamo" class="grid grid-cols-2 gap-4">
+                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="montoPrestado" id="no-montoPrestado" placeholder="Capital Prestado ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="montoDevolver" id="no-montoDevolver" placeholder="A Devolver ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <!-- Campos Electro -->
+                    <div id="no-campos-electro" class="hidden space-y-4">
+                        <input type="text" name="producto" id="no-producto" placeholder="Producto vendido" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-amber-500">
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="costoCompra" id="no-costoCompra" placeholder="Costo ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-amber-500">
+                            <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="precioVenta" id="no-precioVenta" placeholder="Precio Venta ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-amber-500">
+                        </div>
+                    </div>
+
+                    <!-- Campos Trámite -->
+                    <div id="no-campos-tramite" class="hidden space-y-4">
+                        <input type="text" name="tramite" id="no-tramite" placeholder="Nombre del Trámite" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-violet-500">
+                        <input type="text" name="subTipoTramite" id="no-subTipoTramite" placeholder="Detalle adicional" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-violet-500">
+                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="honorarios" id="no-honorarios" placeholder="Honorarios ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-violet-500">
+                    </div>
+
                     <div class="flex gap-4 pt-4">
-                        <button type="button" onclick="closeNuevoPrestamoModal()" class="flex-1 font-bold text-slate-500">Cancelar</button>
+                        <button type="button" onclick="closeNuevaOperacionModal()" class="flex-1 font-bold text-slate-500">Cancelar</button>
                         <button type="submit" class="flex-[2] py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all">CREAR</button>
                     </div>
                 </form>
             </div>
         </div>
+
 
         <!-- NOTIFICACIÓN -->
         <div id="toast" class="hidden fixed bottom-24 right-6 bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl z-[100] font-bold text-sm"></div>
@@ -2255,111 +2284,86 @@
                     optionsTpl += `<option value="${t._id}">${t.titulo}</option>`;
                 });
 
-                let prestamosHtml = '';
-                if (c.categoria !== 'Trámites') {
-                    let prestamosARenderizar = [];
-                    if (c.montoDevolver || c.precioVenta) {
-                        prestamosARenderizar.push({
-                            _id: 'legacy',
-                            montoPrestado: c.montoPrestado || c.costoCompra || 0,
-                            montoDevolver: c.montoDevolver || c.precioVenta || 0,
-                            saldoPendiente: (c.montoDevolver || c.precioVenta || 0) - (c.montoPagado || 0),
-                            estado: c.estado,
-                            historialPagos: c.historialPagos || [],
-                            proximoCobro: c.proximoCobro
-                        });
-                    }
-                    if (c.prestamos && c.prestamos.length > 0) {
-                        prestamosARenderizar = prestamosARenderizar.concat(c.prestamos.map(p => {
-                            const totalPagado = (p.historialPagos || []).reduce((sum, pago) => sum + pago.monto, 0);
-                            return {
-                                _id: p._id,
-                                montoPrestado: p.montoPrestado,
-                                montoDevolver: p.montoDevolver,
-                                saldoPendiente: p.saldoPendiente,
-                                estado: p.estado,
-                                historialPagos: p.historialPagos || [],
-                                proximoCobro: p.fechaAlta // Placeholder for new loans
-                            };
-                        }));
-                    }
+                let operacionesHtml = '';
+                if (c.operaciones && c.operaciones.length > 0) {
+                    c.operaciones.forEach((op, index) => {
+                        const icon = op.tipo === 'Préstamos' ? '💸' : (op.tipo === 'Electrodomésticos' ? '📺' : '📋');
+                        const montoP = op.montoPrestado || op.costoCompra || 0;
+                        const montoD = op.montoDevolver || op.precioVenta || op.honorarios || 0;
+                        const saldoPend = op.saldoPendiente || 0;
+                        
+                        let itemsHtml = '<p class="text-[10px] text-slate-400 italic mt-2">Sin pagos registrados</p>';
+                        if (op.historialPagos && op.historialPagos.length > 0) {
+                            const reversos = [...op.historialPagos].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+                            itemsHtml = '<div class="mt-2 space-y-1.5 max-h-32 overflow-y-auto pr-2 custom-scrollbar">';
+                            reversos.forEach(p => {
+                                const opciones = { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
+                                let dStr = new Date(p.fecha).toLocaleString('es-AR', opciones);
+                                dStr = dStr.replace(',', ' -') + ' hs';
+                                
+                                const mntStr = formatCurrency(p.monto || 0);
+                                const msj = `Hola ${c.nombre}! Confirmo que recibí tu pago de ${mntStr} el día ${dStr.split(' - ')[0]} a las ${dStr.split(' - ')[1].replace(' hs', '')} hs. Tu saldo pendiente es ${formatCurrency(saldoPend)}. ¡Muchas gracias!`;
+                                const waLink = generarLinkWhatsApp(c.telefono, msj);
 
-                    if (prestamosARenderizar.length === 0) {
-                        prestamosHtml = '<p class="text-[10px] text-slate-400 italic">No hay préstamos registrados.</p>';
-                    } else {
-                        prestamosARenderizar.forEach((prestamo, index) => {
-                            const capital = prestamo.montoPrestado;
-                            const totalDevolver = prestamo.montoDevolver;
-                            const saldoRestante = prestamo.saldoPendiente;
-
-                            let itemsHtml = '<p class="text-[10px] text-slate-400 italic mt-2">Sin pagos registrados</p>';
-                            if (prestamo.historialPagos && prestamo.historialPagos.length > 0) {
-                                const reversos = [...prestamo.historialPagos].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
-                                itemsHtml = '<div class="mt-2 space-y-1.5 max-h-32 overflow-y-auto pr-2 custom-scrollbar">';
-                                reversos.forEach(p => {
-                                    const opciones = { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
-                                    let dStr = new Date(p.fecha).toLocaleString('es-AR', opciones);
-                                    dStr = dStr.replace(',', ' -') + ' hs';
-                                    
-                                    const mntStr = formatCurrency(p.monto || 0);
-                                    const saldoActual = formatCurrency(saldoRestante);
-                                    const diaRecorte = dStr.split(' - ')[0]; 
-                                    const horaRecorte = dStr.split(' - ')[1].replace(' hs', ''); 
-                                    const msj = `Hola ${c.nombre}! Confirmo que recibí tu pago de ${mntStr} el día ${diaRecorte} a las ${horaRecorte} hs. Tu saldo pendiente es ${saldoActual}. ¡Muchas gracias!`;
-                                    const waLink = generarLinkWhatsApp(c.telefono, msj);
-
-                                    itemsHtml += `
-                                        <div class="flex justify-between items-center bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100/50 hover:border-slate-200 transition-colors group/wa">
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-[9px] font-bold text-slate-500">${dStr} - <span class="text-emerald-600">${mntStr}</span></span>
-                                            </div>
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-[9px] font-bold text-slate-400 italic truncate max-w-[80px]" title="${p.metodo || ''}">(${p.metodo || ''})</span>
-                                                <a href="${waLink}" target="_blank" class="opacity-0 group-hover/wa:opacity-100 text-emerald-500 hover:text-emerald-600 p-0.5 flex items-center justify-center rounded hover:bg-emerald-100 transition-all border border-emerald-200 shadow-sm">
-                                                    <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
-                                                </a>
-                                                <button onclick="borrarPago('${c._id}', '${p._id}', '${prestamo._id}'); event.stopPropagation();" class="opacity-0 group-hover/wa:opacity-100 text-rose-500 hover:text-rose-600 p-0.5 flex items-center justify-center rounded hover:bg-rose-100 transition-all border border-rose-200 shadow-sm">
-                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                                </button>
-                                            </div>
+                                itemsHtml += `
+                                    <div class="flex justify-between items-center bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100/50 hover:border-slate-200 transition-colors group/wa">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[9px] font-bold text-slate-500">${dStr} - <span class="text-emerald-600">${mntStr}</span></span>
                                         </div>
-                                    `;
-                                });
-                                itemsHtml += '</div>';
-                            }
-
-                            prestamosHtml += `
-                                <div class="mb-4 border border-slate-200 dark:border-white/10 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-sm">
-                                    <div class="flex justify-between items-center mb-3">
-                                        <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Préstamo ${prestamo._id === 'legacy' ? '(Original)' : `#${index + 1}`} - ${prestamo.estado}</p>
-                                        ${prestamo.estado !== 'Cerrado' && prestamo.estado !== 'Cancelado' && prestamo.estado !== 'Pagado' ? `
-                                            <button onclick="openPagoModal('${c._id}', '${c.nombre}', '${prestamo._id}')" class="py-1 px-3 bg-emerald-500 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center">
-                                                <i data-lucide="dollar-sign" class="w-3 h-3 mr-1"></i> Cobrar
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[9px] font-bold text-slate-400 italic truncate max-w-[80px]" title="${p.metodo || ''}">(${p.metodo || ''})</span>
+                                            <a href="${waLink}" target="_blank" class="opacity-0 group-hover/wa:opacity-100 text-emerald-500 hover:text-emerald-600 p-0.5 flex items-center justify-center rounded hover:bg-emerald-100 transition-all border border-emerald-200 shadow-sm">
+                                                <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                                            </a>
+                                            <button onclick="borrarPago('${c._id}', '${p._id}', '${op._id}'); event.stopPropagation();" class="opacity-0 group-hover/wa:opacity-100 text-rose-500 hover:text-rose-600 p-0.5 flex items-center justify-center rounded hover:bg-rose-100 transition-all border border-rose-200 shadow-sm">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                             </button>
-                                        ` : ''}
-                                    </div>
-                                    <div class="finance-panel bg-slate-50 border border-slate-100 rounded-xl p-3 flex justify-between">
-                                        <div class="finance-col flex flex-col items-start">
-                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Capital</p>
-                                            <p class="text-xs font-black text-slate-700">${formatCurrency(capital)}</p>
-                                        </div>
-                                        <div class="finance-col flex flex-col items-center border-x border-slate-200 px-3">
-                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">A Devolver</p>
-                                            <p class="text-xs font-black text-slate-700">${formatCurrency(totalDevolver)}</p>
-                                        </div>
-                                        <div class="finance-col flex flex-col items-end">
-                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Saldo</p>
-                                            <p class="text-xs font-black ${saldoRestante > 0 ? 'text-rose-500' : 'text-emerald-500'}">${formatCurrency(saldoRestante)}</p>
                                         </div>
                                     </div>
-                                    <div class="mt-3 border-t border-slate-100 pt-3">
-                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Historial</p>
-                                        ${itemsHtml}
+                                `;
+                            });
+                            itemsHtml += '</div>';
+                        }
+
+                        let detalleSecundario = '';
+                        if (op.tipo === 'Electrodomésticos') detalleSecundario = op.producto || '';
+                        else if (op.tipo === 'Trámites') detalleSecundario = op.tramite || '';
+
+                        operacionesHtml += `
+                            <div class="mb-4 border border-slate-200 dark:border-white/10 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-sm">
+                                <div class="flex justify-between items-center mb-3">
+                                    <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1">${icon} ${op.tipo} ${op._id === 'legacy' ? '(Original)' : `#${index + 1}`} - ${op.estado} ${detalleSecundario ? `<span class="text-slate-400 lowercase ml-1">(${detalleSecundario})</span>` : ''}</p>
+                                    ${op.estado !== 'Cerrado' && op.estado !== 'Cancelado' && op.estado !== 'Pagado' ? `
+                                        <button onclick="openPagoModal('${c._id}', '${c.nombre}', '${op._id}')" class="py-1 px-3 bg-emerald-500 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center">
+                                            <i data-lucide="dollar-sign" class="w-3 h-3 mr-1"></i> Cobrar
+                                        </button>
+                                    ` : ''}
+                                </div>
+                                <div class="finance-panel bg-slate-50 border border-slate-100 rounded-xl p-3 flex justify-between">
+                                    ${op.tipo !== 'Trámites' ? `
+                                    <div class="finance-col flex flex-col items-start">
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">${op.tipo === 'Electrodomésticos' ? 'Costo' : 'Capital'}</p>
+                                        <p class="text-xs font-black text-slate-700">${formatCurrency(montoP)}</p>
+                                    </div>
+                                    ` : ''}
+                                    <div class="finance-col flex flex-col items-center ${op.tipo !== 'Trámites' ? 'border-x border-slate-200 px-3' : 'items-start'}">
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">${op.tipo === 'Trámites' ? 'Honorarios' : 'A Devolver'}</p>
+                                        <p class="text-xs font-black text-slate-700">${formatCurrency(montoD)}</p>
+                                    </div>
+                                    <div class="finance-col flex flex-col items-end ${op.tipo === 'Trámites' ? 'flex-1' : ''}">
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Saldo</p>
+                                        <p class="text-xs font-black ${saldoPend > 0 ? 'text-rose-500' : 'text-emerald-500'}">${formatCurrency(saldoPend)}</p>
                                     </div>
                                 </div>
-                            `;
-                        });
-                    }
+                                <div class="mt-3 border-t border-slate-100 pt-3">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Historial</p>
+                                    ${itemsHtml}
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    operacionesHtml = '<p class="text-[10px] text-slate-400 italic">No hay operaciones registradas.</p>';
                 }
 
                 row.innerHTML = `
@@ -2414,19 +2418,17 @@
                             </div>
                             <div class="col-span-2 md:border-l border-slate-100 md:pl-8 flex flex-col justify-between">
                                 <div>
-                                    ${prestamosHtml}
+                                    ${operacionesHtml}
                                 </div>
                                 <div class="pt-6 flex flex-wrap gap-3">
                                     <button onclick="openAgendaModal('${c._id}', '${c.nombre}')" class="flex items-center justify-center space-x-2 flex-1 md:flex-none px-4 py-2 bg-violet-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-violet-700 transition-all">
                                         <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
                                         <span>Nueva Tarea/Cita</span>
                                     </button>
-                                    ${c.categoria !== 'Trámites' ? `
-                                    <button onclick="openNuevoPrestamoModal('${c._id}', '${c.nombre}')" class="flex items-center justify-center space-x-2 flex-1 md:flex-none px-4 py-2 bg-blue-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all">
+                                    <button onclick="openNuevaOperacionModal('${c._id}', '${c.nombre}')" class="flex items-center justify-center space-x-2 flex-1 md:flex-none px-4 py-2 bg-blue-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all">
                                         <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
-                                        <span>Otorgar Nuevo Préstamo</span>
+                                        <span>➕ Nuevo Servicio</span>
                                     </button>
-                                    ` : ''}
                                 </div>
                             </div>
                         </div>
@@ -2612,39 +2614,60 @@
             document.getElementById('modalPago').classList.add('hidden');
         }
 
-        // --- NUEVO PRESTAMO MODAL ---
-        function openNuevoPrestamoModal(id, nombre) {
-            document.getElementById('np-clienteId').value = id;
-            document.getElementById('modalNuevoPrestamoName').textContent = `Cliente: ${nombre}`;
-            document.getElementById('np-montoPrestado').value = '';
-            document.getElementById('np-montoDevolver').value = '';
-            document.getElementById('modalNuevoPrestamo').classList.remove('hidden');
+        // --- NUEVO SERVICIO MODAL ---
+        function toggleNuevaOperacionCampos() {
+            const tipo = document.getElementById('no-tipo').value;
+            document.getElementById('no-campos-prestamo').classList.add('hidden');
+            document.getElementById('no-campos-electro').classList.add('hidden');
+            document.getElementById('no-campos-tramite').classList.add('hidden');
+            
+            if (tipo === 'Préstamos') document.getElementById('no-campos-prestamo').classList.remove('hidden');
+            if (tipo === 'Electrodomésticos') document.getElementById('no-campos-electro').classList.remove('hidden');
+            if (tipo === 'Trámites') document.getElementById('no-campos-tramite').classList.remove('hidden');
         }
 
-        function closeNuevoPrestamoModal() {
-            document.getElementById('modalNuevoPrestamo').classList.add('hidden');
+        function openNuevaOperacionModal(id, nombre) {
+            document.getElementById('no-clienteId').value = id;
+            document.getElementById('modalNuevaOperacionName').textContent = `Cliente: ${nombre}`;
+            document.getElementById('nuevaOperacionForm').reset();
+            toggleNuevaOperacionCampos();
+            document.getElementById('modalNuevaOperacion').classList.remove('hidden');
         }
 
-        document.getElementById('nuevoPrestamoForm').addEventListener('submit', async (e) => {
+        function closeNuevaOperacionModal() {
+            document.getElementById('modalNuevaOperacion').classList.add('hidden');
+        }
+
+        document.getElementById('nuevaOperacionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const clienteId = document.getElementById('np-clienteId').value;
-            const montoPrestado = unmaskCurrency(document.getElementById('np-montoPrestado').value);
-            const montoDevolver = unmaskCurrency(document.getElementById('np-montoDevolver').value);
+            const clienteId = document.getElementById('no-clienteId').value;
+            
+            const payload = {
+                tipo: document.getElementById('no-tipo').value,
+                montoPrestado: unmaskCurrency(document.getElementById('no-montoPrestado').value),
+                montoDevolver: unmaskCurrency(document.getElementById('no-montoDevolver').value),
+                producto: document.getElementById('no-producto').value,
+                costoCompra: unmaskCurrency(document.getElementById('no-costoCompra').value),
+                precioVenta: unmaskCurrency(document.getElementById('no-precioVenta').value),
+                tramite: document.getElementById('no-tramite').value,
+                subTipoTramite: document.getElementById('no-subTipoTramite').value,
+                honorarios: unmaskCurrency(document.getElementById('no-honorarios').value)
+            };
             
             try {
-                const res = await authFetch(`/api/clientes/${clienteId}/prestamos`, {
+                const res = await authFetch(`/api/clientes/${clienteId}/operaciones`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ montoPrestado, montoDevolver })
+                    body: JSON.stringify(payload)
                 });
                 if (!res) return;
                 const data = await res.json();
                 if (data.ok) {
-                    closeNuevoPrestamoModal();
+                    closeNuevaOperacionModal();
                     await refrescarTodo();
-                    showToast('¡Éxito!', 'Nuevo préstamo agregado', 'emerald');
+                    showToast('¡Éxito!', 'Nuevo servicio agregado', 'emerald');
                 } else {
-                    showToast('Error', data.msg || 'Error al agregar préstamo', 'rose');
+                    showToast('Error', data.msg || 'Error al agregar servicio', 'rose');
                 }
             } catch (err) {
                 console.error(err);
@@ -2655,14 +2678,14 @@
         document.getElementById('pagoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const clienteId = document.getElementById('pago-clienteId').value;
-            const prestamoId = document.getElementById('pago-prestamoId').value;
+            const operacionId = document.getElementById('pago-prestamoId').value;
             const montoStr = document.getElementById('pago-monto').value;
             const metodo = document.getElementById('pago-metodo').value;
             const fechaPago = document.getElementById('pago-fechaPago')?.value || '';
             const montoLimpio = unmaskCurrency(montoStr);
             
             try {
-                const payloadPago = { monto: montoLimpio, metodo, prestamoId };
+                const payloadPago = { monto: montoLimpio, metodo, operacionId };
                 if (fechaPago) payloadPago.fechaPago = fechaPago;
                 const res = await authFetch(`/api/clientes/${clienteId}/pago`, {
                     method: 'POST',

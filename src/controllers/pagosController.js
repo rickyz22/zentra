@@ -5,7 +5,7 @@ const Cliente = require('../models/Cliente');
 exports.registrarPago = async (req, res) => {
     try {
         const { id } = req.params;
-        const { monto, metodo, fechaPago, prestamoId } = req.body;
+        const { monto, metodo, fechaPago, operacionId } = req.body;
         
         const cliente = await Cliente.findById(id);
         if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
@@ -19,21 +19,23 @@ exports.registrarPago = async (req, res) => {
             nota: `Pago de $${Number(monto).toLocaleString('es-AR')} vía ${metodo || 'Efectivo'}`
         };
 
-        if (prestamoId && prestamoId !== 'legacy') {
-            const prestamo = cliente.prestamos.id(prestamoId);
-            if (!prestamo) return res.status(404).json({ ok: false, msg: 'Préstamo no encontrado' });
+        if (operacionId && operacionId !== 'legacy') {
+            const operacion = cliente.operaciones.id(operacionId);
+            if (!operacion) return res.status(404).json({ ok: false, msg: 'Operación no encontrada' });
 
-            prestamo.historialPagos.push(nuevoPago);
-            const totalPagado = prestamo.historialPagos.reduce((total, p) => total + p.monto, 0);
-            prestamo.saldoPendiente = prestamo.montoDevolver - totalPagado;
+            operacion.historialPagos.push(nuevoPago);
+            const totalPagado = operacion.historialPagos.reduce((total, p) => total + p.monto, 0);
+            
+            const montoADevolver = operacion.montoDevolver || operacion.precioVenta || operacion.honorarios || 0;
+            operacion.saldoPendiente = montoADevolver - totalPagado;
 
-            if (prestamo.saldoPendiente <= 0) {
-                prestamo.estado = 'Cancelado';
-                prestamo.saldoPendiente = 0;
+            if (operacion.saldoPendiente <= 0) {
+                operacion.estado = 'Pagado';
+                operacion.saldoPendiente = 0;
             } else {
-                prestamo.estado = 'Activo';
+                operacion.estado = 'Activo';
             }
-            cliente.markModified('prestamos');
+            cliente.markModified('operaciones');
         } else {
             // Lógica legacy
             cliente.historialPagos.push(nuevoPago);
@@ -61,25 +63,27 @@ exports.registrarPago = async (req, res) => {
 exports.eliminarPago = async (req, res) => {
     try {
         const { id, pagoId } = req.params;
-        const { prestamoId } = req.body; // Requiere que el body envíe prestamoId si es nuevo formato
+        const { operacionId } = req.body;
 
         const cliente = await Cliente.findById(id);
         if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
 
-        if (prestamoId && prestamoId !== 'legacy') {
-            const prestamo = cliente.prestamos.id(prestamoId);
-            if (!prestamo) return res.status(404).json({ ok: false, msg: 'Préstamo no encontrado' });
+        if (operacionId && operacionId !== 'legacy') {
+            const operacion = cliente.operaciones.id(operacionId);
+            if (!operacion) return res.status(404).json({ ok: false, msg: 'Operación no encontrada' });
 
-            prestamo.historialPagos = prestamo.historialPagos.filter(p => p._id.toString() !== pagoId);
-            const totalPagado = prestamo.historialPagos.reduce((total, p) => total + p.monto, 0);
-            prestamo.saldoPendiente = prestamo.montoDevolver - totalPagado;
+            operacion.historialPagos = operacion.historialPagos.filter(p => p._id.toString() !== pagoId);
+            const totalPagado = operacion.historialPagos.reduce((total, p) => total + p.monto, 0);
+            
+            const montoADevolver = operacion.montoDevolver || operacion.precioVenta || operacion.honorarios || 0;
+            operacion.saldoPendiente = montoADevolver - totalPagado;
 
-            if (prestamo.saldoPendiente > 0) {
-                prestamo.estado = 'Activo';
+            if (operacion.saldoPendiente > 0) {
+                operacion.estado = 'Activo';
             } else {
-                prestamo.estado = 'Cancelado';
+                operacion.estado = 'Pagado';
             }
-            cliente.markModified('prestamos');
+            cliente.markModified('operaciones');
         } else {
             // Lógica legacy
             cliente.historialPagos = cliente.historialPagos.filter(p => p._id.toString() !== pagoId);

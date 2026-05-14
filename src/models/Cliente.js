@@ -81,12 +81,20 @@ const clienteSchema = new mongoose.Schema({
         metodo: String,
         nota: String
     }],
-    prestamos: [{
-        montoPrestado: { type: Number, required: true },
-        montoDevolver: { type: Number, required: true },
-        saldoPendiente: { type: Number, required: true },
+    operaciones: [{
+        tipo: { type: String, enum: ['Préstamos', 'Trámites', 'Electrodomésticos'], required: true },
+        estado: { type: String, enum: ['Activo', 'Cancelado', 'Moroso', 'Pagado', 'Pendiente', 'Cerrado'], default: 'Activo' },
         fechaAlta: { type: Date, default: Date.now },
-        estado: { type: String, enum: ['Activo', 'Cancelado', 'Moroso'], default: 'Activo' },
+        // Campos dinámicos
+        montoPrestado: Number,
+        montoDevolver: Number,
+        costoCompra: Number,
+        precioVenta: Number,
+        producto: String,
+        tramite: String,
+        subTipoTramite: String,
+        honorarios: Number,
+        saldoPendiente: { type: Number, default: 0 },
         historialPagos: [{
             monto: { type: Number, required: true },
             fecha: { type: Date, default: Date.now },
