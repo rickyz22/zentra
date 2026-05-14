@@ -14,7 +14,7 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '2.8.0'; 
+        const APP_VERSION = '2.8.1'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -2296,7 +2296,7 @@
                         const fechas = opsActivas.map(o => new Date(o.fechaVencimiento)).filter(d => !isNaN(d.getTime()));
                         if (fechas.length > 0) {
                             const minFecha = new Date(Math.min(...fechas));
-                            proximoVtoStr = minFecha.toLocaleDateString('es-AR');
+                            proximoVtoStr = minFecha.toLocaleDateString('es-AR', { timeZone: 'UTC' });
                         }
                     }
                 }
@@ -2328,7 +2328,7 @@
                         const cuotasPagadas = op.historialPagos ? op.historialPagos.length : 0;
                         const cuotasTotales = op.cuotasTotales || op.cuotas || 1;
                         const valorCuota = cuotasTotales > 0 ? (montoD / cuotasTotales) : 0;
-                        const fechaVenc = op.fechaVencimiento ? new Date(op.fechaVencimiento).toLocaleDateString('es-AR') : 'N/A';
+                        const fechaVenc = op.fechaVencimiento ? new Date(op.fechaVencimiento).toLocaleDateString('es-AR', { timeZone: 'UTC' }) : 'N/A';
                         
                         let itemsHtml = '<p class="text-[10px] text-slate-400 italic mt-2">Sin pagos registrados</p>';
                         if (op.historialPagos && op.historialPagos.length > 0) {
@@ -2452,7 +2452,7 @@
                                 <div class="flex items-center space-x-3 mt-4">
                                     <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center"><i data-lucide="calendar-days" class="w-4 h-4"></i></div>
                                     <div class="flex flex-col">
-                                        <span class="text-sm font-bold text-slate-700"><strong>Inicio/Préstamo:</strong> ${c.fechaIngreso ? new Date(c.fechaIngreso).toLocaleDateString('es-AR') : 'Sin fecha registrada'}</span>
+                                        <span class="text-sm font-bold text-slate-700"><strong>Inicio/Préstamo:</strong> ${c.fechaIngreso ? new Date(c.fechaIngreso).toLocaleDateString('es-AR', { timeZone: 'UTC' }) : 'Sin fecha registrada'}</span>
                                     </div>
                                 </div>
                                 <div class="flex gap-2">
@@ -2903,7 +2903,7 @@
                         </div>
                         <div class="flex items-center justify-between mt-auto">
                             <span class="text-[9px] font-black px-2 py-1 ${colorStyle} rounded-lg border">
-                                ${date.toLocaleDateString('es-AR')}
+                                ${date.toLocaleDateString('es-AR', { timeZone: 'UTC' })}
                             </span>
                             ${item.clienteId ? `
                                 <a href="${generarLinkWhatsApp(item.clienteId.telefono)}" target="_blank" class="text-emerald-500 hover:text-emerald-600 transition-colors">
@@ -3541,8 +3541,8 @@
                         'Saldo Pendiente': Math.max(0, totalAdeudado - pagado),
                         'Monto Pagado': pagado,
                         'Estado': c.estado || 'Activo',
-                        'Próximo Cobro': c.proximoCobro ? new Date(c.proximoCobro).toLocaleDateString('es-AR') : 'N/A',
-                        'Fecha de Alta': c.createdAt ? new Date(c.createdAt).toLocaleDateString('es-AR') : 'N/A'
+                        'Próximo Cobro': c.proximoCobro ? new Date(c.proximoCobro).toLocaleDateString('es-AR', { timeZone: 'UTC' }) : 'N/A',
+                        'Fecha de Alta': c.createdAt ? new Date(c.createdAt).toLocaleDateString('es-AR', { timeZone: 'UTC' }) : 'N/A'
                     };
                 });
 

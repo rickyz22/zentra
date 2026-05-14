@@ -10,7 +10,7 @@ exports.registrarPago = async (req, res) => {
         const cliente = await Cliente.findById(id);
         if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
 
-        const fechaEfectiva = fechaPago ? new Date(fechaPago) : new Date();
+        const fechaEfectiva = fechaPago ? new Date(fechaPago + 'T12:00:00') : new Date();
 
         const nuevoPago = {
             monto: Number(monto),

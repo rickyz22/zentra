@@ -3,7 +3,7 @@ require('dotenv').config();
 // VERSIÓN CANÓNICA DEL SERVIDOR
 // Actualizá este número con cada deploy
 // ==========================================
-const APP_VERSION = '2.8.0';
+const APP_VERSION = '2.8.1';
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');

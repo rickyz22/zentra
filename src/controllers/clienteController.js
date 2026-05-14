@@ -24,7 +24,7 @@ exports.crearCliente = async (req, res) => {
             if (!data.precioVenta || data.precioVenta <= 0) return res.status(400).json({ ok: false, msg: 'El precio de venta es obligatorio para Electrodomésticos' });
         }
 
-        const fechaBase = data.fechaIngreso ? new Date(data.fechaIngreso) : new Date();
+        const fechaBase = data.fechaIngreso ? new Date(data.fechaIngreso + 'T12:00:00') : new Date();
 
         // Estructura de la operación base
         const nuevaOperacion = {
@@ -42,7 +42,7 @@ exports.crearCliente = async (req, res) => {
             cuotasTotales: data.cuotasTotales ? Number(data.cuotasTotales) : 1,
             saldoPendiente: (data.montoDevolver || data.precioVenta || data.honorarios || 0),
             historialPagos: [],
-            fechaVencimiento: data.fechaVencimiento ? new Date(data.fechaVencimiento) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            fechaVencimiento: data.fechaVencimiento ? new Date(data.fechaVencimiento + 'T12:00:00') : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         };
 
         const clienteData = {
@@ -270,7 +270,7 @@ exports.agregarOperacion = async (req, res) => {
             cuotasTotales: data.cuotasTotales ? Number(data.cuotasTotales) : 1,
             saldoPendiente: Math.round(data.montoDevolver || data.precioVenta || data.honorarios || 0),
             historialPagos: [],
-            fechaVencimiento: data.fechaVencimiento ? new Date(data.fechaVencimiento) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            fechaVencimiento: data.fechaVencimiento ? new Date(data.fechaVencimiento + 'T12:00:00') : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         };
 
         if (!cliente.operaciones) cliente.operaciones = [];
