@@ -14,7 +14,7 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '2.5.1'; 
+        const APP_VERSION = '2.6.0'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -1514,6 +1514,11 @@
                         <input type="number" name="cuotasTotales" id="no-cuotasTotales" placeholder="Ej: 1" value="1" min="1" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
 
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">Primer Vencimiento (Opcional)</label>
+                        <input type="date" name="fechaVencimiento" id="no-fechaVencimiento" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
                     <div class="flex gap-4 pt-4">
                         <button type="button" onclick="closeNuevaOperacionModal()" class="flex-1 font-bold text-slate-500">Cancelar</button>
                         <button type="submit" class="flex-[2] py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all">CREAR</button>
@@ -2301,6 +2306,7 @@
                         const cuotasPagadas = op.historialPagos ? op.historialPagos.length : 0;
                         const cuotasTotales = op.cuotasTotales || op.cuotas || 1;
                         const valorCuota = cuotasTotales > 0 ? (montoD / cuotasTotales) : 0;
+                        const fechaVenc = op.fechaVencimiento ? new Date(op.fechaVencimiento).toLocaleDateString('es-AR') : 'N/A';
                         
                         let itemsHtml = '<p class="text-[10px] text-slate-400 italic mt-2">Sin pagos registrados</p>';
                         if (op.historialPagos && op.historialPagos.length > 0) {
@@ -2342,7 +2348,7 @@
                         operacionesHtml += `
                             <div class="mb-4 border border-slate-200 dark:border-white/10 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-sm">
                                 <div class="flex justify-between items-center mb-3">
-                                    <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1">${icon} ${op.tipo} ${op._id === 'legacy' ? '(Original)' : `#${index + 1}`} - ${op.estado} ${detalleSecundario ? `<span class="text-slate-400 lowercase ml-1">(${detalleSecundario})</span>` : ''}</p>
+                                    <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1">${icon} ${op.tipo} ${op._id === 'legacy' ? '(Original)' : `#${index + 1}`} - ${op.estado} ${detalleSecundario ? `<span class="text-slate-400 lowercase ml-1">(${detalleSecundario})</span>` : ''} <span class="text-slate-400 ml-2">📅 Vence: ${fechaVenc}</span></p>
                                     <div class="flex items-center gap-4">
                                         <span class="font-black text-slate-400 text-[10px] uppercase tracking-widest">Cuota: ${cuotasPagadas}/${cuotasTotales} (${formatCurrency(valorCuota)})</span>
                                         ${op.estado !== 'Cerrado' && op.estado !== 'Cancelado' && op.estado !== 'Pagado' ? `

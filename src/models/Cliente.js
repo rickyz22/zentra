@@ -101,7 +101,8 @@ const clienteSchema = new mongoose.Schema({
             fecha: { type: Date, default: Date.now },
             metodo: String,
             nota: String
-        }]
+        }],
+        fechaVencimiento: { type: Date }
     }],
     fechaIngreso: {
         type: Date,

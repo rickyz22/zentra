@@ -267,7 +267,8 @@ exports.agregarOperacion = async (req, res) => {
             honorarios: data.honorarios ? Math.round(data.honorarios) : undefined,
             cuotasTotales: data.cuotasTotales ? Number(data.cuotasTotales) : 1,
             saldoPendiente: Math.round(data.montoDevolver || data.precioVenta || data.honorarios || 0),
-            historialPagos: []
+            historialPagos: [],
+            fechaVencimiento: data.fechaVencimiento ? new Date(data.fechaVencimiento) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         };
 
         if (!cliente.operaciones) cliente.operaciones = [];
