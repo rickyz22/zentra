@@ -1,5 +1,6 @@
 const Cliente = require('../models/Cliente');
 const Agenda = require('../models/Agenda');
+const Ganancia = require('../models/Ganancia');
 const xlsx = require('xlsx');
 
 // Crear un nuevo cliente con lógica de cuotas y fechas
@@ -23,13 +24,21 @@ exports.crearCliente = async (req, res) => {
             if (!data.costoCompra || data.costoCompra <= 0) return res.status(400).json({ ok: false, msg: 'El costo de compra es obligatorio para Electrodomésticos' });
             if (!data.precioVenta || data.precioVenta <= 0) return res.status(400).json({ ok: false, msg: 'El precio de venta es obligatorio para Electrodomésticos' });
         }
-
+        
         const fechaBase = data.fechaIngreso ? new Date(data.fechaIngreso + 'T12:00:00') : new Date();
+        const pagoInicial = parseFloat(data.pagoInicial) || 0;
 
-        // Estructura de la operación base
+        // 1. Lógica de Cliente Único (Upsert por DNI)
+        let cliente = null;
+        if (data.dni && data.dni.length > 5) {
+            cliente = await Cliente.findOne({ dni: data.dni });
+        }
+
+        // 2. Estructura de la operación base
+        const esTramite = data.categoria === 'Trámites';
         const nuevaOperacion = {
             tipo: data.categoria || 'Trámites',
-            estado: 'Activo',
+            estado: esTramite ? 'Pagado' : 'Activo',
             fechaAlta: fechaBase,
             montoPrestado: data.montoPrestado,
             montoDevolver: data.montoDevolver,
@@ -39,80 +48,103 @@ exports.crearCliente = async (req, res) => {
             tramite: data.tramite,
             subTipoTramite: data.subTipoTramite,
             honorarios: data.honorarios,
-            cuotasTotales: (data.categoria === 'Trámites' || data.tipo === 'Trámites') ? 1 : (data.cuotasTotales ? Number(data.cuotasTotales) : 1),
-            saldoPendiente: (data.montoDevolver || data.precioVenta || data.honorarios || 0),
+            cuotasTotales: esTramite ? 1 : (data.cuotasTotales ? Number(data.cuotasTotales) : 1),
+            saldoPendiente: esTramite ? 0 : (data.montoDevolver || data.precioVenta || data.honorarios || 0),
             historialPagos: [],
-            fechaVencimiento: data.fechaVencimiento ? new Date(data.fechaVencimiento + 'T12:00:00') : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            fechaVencimiento: esTramite ? null : (data.fechaVencimiento ? new Date(data.fechaVencimiento + 'T12:00:00') : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
         };
 
-        const clienteData = {
-            nombre: data.nombre,
-            telefono: data.telefono,
-            dni: data.dni,
-            direccion: data.direccion,
-            garante: data.garante,
-            empresa: data.empresa,
-            legajoToyota: data.legajoToyota,
-            notas: data.notas,
-            categoria: data.categoria || 'Trámites',
-            fechaIngreso: fechaBase,
-            operaciones: [nuevaOperacion]
-        };
-
-        const nuevoCliente = new Cliente(clienteData);
-
-        const pagoInicial = parseFloat(req.body.pagoInicial);
-        if (pagoInicial > 0) {
-            // Obtener la operación recién creada (la última del array)
-            const nuevaOp = nuevoCliente.operaciones[nuevoCliente.operaciones.length - 1];
-            
-            // Descontar el saldo
-            nuevaOp.saldoPendiente -= pagoInicial;
-            if (nuevaOp.saldoPendiente < 0) nuevaOp.saldoPendiente = 0;
-            if (nuevaOp.saldoPendiente === 0) nuevaOp.estado = 'Pagado';
-            
-            // Registrar en el historial
-            nuevaOp.historialPagos.push({
+        // Si es trámite con pago inicial, registrar ganancia inmediata (Caja)
+        if (esTramite && pagoInicial > 0) {
+            await Ganancia.create({
                 monto: pagoInicial,
-                fecha: new Date(),
-                nota: 'Abono en el momento de creación'
+                descripcion: `Trámite: ${data.nombre || (cliente ? cliente.nombre : 'Sin Nombre')}`,
+                categoria: 'Trámites',
+                fecha: new Date()
             });
             
-            // Si sigue usando campos root por compatibilidad, actualizalos también
-            if (nuevoCliente.saldoPendiente !== undefined) {
-                nuevoCliente.saldoPendiente -= pagoInicial;
-                if (nuevoCliente.saldoPendiente <= 0) {
-                    nuevoCliente.estado = 'Pagado';
-                }
-            }
-            // Compatibilidad estricta con legacy:
-            nuevoCliente.montoPagado = (nuevoCliente.montoPagado || 0) + pagoInicial;
-            
-            // Si no tiene saldoPendiente root explícito pero la operación sí se saldó, garantizamos el estado
-            if (nuevaOp.estado === 'Pagado') {
-                nuevoCliente.estado = 'Pagado';
-            }
+            nuevaOperacion.historialPagos.push({
+                monto: pagoInicial,
+                fecha: new Date(),
+                nota: 'Pago inicial de trámite (Automático)'
+            });
         }
 
-        const clienteGuardado = await nuevoCliente.save();
+        let clienteGuardado;
+        if (cliente) {
+            // Actualizar cliente existente
+            cliente.operaciones.push(nuevaOperacion);
+            if (esTramite) cliente.estado = 'Pagado';
+            
+            // Si NO es trámite y hay pago inicial, aplicar descuento normal
+            if (!esTramite && pagoInicial > 0) {
+                nuevaOperacion.saldoPendiente -= pagoInicial;
+                if (nuevaOperacion.saldoPendiente <= 0) {
+                    nuevaOperacion.saldoPendiente = 0;
+                    nuevaOperacion.estado = 'Pagado';
+                }
+                nuevaOperacion.historialPagos.push({
+                    monto: pagoInicial,
+                    fecha: new Date(),
+                    nota: 'Abono inicial'
+                });
+            }
+            clienteGuardado = await cliente.save();
+        } else {
+            // Crear cliente nuevo
+            const clienteData = {
+                nombre: data.nombre,
+                telefono: data.telefono,
+                dni: data.dni,
+                direccion: data.direccion,
+                garante: data.garante,
+                empresa: data.empresa,
+                legajoToyota: data.legajoToyota,
+                notas: data.notas,
+                categoria: data.categoria || 'Trámites',
+                fechaIngreso: fechaBase,
+                estado: esTramite ? 'Pagado' : 'Activo',
+                operaciones: [nuevaOperacion]
+            };
 
-        if (nuevaOperacion.tipo === 'Trámites') {
+            const nuevoCliente = new Cliente(clienteData);
+            
+            // Aplicar pago inicial si no es trámite (ya manejado arriba para trámites)
+            if (!esTramite && pagoInicial > 0) {
+                const op = nuevoCliente.operaciones[0];
+                op.saldoPendiente -= pagoInicial;
+                if (op.saldoPendiente <= 0) {
+                    op.saldoPendiente = 0;
+                    op.estado = 'Pagado';
+                    nuevoCliente.estado = 'Pagado';
+                }
+                op.historialPagos.push({
+                    monto: pagoInicial,
+                    fecha: new Date(),
+                    nota: 'Abono inicial'
+                });
+            }
+            
+            clienteGuardado = await nuevoCliente.save();
+        }
+
+        // Solo agendar si NO es trámite o si se requiere específicamente (los trámites pagados no ensucian la agenda)
+        if (!esTramite && nuevaOperacion.estado !== 'Pagado') {
             const fechaVencimiento = new Date(fechaBase);
             fechaVencimiento.setDate(fechaVencimiento.getDate() + 31);
             
             await Agenda.create({
-                titulo: `Vence Trámite: ${data.tramite || 'General'}`,
+                titulo: `Vence: ${data.nombre} (${data.categoria})`,
                 fecha: fechaVencimiento,
                 clienteId: clienteGuardado._id,
-                tipo: 'Trámite',
-                honorarios: data.honorarios || 0,
-                categoria: 'Trámites'
+                tipo: data.categoria,
+                categoria: data.categoria
             });
         }
 
         res.status(201).json({
             ok: true,
-            msg: 'Cliente creado correctamente',
+            msg: cliente ? 'Operación agregada al cliente existente' : 'Cliente creado correctamente',
             cliente: clienteGuardado
         });
     } catch (error) {
