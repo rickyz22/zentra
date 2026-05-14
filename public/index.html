@@ -1179,7 +1179,7 @@
                                     <div class="legajo hidden">
                                         <input type="text" name="legajoToyota" placeholder="Legajo Toyota" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
                                     </div>
-                                    <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="honorarios" placeholder="Honorarios Sugeridos ($) (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                    <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="honorarios" placeholder="Honorarios Sugeridos ($) (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
                                     
                                     <div class="mt-4">
                                         <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest pl-1 mb-2">Monto Abonado Ahora (Opcional)</p>
@@ -1195,6 +1195,7 @@
                                     <div class="pt-2">
                                         <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-2">Fecha de Ingreso</p>
                                         <input type="date" name="fechaIngreso" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+                                        <p class="text-[9px] text-slate-600 pl-1 mt-1">Por defecto: hoy. Útil para registros previos.</p>
                                     </div>
                                     <div class="pt-2">
                                         <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-2">Primer Vencimiento (Opcional)</p>
@@ -1217,8 +1218,8 @@
                                 <div class="space-y-4">
                                     <h5 class="text-white font-black text-sm flex items-center"><i data-lucide="banknote" class="w-4 h-4 mr-2 text-slate-400"></i>Detalles Financieros</h5>
                                     <div class="grid grid-cols-2 gap-4">
-                                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event);" name="montoPrestado" placeholder="Monto Prestado ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
-                                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event);" name="montoDevolver" placeholder="Monto a Devolver ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
+                                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="montoPrestado" placeholder="Monto Prestado ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
+                                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="montoDevolver" placeholder="Monto a Devolver ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
                                     </div>
                                     <input type="number" name="cuotasTotales" placeholder="Cantidad de Cuotas" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
                                 </div>
@@ -1234,6 +1235,7 @@
                                         <div>
                                             <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-2">Ingreso</p>
                                             <input type="date" name="fechaIngreso" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
+                                            <p class="text-[8px] text-slate-600 mt-1">Default: hoy</p>
                                         </div>
                                         <div>
                                             <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-2">1° Vencimiento</p>
@@ -1258,8 +1260,8 @@
                                     <h5 class="text-white font-black text-sm flex items-center"><i data-lucide="tv" class="w-4 h-4 mr-2 text-slate-400"></i>Detalles del Producto</h5>
                                     <input type="text" name="producto" placeholder="Producto/Modelo (Ej: Heladera Patrick)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
                                     <div class="grid grid-cols-2 gap-4">
-                                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event);" name="costoCompra" placeholder="Costo Compra ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
-                                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event);" name="precioVenta" placeholder="Precio Venta ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="costoCompra" placeholder="Costo Compra ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                        <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="precioVenta" placeholder="Precio Venta ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
                                     </div>
                                     <input type="number" name="cuotasTotales" placeholder="Cantidad de Cuotas" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
                                 </div>
@@ -3579,6 +3581,9 @@
                 
                 // Reiniciar al selector
                 mostrarPaso('step-selector');
+                
+                // Limpiar bordes de validación
+                document.querySelectorAll('#clienteForm input').forEach(i => i.style.borderColor = '');
                 
                 // Default fechaIngreso = hoy para todos los campos de fechaIngreso
                 const hoy = new Date().toISOString().split('T')[0];
