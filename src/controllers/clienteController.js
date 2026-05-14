@@ -360,15 +360,12 @@ exports.exportarDatos = async (req, res) => {
     }
 };
 
-// Agregar una nueva operación a un cliente existente
+// Agregar una nueva operación a un cliente existente (Fix Crítico v3.4.2: $push para evitar sobrescritura)
 exports.agregarOperacion = async (req, res) => {
     try {
         const { id } = req.params;
         const data = req.body;
         
-        const cliente = await Cliente.findById(id);
-        if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
-
         const nuevaOperacion = {
             tipo: data.tipo || 'Préstamos',
             estado: 'Activo',
@@ -388,12 +385,20 @@ exports.agregarOperacion = async (req, res) => {
             fechaVencimiento: data.fechaVencimiento ? new Date(data.fechaVencimiento + 'T12:00:00') : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         };
 
-        if (!cliente.operaciones) cliente.operaciones = [];
-        cliente.operaciones.push(nuevaOperacion);
-        
-        await cliente.save();
-        res.status(200).json({ ok: true, msg: 'Operación agregada exitosamente', cliente });
+        const clienteActualizado = await Cliente.findByIdAndUpdate(
+            id,
+            { 
+                $push: { operaciones: nuevaOperacion },
+                $set: { estado: 'Activo' } 
+            },
+            { new: true, runValidators: true }
+        );
+
+        if (!clienteActualizado) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
+
+        res.status(200).json({ ok: true, msg: 'Operación agregada exitosamente', cliente: clienteActualizado });
     } catch (error) {
+        console.error('Error en agregarOperacion:', error);
         res.status(500).json({ ok: false, msg: 'Error al agregar operación', error: error.message });
     }
 };

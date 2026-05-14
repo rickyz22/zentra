@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.4.0'; 
-        const CACHE_NAME = 'zentra-v3.4.0-CURRENCY'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.4.2'; 
+        const CACHE_NAME = 'zentra-v3.4.2-PUSH-FIX'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1600,6 +1600,12 @@
                         </select>
                     </div>
 
+                    <div id="no-moneda-container" class="flex gap-2 p-1 bg-slate-950 rounded-2xl border border-white/5">
+                        <button type="button" onclick="setMoneda(this, 'ARS')" class="flex-1 py-2 text-[10px] font-black rounded-xl transition-all bg-emerald-500 text-white moneda-btn">ARS</button>
+                        <button type="button" onclick="setMoneda(this, 'USD')" class="flex-1 py-2 text-[10px] font-black rounded-xl transition-all text-slate-500 hover:text-white moneda-btn">USD</button>
+                        <input type="hidden" name="moneda" id="no-moneda" value="ARS">
+                    </div>
+
                     <!-- Campos Préstamo -->
                     <div id="no-campos-prestamo" class="grid grid-cols-2 gap-4">
                         <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="montoPrestado" id="no-montoPrestado" placeholder="Capital Prestado ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
@@ -1680,7 +1686,7 @@
     </main>
 
     <script>
-        console.log('%c Zentra v3.4.0: Soporte Multimoneda ARS/USD %c', 'background: #10b981; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
+        console.log('%c Zentra v3.4.2: Soporte Multimoneda & Fix PUSH %c', 'background: #10b981; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
         let allClientes = [];
         let allRecordatorios = [];
         let editingClientId = null;
@@ -3007,7 +3013,8 @@
                 subTipoTramite: document.getElementById('no-subTipoTramite').value,
                 honorarios: unmaskCurrency(document.getElementById('no-honorarios').value),
                 cuotasTotales: document.getElementById('no-cuotasTotales').value,
-                fechaVencimiento: document.getElementById('no-fechaVencimiento').value
+                fechaVencimiento: document.getElementById('no-fechaVencimiento').value,
+                moneda: document.getElementById('no-moneda').value || 'ARS'
             };
             
             try {

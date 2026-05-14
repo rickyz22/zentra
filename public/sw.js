@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.4.0-CURRENCY'; // v3.4.0-CURRENCY-UPGRADE
+const CACHE_NAME = 'zentra-v3.4.2-PUSH-FIX'; // v3.4.2-PUSH-FIX-UPGRADE
 const ASSETS = [
   '/',
   '/index.html',
