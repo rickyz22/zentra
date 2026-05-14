@@ -314,10 +314,12 @@ exports.reprogramarVencimiento = async (req, res) => {
 
         // Lógica Híbrida: Buscar en el array o migrar si es legacy
         let op = null;
-        // Solo buscamos en el array si operacionId parece un ID válido de Mongo y no es el string 'legacy' o 'undefined'
-        if (cliente.operaciones && cliente.operaciones.length > 0 && operacionId !== 'legacy' && operacionId !== 'undefined') {
+        const opId = operacionId;
+
+        // FIX: Validación estricta para evitar CastError de Mongoose
+        if (opId && opId !== 'undefined' && opId !== 'null' && opId !== 'legacy' && opId.length === 24) {
             try {
-                op = cliente.operaciones.id(operacionId);
+                op = cliente.operaciones ? cliente.operaciones.id(opId) : null;
             } catch (e) {
                 op = null;
             }
@@ -327,7 +329,7 @@ exports.reprogramarVencimiento = async (req, res) => {
             // Actualización normal
             op.fechaVencimiento = new Date(nuevaFecha + 'T12:00:00');
         } else {
-            // Migración Legacy Automática: Inicializar array si no existe
+            // Migración Legacy Automática (Auto-Fix): Inicializar array si no existe
             if (!cliente.operaciones) cliente.operaciones = [];
             
             // Si el cliente no tiene operaciones, creamos la primera migrando los campos de la raíz
@@ -347,9 +349,15 @@ exports.reprogramarVencimiento = async (req, res) => {
                     fechaAlta: cliente.createdAt || cliente.fecha || new Date()
                 };
                 cliente.operaciones.push(nuevaOp);
+            } else if (opId === 'legacy' || opId === 'undefined') {
+                // Caso específico donde forzamos migración o actualización de la primera op existente si no hay ID
+                if (cliente.operaciones.length > 0) {
+                    cliente.operaciones[0].fechaVencimiento = new Date(nuevaFecha + 'T12:00:00');
+                } else {
+                    return res.status(404).json({ ok: false, msg: 'No hay operaciones para reprogramar.' });
+                }
             } else {
-                // Si ya tiene operaciones pero no encontramos el ID, devolvemos error para no duplicar datos legacy
-                return res.status(404).json({ ok: false, msg: 'Operación no encontrada en el historial' });
+                return res.status(404).json({ ok: false, msg: 'Operación no encontrada o ID inválido' });
             }
         }
         
