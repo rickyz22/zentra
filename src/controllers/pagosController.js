@@ -33,6 +33,7 @@ exports.registrarPago = async (req, res) => {
             } else {
                 prestamo.estado = 'Activo';
             }
+            cliente.markModified('prestamos');
         } else {
             // Lógica legacy
             cliente.historialPagos.push(nuevoPago);
@@ -46,6 +47,7 @@ exports.registrarPago = async (req, res) => {
                     cliente.estado = 'Activo';
                 }
             }
+            cliente.markModified('historialPagos');
         }
 
         await cliente.save();
@@ -77,6 +79,7 @@ exports.eliminarPago = async (req, res) => {
             } else {
                 prestamo.estado = 'Cancelado';
             }
+            cliente.markModified('prestamos');
         } else {
             // Lógica legacy
             cliente.historialPagos = cliente.historialPagos.filter(p => p._id.toString() !== pagoId);
@@ -88,6 +91,7 @@ exports.eliminarPago = async (req, res) => {
                     cliente.estado = 'Activo';
                 }
             }
+            cliente.markModified('historialPagos');
         }
 
         await cliente.save();

@@ -77,7 +77,6 @@ exports.obtenerClientes = async (req, res) => {
 
         // Optimización: Excluir historialPagos del listado general
         const clientes = await Cliente.find()
-            .select('-historialPagos')
             .sort({ fecha: -1 })
             .skip(skip)
             .limit(limit);
