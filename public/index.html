@@ -14,7 +14,7 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '2.9.1'; 
+        const APP_VERSION = '2.9.2'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -2318,8 +2318,11 @@
                 });
 
                 let operacionesHtml = '';
-                if (c.operaciones && c.operaciones.length > 0) {
-                    c.operaciones.forEach((op, index) => {
+                const opsReales = (c.operaciones || []).filter(op => op._id !== 'legacy');
+                const tieneOperacionesNuevas = opsReales.length > 0;
+
+                if (tieneOperacionesNuevas) {
+                    opsReales.forEach((op, index) => {
                         const icon = op.tipo === 'Préstamos' ? '💸' : (op.tipo === 'Electrodomésticos' ? '📺' : '📋');
                         const montoP = op.montoPrestado || op.costoCompra || 0;
                         const montoD = op.montoDevolver || op.precioVenta || op.honorarios || 0;
@@ -2411,7 +2414,7 @@
                             </div>
                         `;
                     });
-                } else if (c.categoria !== 'Trámites' || (c.honorarios && c.honorarios > 0)) {
+                } else if (!tieneOperacionesNuevas && (c.categoria !== 'Trámites' || (c.honorarios && c.honorarios > 0))) {
                     // Muestra una operación "virtual" basada en los datos raíz para clientes legacy
                     const icon = c.categoria === 'Préstamos' ? '💸' : (c.categoria === 'Electrodomésticos' ? '📺' : '📋');
                     const montoD = c.montoDevolver || c.precioVenta || c.honorarios || 0;
