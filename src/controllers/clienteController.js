@@ -301,7 +301,7 @@ exports.eliminarOperacion = async (req, res) => {
         res.status(500).json({ ok: false, msg: 'Error al eliminar la operación' });
     }
 };
-// Reprogramar fecha de vencimiento de una operación (Híbrido Legacy-Safe)
+// Reprogramar fecha de vencimiento de una operación (Híbrido Legacy-Safe & Estricto)
 exports.reprogramarVencimiento = async (req, res) => {
     try {
         const { id, operacionId } = req.params;
@@ -312,53 +312,47 @@ exports.reprogramarVencimiento = async (req, res) => {
         const cliente = await Cliente.findById(id);
         if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
 
-        // Lógica Híbrida: Buscar en el array o migrar si es legacy
-        let op = null;
         const opId = operacionId;
+        const esIdValido = (opId && opId !== 'undefined' && opId !== 'null' && opId !== 'legacy' && opId.length === 24);
 
-        // FIX: Validación estricta para evitar CastError de Mongoose
-        if (opId && opId !== 'undefined' && opId !== 'null' && opId !== 'legacy' && opId.length === 24) {
+        // 1. Si el cliente NO tiene operaciones (Legacy puro) -> MIGRAR
+        if (!cliente.operaciones || cliente.operaciones.length === 0) {
+            cliente.operaciones = [];
+            cliente.operaciones.push({
+                tipo: cliente.categoria || 'Trámites',
+                estado: cliente.estado || 'Activo',
+                montoPrestado: cliente.montoPrestado || 0,
+                montoDevolver: cliente.montoDevolver || 0,
+                costoCompra: cliente.costoCompra || 0,
+                precioVenta: cliente.precioVenta || 0,
+                honorarios: cliente.honorarios || 0,
+                cuotasTotales: cliente.cuotasTotales || 1,
+                saldoPendiente: (cliente.montoDevolver || cliente.precioVenta || cliente.honorarios || 0) - (cliente.montoPagado || 0),
+                historialPagos: cliente.historialPagos || [],
+                fechaVencimiento: new Date(nuevaFecha + 'T12:00:00'),
+                fechaAlta: cliente.createdAt || cliente.fecha || new Date()
+            });
+        } 
+        // 2. Si YA tiene operaciones -> EXIGIR COINCIDENCIA EXACTA
+        else {
+            if (!esIdValido) {
+                return res.status(400).json({ ok: false, msg: 'ID de operación inválido para un cliente ya migrado.' });
+            }
+            
+            let op = null;
             try {
-                op = cliente.operaciones ? cliente.operaciones.id(opId) : null;
+                op = cliente.operaciones.id(opId);
             } catch (e) {
                 op = null;
             }
-        }
 
-        if (op) {
-            // Actualización normal
-            op.fechaVencimiento = new Date(nuevaFecha + 'T12:00:00');
-        } else {
-            // Migración Legacy Automática (Auto-Fix): Inicializar array si no existe
-            if (!cliente.operaciones) cliente.operaciones = [];
-            
-            // Si el cliente no tiene operaciones, creamos la primera migrando los campos de la raíz
-            if (cliente.operaciones.length === 0) {
-                const nuevaOp = {
-                    tipo: cliente.categoria || 'Trámites',
-                    estado: cliente.estado || 'Activo',
-                    montoPrestado: cliente.montoPrestado || 0,
-                    montoDevolver: cliente.montoDevolver || 0,
-                    costoCompra: cliente.costoCompra || 0,
-                    precioVenta: cliente.precioVenta || 0,
-                    honorarios: cliente.honorarios || 0,
-                    cuotasTotales: cliente.cuotasTotales || 1,
-                    saldoPendiente: (cliente.montoDevolver || cliente.precioVenta || cliente.honorarios || 0) - (cliente.montoPagado || 0),
-                    historialPagos: cliente.historialPagos || [],
-                    fechaVencimiento: new Date(nuevaFecha + 'T12:00:00'),
-                    fechaAlta: cliente.createdAt || cliente.fecha || new Date()
-                };
-                cliente.operaciones.push(nuevaOp);
-            } else if (opId === 'legacy' || opId === 'undefined') {
-                // Caso específico donde forzamos migración o actualización de la primera op existente si no hay ID
-                if (cliente.operaciones.length > 0) {
-                    cliente.operaciones[0].fechaVencimiento = new Date(nuevaFecha + 'T12:00:00');
-                } else {
-                    return res.status(404).json({ ok: false, msg: 'No hay operaciones para reprogramar.' });
-                }
-            } else {
-                return res.status(404).json({ ok: false, msg: 'Operación no encontrada o ID inválido' });
+            if (!op) {
+                // NUNCA actualizar por defecto. Abortar por seguridad financiera.
+                return res.status(404).json({ ok: false, msg: 'Operación exacta no encontrada. No se realizaron cambios por seguridad.' });
             }
+            
+            // Si la encontró, actualizar
+            op.fechaVencimiento = new Date(nuevaFecha + 'T12:00:00');
         }
         
         await cliente.save();
