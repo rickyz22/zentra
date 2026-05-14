@@ -1508,6 +1508,12 @@
                         <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="honorarios" id="no-honorarios" placeholder="Honorarios ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-violet-500">
                     </div>
 
+                    <!-- Cuotas (Común para Préstamos y Electro) -->
+                    <div id="no-campos-cuotas" class="hidden">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">Cantidad de Cuotas</label>
+                        <input type="number" name="cuotasTotales" id="no-cuotasTotales" placeholder="Ej: 1" value="1" min="1" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
                     <div class="flex gap-4 pt-4">
                         <button type="button" onclick="closeNuevaOperacionModal()" class="flex-1 font-bold text-slate-500">Cancelar</button>
                         <button type="submit" class="flex-[2] py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all">CREAR</button>
@@ -2339,18 +2345,18 @@
                                         </button>
                                     ` : ''}
                                 </div>
-                                <div class="finance-panel bg-slate-50 border border-slate-100 rounded-xl p-3 flex justify-between">
-                                    ${op.tipo !== 'Trámites' ? `
+                                <div class="finance-panel bg-slate-50 border border-slate-100 rounded-xl p-3 grid grid-cols-3 gap-2">
                                     <div class="finance-col flex flex-col items-start">
-                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">${op.tipo === 'Electrodomésticos' ? 'Costo' : 'Capital'}</p>
-                                        <p class="text-xs font-black text-slate-700">${formatCurrency(montoP)}</p>
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                            ${op.tipo === 'Préstamos' ? 'Capital' : (op.tipo === 'Electrodomésticos' ? 'Costo' : 'Honorarios')}
+                                        </p>
+                                        <p class="text-xs font-black text-slate-700">${formatCurrency(montoP || montoD)}</p>
                                     </div>
-                                    ` : ''}
-                                    <div class="finance-col flex flex-col items-center ${op.tipo !== 'Trámites' ? 'border-x border-slate-200 px-3' : 'items-start'}">
-                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">${op.tipo === 'Trámites' ? 'Honorarios' : 'A Devolver'}</p>
-                                        <p class="text-xs font-black text-slate-700">${formatCurrency(montoD)}</p>
+                                    <div class="finance-col flex flex-col items-center border-x border-slate-200 px-2">
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Cuotas</p>
+                                        <p class="text-xs font-black text-slate-700">${op.cuotasTotales || 1}</p>
                                     </div>
-                                    <div class="finance-col flex flex-col items-end ${op.tipo === 'Trámites' ? 'flex-1' : ''}">
+                                    <div class="finance-col flex flex-col items-end">
                                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Saldo</p>
                                         <p class="text-xs font-black ${saldoPend > 0 ? 'text-rose-500' : 'text-emerald-500'}">${formatCurrency(saldoPend)}</p>
                                     </div>
@@ -2620,10 +2626,19 @@
             document.getElementById('no-campos-prestamo').classList.add('hidden');
             document.getElementById('no-campos-electro').classList.add('hidden');
             document.getElementById('no-campos-tramite').classList.add('hidden');
+            document.getElementById('no-campos-cuotas').classList.add('hidden');
             
-            if (tipo === 'Préstamos') document.getElementById('no-campos-prestamo').classList.remove('hidden');
-            if (tipo === 'Electrodomésticos') document.getElementById('no-campos-electro').classList.remove('hidden');
-            if (tipo === 'Trámites') document.getElementById('no-campos-tramite').classList.remove('hidden');
+            if (tipo === 'Préstamos') {
+                document.getElementById('no-campos-prestamo').classList.remove('hidden');
+                document.getElementById('no-campos-cuotas').classList.remove('hidden');
+            }
+            if (tipo === 'Electrodomésticos') {
+                document.getElementById('no-campos-electro').classList.remove('hidden');
+                document.getElementById('no-campos-cuotas').classList.remove('hidden');
+            }
+            if (tipo === 'Trámites') {
+                document.getElementById('no-campos-tramite').classList.remove('hidden');
+            }
         }
 
         function openNuevaOperacionModal(id, nombre) {
@@ -2651,7 +2666,8 @@
                 precioVenta: unmaskCurrency(document.getElementById('no-precioVenta').value),
                 tramite: document.getElementById('no-tramite').value,
                 subTipoTramite: document.getElementById('no-subTipoTramite').value,
-                honorarios: unmaskCurrency(document.getElementById('no-honorarios').value)
+                honorarios: unmaskCurrency(document.getElementById('no-honorarios').value),
+                cuotasTotales: document.getElementById('no-cuotasTotales').value
             };
             
             try {

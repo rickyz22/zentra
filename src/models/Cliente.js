@@ -94,6 +94,7 @@ const clienteSchema = new mongoose.Schema({
         tramite: String,
         subTipoTramite: String,
         honorarios: Number,
+        cuotasTotales: { type: Number, default: 1 },
         saldoPendiente: { type: Number, default: 0 },
         historialPagos: [{
             monto: { type: Number, required: true },

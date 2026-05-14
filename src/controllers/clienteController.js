@@ -39,6 +39,7 @@ exports.crearCliente = async (req, res) => {
             tramite: data.tramite,
             subTipoTramite: data.subTipoTramite,
             honorarios: data.honorarios,
+            cuotasTotales: data.cuotasTotales ? Number(data.cuotasTotales) : 1,
             saldoPendiente: (data.montoDevolver || data.precioVenta || data.honorarios || 0),
             historialPagos: []
         };
@@ -264,6 +265,7 @@ exports.agregarOperacion = async (req, res) => {
             tramite: data.tramite,
             subTipoTramite: data.subTipoTramite,
             honorarios: data.honorarios ? Math.round(data.honorarios) : undefined,
+            cuotasTotales: data.cuotasTotales ? Number(data.cuotasTotales) : 1,
             saldoPendiente: Math.round(data.montoDevolver || data.precioVenta || data.honorarios || 0),
             historialPagos: []
         };
