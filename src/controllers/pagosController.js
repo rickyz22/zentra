@@ -35,6 +35,15 @@ exports.registrarPago = async (req, res) => {
             } else {
                 operacion.estado = 'Activo';
             }
+
+            // Desplazar fecha de vencimiento (+30 días)
+            if (operacion.fechaVencimiento) {
+                const currentVenc = new Date(operacion.fechaVencimiento);
+                operacion.fechaVencimiento = new Date(currentVenc.setDate(currentVenc.getDate() + 30));
+            } else {
+                operacion.fechaVencimiento = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+            }
+
             cliente.markModified('operaciones');
         } else {
             // Lógica legacy
