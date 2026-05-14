@@ -5,7 +5,7 @@ const Cliente = require('../models/Cliente');
 exports.registrarPago = async (req, res) => {
     try {
         const { id } = req.params;
-        const { monto, metodo, fechaPago, operacionId } = req.body;
+        const { monto, metodo, fechaPago, operacionId, conRecargo } = req.body;
         
         const cliente = await Cliente.findById(id);
         if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
@@ -16,7 +16,9 @@ exports.registrarPago = async (req, res) => {
             monto: Number(monto),
             metodo: metodo || 'Efectivo',
             fecha: fechaEfectiva,
-            nota: `Pago de $${Number(monto).toLocaleString('es-AR')} vía ${metodo || 'Efectivo'}`
+            nota: conRecargo === true || conRecargo === 'true'
+                ? `Pago con recargo por mora del 15% ($${Number(monto).toLocaleString('es-AR')}) vía ${metodo || 'Efectivo'}`
+                : `Pago de $${Number(monto).toLocaleString('es-AR')} vía ${metodo || 'Efectivo'}`
         };
 
         if (operacionId && operacionId !== 'legacy') {
