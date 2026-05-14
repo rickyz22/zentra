@@ -56,25 +56,32 @@ exports.obtenerEstadisticas = async (req, res) => {
             ]),
             Cliente.find({ honorarios: { $gt: 0 }, createdAt: { $gte: todayStart, $lt: todayEnd } }),
             Cliente.find({ honorarios: { $gt: 0 }, createdAt: { $gte: monthStart } }),
-            Cliente.find({ 'historialPagos.fecha': { $gte: monthStart } }),
+            Cliente.find({ 'operaciones.historialPagos.fecha': { $gte: monthStart } }),
             Agenda.aggregate([{ $group: { _id: '$clienteId', total: { $sum: '$honorarios' } } }]),
             Cliente.find({ $or: [{ categoria: 'Trámites' }, { categoria: { $exists: false } }] }),
             
-            // Reemplazamos la carga masiva en RAM por Aggregation nativa de Mongo
+            // Agregación de Operaciones
             Cliente.aggregate([
-                { $match: { categoria: { $in: ['Préstamos', 'Electrodomésticos'] } } },
+                { $unwind: '$operaciones' },
+                { $match: { 'operaciones.tipo': { $in: ['Préstamos', 'Electrodomésticos'] } } },
                 {
                     $project: {
-                        categoria: 1,
-                        costo: { $cond: [{ $eq: ['$categoria', 'Préstamos'] }, { $ifNull: ['$montoPrestado', 0] }, { $ifNull: ['$costoCompra', 0] }] },
-                        retorno: { $cond: [{ $eq: ['$categoria', 'Préstamos'] }, { $ifNull: ['$montoDevolver', 0] }, { $ifNull: ['$precioVenta', 0] }] },
-                        pago: { $ifNull: ['$montoPagado', 0] },
-                        estado: { $ifNull: ['$estado', 'Pendiente'] }
+                        tipo: '$operaciones.tipo',
+                        costo: { $cond: [{ $eq: ['$operaciones.tipo', 'Préstamos'] }, { $ifNull: ['$operaciones.montoPrestado', 0] }, { $ifNull: ['$operaciones.costoCompra', 0] }] },
+                        retorno: { $cond: [{ $eq: ['$operaciones.tipo', 'Préstamos'] }, { $ifNull: ['$operaciones.montoDevolver', 0] }, { $ifNull: ['$operaciones.precioVenta', 0] }] },
+                        pago: { 
+                            $reduce: {
+                                input: { $ifNull: ['$operaciones.historialPagos', []] },
+                                initialValue: 0,
+                                in: { $add: ['$$value', '$$this.monto'] }
+                            }
+                        },
+                        estado: { $ifNull: ['$operaciones.estado', 'Pendiente'] }
                     }
                 },
                 {
                     $project: {
-                        categoria: 1,
+                        tipo: 1,
                         cap: {
                             $cond: [
                                 { $in: ['$estado', ['Cerrado', 'Pagado']] }, 0,
@@ -109,7 +116,7 @@ exports.obtenerEstadisticas = async (req, res) => {
                 },
                 {
                     $group: {
-                        _id: '$categoria',
+                        _id: '$tipo',
                         capitalEnCalle: { $sum: '$cap' },
                         gananciaPendiente: { $sum: '$gPend' },
                         gananciaRealizada: { $sum: '$gReal' }
@@ -119,55 +126,46 @@ exports.obtenerEstadisticas = async (req, res) => {
             
             Agenda.find({ honorarios: { $gt: 0 } }),
             Cliente.find({ honorarios: { $gt: 0 } }),
-            // Optimización: Solo traer aquellos que tengan pagos registrados para el historial mensual
-            Cliente.find({ categoria: { $in: ['Préstamos', 'Electrodomésticos'] }, 'historialPagos.0': { $exists: true } })
+            // Clientes con operaciones para historial mensual
+            Cliente.find({ 'operaciones.tipo': { $in: ['Préstamos', 'Electrodomésticos'] }, 'operaciones.historialPagos.0': { $exists: true } })
         ]);
 
         const stats = {};
         results.forEach(item => { if (item._id) stats[item._id] = item.count; });
 
-        // Clientes que ya están cubiertos por la agenda
-        const clientesEnAgendaHoy = new Set(
-            agendaFinance[0].hoy.map(x => x._id ? x._id.toString() : null).filter(Boolean)
-        );
-        const clientesEnAgendaMes = new Set(
-            agendaFinance[0].mes.map(x => x._id ? x._id.toString() : null).filter(Boolean)
-        );
-
         const agendaHoy = agendaFinance[0].hoy.reduce((s, x) => s + x.total, 0);
         const agendaMes = agendaFinance[0].mes.reduce((s, x) => s + x.total, 0);
 
-        const clientesHoyExtra = clientesHoy
-            .filter(c => !clientesEnAgendaHoy.has(c._id.toString()))
-            .reduce((s, c) => s + (c.honorarios || 0), 0);
+        const clientesHoyExtra = clientesHoy.reduce((s, c) => s + (c.honorarios || 0), 0);
+        const clientesMesExtra = clientesMes.reduce((s, c) => s + (c.honorarios || 0), 0);
 
-        const clientesMesExtra = clientesMes
-            .filter(c => !clientesEnAgendaMes.has(c._id.toString()))
-            .reduce((s, c) => s + (c.honorarios || 0), 0);
-
-        // 5. NUEVO: Flujo de Caja
+        // 5. Flujo de Caja
         let pagosRegistradosHoy = 0;
         let pagosRegistradosMes = 0;
         let presHoy = 0, presMes = 0;
         let elecHoy = 0, elecMes = 0;
 
         clientesConPagos.forEach(c => {
-            if (c.historialPagos) {
-                c.historialPagos.forEach(p => {
-                    const esHoy = p.fecha >= todayStart && p.fecha < todayEnd;
-                    const esMes = p.fecha && p.fecha >= monthStart;
-                    const monto = Number(p.monto) || 0;
+            if (c.operaciones) {
+                c.operaciones.forEach(op => {
+                    if (op.historialPagos) {
+                        op.historialPagos.forEach(p => {
+                            const esHoy = p.fecha >= todayStart && p.fecha < todayEnd;
+                            const esMes = p.fecha && p.fecha >= monthStart;
+                            const monto = Number(p.monto) || 0;
 
-                    if (esMes) {
-                        pagosRegistradosMes += monto;
-                        if (c.categoria === 'Préstamos') presMes += monto;
-                        else if (c.categoria === 'Electrodomésticos') elecMes += monto;
+                            if (esMes) {
+                                pagosRegistradosMes += monto;
+                                if (op.tipo === 'Préstamos') presMes += monto;
+                                else if (op.tipo === 'Electrodomésticos') elecMes += monto;
 
-                        if (esHoy) {
-                            pagosRegistradosHoy += monto;
-                            if (c.categoria === 'Préstamos') presHoy += monto;
-                            else if (c.categoria === 'Electrodomésticos') elecHoy += monto;
-                        }
+                                if (esHoy) {
+                                    pagosRegistradosHoy += monto;
+                                    if (op.tipo === 'Préstamos') presHoy += monto;
+                                    else if (op.tipo === 'Electrodomésticos') elecHoy += monto;
+                                }
+                            }
+                        });
                     }
                 });
             }
@@ -191,7 +189,6 @@ exports.obtenerEstadisticas = async (req, res) => {
         let mPrestamos = { recaudacionHoy: presHoy, recaudacionMes: presMes, capitalEnCalle: 0, gananciaPendiente: 0, gananciaRealizada: 0 };
         let mElectro = { recaudacionHoy: elecHoy, recaudacionMes: elecMes, capitalEnCalle: 0, gananciaPendiente: 0, gananciaRealizada: 0 };
 
-        // Procesar resultados pre-calculados por MongoDB Aggregation
         todosPreEles.forEach(grupo => {
             if (grupo._id === 'Préstamos') {
                 mPrestamos.capitalEnCalle = Math.round(grupo.capitalEnCalle * 100) / 100;
@@ -204,59 +201,55 @@ exports.obtenerEstadisticas = async (req, res) => {
             }
         });
 
-        // 6. HISTORIAL MENSUAL
         const historialMap = {};
         const getMonthKey = (dateStr) => {
             if (!dateStr) return null;
             const d = new Date(dateStr);
             const localD = new Date(d.getTime() - (3 * 60 * 60 * 1000));
-            const y = localD.getUTCFullYear();
-            let m = localD.getUTCMonth() + 1;
-            return `${y}-${m.toString().padStart(2, '0')}`;
+            return `${localD.getUTCFullYear()}-${(localD.getUTCMonth() + 1).toString().padStart(2, '0')}`;
         };
 
         const initMonth = (m) => {
             if (!historialMap[m]) historialMap[m] = { tramites: 0, prestamos: 0, electro: 0 };
         };
 
-        const agendaIds = new Set();
         todaAgenda.forEach(a => {
-            if (a.clienteId) agendaIds.add(a.clienteId.toString());
             const mk = getMonthKey(a.fecha);
             if (mk) { initMonth(mk); historialMap[mk].tramites += (Number(a.honorarios) || 0); }
         });
 
         todosTramites.forEach(c => {
-            if (!agendaIds.has(c._id.toString())) {
-                const mk = getMonthKey(c.createdAt || c.fecha);
-                if (mk) { initMonth(mk); historialMap[mk].tramites += (Number(c.honorarios) || 0); }
-            }
+            const mk = getMonthKey(c.createdAt || c.fecha);
+            if (mk) { initMonth(mk); historialMap[mk].tramites += (Number(c.honorarios) || 0); }
         });
 
         todosPreElesGanancia.forEach(c => {
-            if (!c.historialPagos || c.historialPagos.length === 0) return;
-            const costo = c.categoria === 'Préstamos' ? (Number(c.montoPrestado) || 0) : (Number(c.costoCompra) || 0);
-            const pagosOrdenados = [...c.historialPagos].sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
-            let capitalRecuperado = 0;
-            
-            pagosOrdenados.forEach(p => {
-                const pagoFisico = Number(p.monto) || 0;
-                let gananciaNetaDelPago = 0;
-                if (capitalRecuperado < costo) {
-                    const porcionCapital = Math.min(pagoFisico, costo - capitalRecuperado);
-                    gananciaNetaDelPago = Math.max(0, pagoFisico - porcionCapital);
-                    capitalRecuperado += porcionCapital;
-                } else {
-                    gananciaNetaDelPago = pagoFisico;
-                }
-                if (gananciaNetaDelPago > 0) {
-                    const mk = getMonthKey(p.fecha);
-                    if (mk) {
-                        initMonth(mk);
-                        if (c.categoria === 'Préstamos') historialMap[mk].prestamos += gananciaNetaDelPago;
-                        else historialMap[mk].electro += gananciaNetaDelPago;
+            if (!c.operaciones) return;
+            c.operaciones.forEach(op => {
+                if (!op.historialPagos || op.historialPagos.length === 0) return;
+                const costo = op.tipo === 'Préstamos' ? (Number(op.montoPrestado) || 0) : (Number(op.costoCompra) || 0);
+                const pagosOrdenados = [...op.historialPagos].sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
+                let capitalRecuperado = 0;
+                
+                pagosOrdenados.forEach(p => {
+                    const pagoFisico = Number(p.monto) || 0;
+                    let gananciaNetaDelPago = 0;
+                    if (capitalRecuperado < costo) {
+                        const porcionCapital = Math.min(pagoFisico, costo - capitalRecuperado);
+                        gananciaNetaDelPago = Math.max(0, pagoFisico - porcionCapital);
+                        capitalRecuperado += porcionCapital;
+                    } else {
+                        gananciaNetaDelPago = pagoFisico;
                     }
-                }
+                    if (gananciaNetaDelPago > 0) {
+                        const mk = getMonthKey(p.fecha);
+                        if (mk) {
+                            initMonth(mk);
+                            if (op.tipo === 'Préstamos') historialMap[mk].prestamos += gananciaNetaDelPago;
+                            else historialMap[mk].electro += gananciaNetaDelPago;
+                        }
+                    }
+                });
             });
         });
 

@@ -14,7 +14,7 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '2.7.4'; 
+        const APP_VERSION = '2.8.0'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -2788,21 +2788,28 @@
                 if (!res) return;
                 const data = await res.json();
                 
-                // On-the-fly virtual projection based on payments
-                const virtualAgendas = allClientes
-                    .filter(c => (c.categoria === 'Préstamos' || c.categoria === 'Electrodomésticos') && c.estado !== 'Cerrado' && c.estado !== 'Pagado' && c.proximoCobro)
-                    .map(c => {
-                        return {
-                            _id: 'virtual_' + c._id,
-                            titulo: `Cobro: ${c.nombre} - ${c.categoria}`,
-                            fechaVencimiento: c.proximoCobro,
-                            tipo: 'Cobro Virtual',
-                            clienteId: c,
-                            categoria: c.categoria,
-                            telefono: c.telefono,
-                            montoCuota: (c.montoDevolver || c.precioVenta || 0) / (c.cuotasTotales || 1)
-                        };
-                    });
+                // On-the-fly virtual projection based on operations
+                const virtualAgendas = [];
+                allClientes.forEach(c => {
+                    if (c.operaciones && c.operaciones.length > 0) {
+                        c.operaciones.forEach((op, opIdx) => {
+                            // Solo incluir operaciones que no estén cerradas/pagadas y tengan fecha de vencimiento
+                            if (!['Pagado', 'Cancelado', 'Cerrado'].includes(op.estado) && op.fechaVencimiento) {
+                                virtualAgendas.push({
+                                    _id: 'virtual_' + c._id + '_' + opIdx,
+                                    titulo: `${c.nombre} - ${op.tipo} (#${opIdx + 1})`,
+                                    fechaVencimiento: op.fechaVencimiento,
+                                    tipo: 'Cobro Virtual',
+                                    clienteId: c,
+                                    categoria: op.tipo,
+                                    telefono: c.telefono,
+                                    saldo: op.saldoPendiente,
+                                    montoCuota: (op.montoDevolver || op.precioVenta || op.honorarios || 0) / (op.cuotasTotales || 1)
+                                });
+                            }
+                        });
+                    }
+                });
 
                 allRecordatorios = [...(data.recordatorios || []), ...virtualAgendas];
                 allRecordatorios = allRecordatorios.map(r => ({
