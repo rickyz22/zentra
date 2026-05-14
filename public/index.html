@@ -14,7 +14,7 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '2.8.5'; 
+        const APP_VERSION = '2.8.6'; 
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -2411,6 +2411,37 @@
                             </div>
                         `;
                     });
+                } else if (c.categoria !== 'Trámites' || (c.honorarios && c.honorarios > 0)) {
+                    // Muestra una operación "virtual" basada en los datos raíz para clientes legacy
+                    const icon = c.categoria === 'Préstamos' ? '💸' : (c.categoria === 'Electrodomésticos' ? '📺' : '📋');
+                    const montoD = c.montoDevolver || c.precioVenta || c.honorarios || 0;
+                    const montoP = c.montoPrestado || c.costoCompra || 0;
+                    const saldoPend = Math.max(0, montoD - (c.montoPagado || 0));
+                    const fechaVenc = c.proximoCobro ? new Date(c.proximoCobro).toLocaleDateString('es-AR', { timeZone: 'UTC' }) : 'N/A';
+                    
+                    operacionesHtml = `
+                        <div class="mb-4 border border-slate-200 dark:border-white/10 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-sm opacity-80">
+                            <div class="flex justify-between items-center mb-3">
+                                <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1">${icon} ${c.categoria || 'Servicio'} (Original) - ${c.estado} <span class="text-slate-400 ml-2">📅 Vence: ${fechaVenc}</span> <button onclick="editarVencimiento('${c._id}', 'legacy')" class="ml-1 text-blue-400 hover:text-blue-300 transition-all" title="Migrar y Reprogramar">✏️</button></p>
+                                <span class="text-[9px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">LEGACY</span>
+                            </div>
+                            <div class="finance-panel bg-slate-50 border border-slate-100 rounded-xl p-3 grid grid-cols-3 gap-x-2 w-full">
+                                <div class="finance-col flex flex-col items-center md:items-start text-center md:text-left min-w-0">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate w-full">Original</p>
+                                    <p class="text-xs font-black text-slate-700 truncate w-full">${formatCurrency(montoP || montoD)}</p>
+                                </div>
+                                <div class="finance-col flex flex-col items-center border-l border-slate-200 px-2 text-center min-w-0">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate w-full">Total</p>
+                                    <p class="text-xs font-black text-slate-700 truncate w-full">${formatCurrency(montoD)}</p>
+                                </div>
+                                <div class="finance-col flex flex-col items-center md:items-end border-l border-slate-200 pl-2 text-center md:text-right min-w-0">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate w-full">Saldo</p>
+                                    <p class="text-xs font-black text-rose-500 truncate w-full">${formatCurrency(saldoPend)}</p>
+                                </div>
+                            </div>
+                            <p class="text-[9px] text-slate-400 mt-2 italic">⚠️ Este cliente tiene datos antiguos. Pulsa el lápiz para migrarlos al nuevo sistema.</p>
+                        </div>
+                    `;
                 } else {
                     operacionesHtml = '<p class="text-[10px] text-slate-400 italic">No hay operaciones registradas.</p>';
                 }
@@ -3492,7 +3523,7 @@
 
         window.editarVencimiento = async function(clienteId, operacionId) {
             const nuevaFecha = prompt("Ingrese la nueva fecha de vencimiento (AAAA-MM-DD):");
-            if (!nuevaFecha) return;
+            if (!nuevaFecha || nuevaFecha.trim() === "") return;
 
             const regex = /^\d{4}-\d{2}-\d{2}$/;
             if (!regex.test(nuevaFecha)) {

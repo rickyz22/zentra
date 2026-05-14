@@ -301,7 +301,7 @@ exports.eliminarOperacion = async (req, res) => {
         res.status(500).json({ ok: false, msg: 'Error al eliminar la operación' });
     }
 };
-// Reprogramar fecha de vencimiento de una operación
+// Reprogramar fecha de vencimiento de una operación (Híbrido Legacy-Safe)
 exports.reprogramarVencimiento = async (req, res) => {
     try {
         const { id, operacionId } = req.params;
@@ -312,17 +312,51 @@ exports.reprogramarVencimiento = async (req, res) => {
         const cliente = await Cliente.findById(id);
         if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
 
-        // Buscar la operación
-        const op = cliente.operaciones.id(operacionId);
-        if (!op) return res.status(404).json({ ok: false, msg: 'Operación no encontrada' });
+        // Lógica Híbrida: Buscar en el array o migrar si es legacy
+        let op = null;
+        // Solo buscamos en el array si operacionId parece un ID válido de Mongo y no es el string 'legacy' o 'undefined'
+        if (cliente.operaciones && cliente.operaciones.length > 0 && operacionId !== 'legacy' && operacionId !== 'undefined') {
+            try {
+                op = cliente.operaciones.id(operacionId);
+            } catch (e) {
+                op = null;
+            }
+        }
 
-        // Aplicar fix de timezone
-        op.fechaVencimiento = new Date(nuevaFecha + 'T12:00:00');
+        if (op) {
+            // Actualización normal
+            op.fechaVencimiento = new Date(nuevaFecha + 'T12:00:00');
+        } else {
+            // Migración Legacy Automática: Inicializar array si no existe
+            if (!cliente.operaciones) cliente.operaciones = [];
+            
+            // Si el cliente no tiene operaciones, creamos la primera migrando los campos de la raíz
+            if (cliente.operaciones.length === 0) {
+                const nuevaOp = {
+                    tipo: cliente.categoria || 'Trámites',
+                    estado: cliente.estado || 'Activo',
+                    montoPrestado: cliente.montoPrestado || 0,
+                    montoDevolver: cliente.montoDevolver || 0,
+                    costoCompra: cliente.costoCompra || 0,
+                    precioVenta: cliente.precioVenta || 0,
+                    honorarios: cliente.honorarios || 0,
+                    cuotasTotales: cliente.cuotasTotales || 1,
+                    saldoPendiente: (cliente.montoDevolver || cliente.precioVenta || cliente.honorarios || 0) - (cliente.montoPagado || 0),
+                    historialPagos: cliente.historialPagos || [],
+                    fechaVencimiento: new Date(nuevaFecha + 'T12:00:00'),
+                    fechaAlta: cliente.createdAt || cliente.fecha || new Date()
+                };
+                cliente.operaciones.push(nuevaOp);
+            } else {
+                // Si ya tiene operaciones pero no encontramos el ID, devolvemos error para no duplicar datos legacy
+                return res.status(404).json({ ok: false, msg: 'Operación no encontrada en el historial' });
+            }
+        }
         
         await cliente.save();
-        res.status(200).json({ ok: true, msg: 'Vencimiento reprogramado exitosamente', nuevaFecha: op.fechaVencimiento });
+        res.status(200).json({ ok: true, msg: 'Vencimiento actualizado correctamente' });
     } catch (error) {
-        console.error('Error al reprogramar:', error);
-        res.status(500).json({ ok: false, msg: 'Error interno al reprogramar vencimiento' });
+        console.error('❌ ERROR REPROGRAMAR:', error);
+        res.status(500).json({ ok: false, msg: 'Error interno en el servidor', error: error.message });
     }
 };
