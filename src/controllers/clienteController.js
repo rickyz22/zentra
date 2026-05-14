@@ -279,3 +279,22 @@ exports.agregarOperacion = async (req, res) => {
         res.status(500).json({ ok: false, msg: 'Error al agregar operación', error: error.message });
     }
 };
+
+// Eliminar una operación específica de un cliente
+exports.eliminarOperacion = async (req, res) => {
+    try {
+        const { id, operacionId } = req.params;
+
+        const cliente = await Cliente.findById(id);
+        if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
+
+        // Eliminar del array usando mongoose pull o filter
+        cliente.operaciones = cliente.operaciones.filter(op => op._id.toString() !== operacionId);
+        
+        await cliente.save();
+        res.status(200).json({ ok: true, msg: 'Operación eliminada correctamente' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ ok: false, msg: 'Error al eliminar la operación' });
+    }
+};

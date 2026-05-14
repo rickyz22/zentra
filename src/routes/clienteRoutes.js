@@ -13,6 +13,7 @@ router.get('/', clienteController.obtenerClientes);
 router.put('/:id', clienteController.actualizarCliente);
 router.delete('/:id', clienteController.eliminarCliente);
 router.post('/:id/operaciones', clienteController.agregarOperacion);
+router.delete('/:id/operaciones/:operacionId', clienteController.eliminarOperacion);
 
 // --- ESTADÍSTICAS ---
 router.get('/stats', statsController.obtenerEstadisticas);
