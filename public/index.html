@@ -14,7 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '2.9.8'; 
+        const APP_VERSION = '3.0.0'; 
+        const CACHE_NAME = 'zentra-v3.0.0';
         // ==========================================
     </script>
     <title>Zentra CRM</title>
@@ -1179,8 +1180,6 @@
                                     <div class="legajo hidden">
                                         <input type="text" name="legajoToyota" placeholder="Legajo Toyota" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
                                     </div>
-                                    <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="honorarios" placeholder="Honorarios Sugeridos ($) (Opcional)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
-                                    
                                     <div class="mt-4">
                                         <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest pl-1 mb-2">Monto Abonado Ahora (Opcional)</p>
                                         <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="pagoInicial" placeholder="Ej: 5000" class="w-full p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-2xl text-sm font-bold text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-emerald-700/50">
@@ -1196,10 +1195,6 @@
                                         <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-2">Fecha de Ingreso</p>
                                         <input type="date" name="fechaIngreso" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all">
                                         <p class="text-[9px] text-slate-600 pl-1 mt-1">Por defecto: hoy. Útil para registros previos.</p>
-                                    </div>
-                                    <div class="pt-2">
-                                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-2">Primer Vencimiento (Opcional)</p>
-                                        <input type="date" name="fechaVencimiento" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all">
                                     </div>
                                 </div>
                             </div>
@@ -2668,6 +2663,17 @@
             }
             f.querySelectorAll('[name="fechaIngreso"]').forEach(i => i.value = fiValue);
 
+            // Calcular fechaVencimiento
+            let fvValue = "";
+            if (c.fechaVencimiento || c.proximoCobro) {
+                const dateObj = new Date(c.fechaVencimiento || c.proximoCobro);
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                fvValue = `${year}-${month}-${day}`;
+            }
+            f.querySelectorAll('[name="fechaVencimiento"]').forEach(i => i.value = fvValue);
+
             // Prellenar específicos según categoría
             if (categoria === 'Trámites') {
                 const step = document.getElementById('step-datos-tramite');
@@ -2683,7 +2689,8 @@
                     legajoCont.classList.add('hidden');
                     step.querySelector('[name="legajoToyota"]').value = '';
                 }
-                step.querySelector('[name="honorarios"]').value = c.honorarios || '';
+                const hInput = step.querySelector('[name="honorarios"]');
+                if (hInput) hInput.value = c.honorarios || '';
             } else if (categoria === 'Préstamos') {
                 const step = document.getElementById('step-datos-prestamo');
                 step.querySelector('[name="montoPrestado"]').value = c.montoPrestado || '';
