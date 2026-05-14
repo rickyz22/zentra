@@ -323,8 +323,7 @@ exports.reprogramarVencimiento = async (req, res) => {
 
         // 1. Si el cliente NO tiene operaciones (Legacy puro) -> MIGRAR
         if (!cliente.operaciones || cliente.operaciones.length === 0) {
-            cliente.operaciones = [];
-            cliente.operaciones.push({
+            const nuevaOp = {
                 tipo: cliente.categoria || 'Trámites',
                 estado: cliente.estado || 'Activo',
                 montoPrestado: cliente.montoPrestado || 0,
@@ -337,7 +336,13 @@ exports.reprogramarVencimiento = async (req, res) => {
                 historialPagos: cliente.historialPagos || [],
                 fechaVencimiento: new Date(nuevaFecha + 'T12:00:00'),
                 fechaAlta: cliente.createdAt || cliente.fecha || new Date()
-            });
+            };
+            
+            await Cliente.updateOne(
+                { _id: id },
+                { $push: { operaciones: nuevaOp } },
+                { runValidators: false } // Evita fallos por campos faltantes en doc legacy
+            );
         } 
         // 2. Si YA tiene operaciones -> EXIGIR COINCIDENCIA EXACTA
         else {
@@ -354,19 +359,21 @@ exports.reprogramarVencimiento = async (req, res) => {
             }
 
             if (!op) {
-                // NUNCA actualizar por defecto. Abortar por seguridad financiera.
                 console.warn('Rechazo de seguridad: Operación exacta no encontrada', { id, opId });
                 return res.status(404).json({ ok: false, msg: 'Operación exacta no encontrada. No se realizaron cambios por seguridad.' });
             }
             
-            // Si la encontró, actualizar
-            op.fechaVencimiento = new Date(nuevaFecha + 'T12:00:00');
+            // Usamos updateOne para actualizar solo ese subdocumento sin validar todo el documento padre
+            await Cliente.updateOne(
+                { _id: id, "operaciones._id": opId },
+                { $set: { "operaciones.$.fechaVencimiento": new Date(nuevaFecha + 'T12:00:00') } },
+                { runValidators: false }
+            );
         }
         
-        await cliente.save();
         res.status(200).json({ ok: true, msg: 'Vencimiento actualizado correctamente' });
     } catch (error) {
         console.error('❌ ERROR REPROGRAMAR:', error);
-        res.status(500).json({ ok: false, msg: 'Error interno en el servidor', error: error.message });
+        res.status(500).json({ ok: false, msg: `Error de servidor: ${error.message}` });
     }
 };
