@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.11.0-PROFIT-FIX'; // v3.11.0-PROFIT-FIX
+const CACHE_NAME = 'zentra-v3.12.0-METRICS-UI'; // v3.12.0-METRICS-UI
 const ASSETS = [
   '/',
   '/index.html',

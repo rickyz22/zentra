@@ -67,6 +67,7 @@ exports.obtenerEstadisticas = async (req, res) => {
                 costoCompra: c.costoCompra,
                 precioVenta: c.precioVenta,
                 honorarios: c.honorarios,
+                cuotasTotales: c.cuotasTotales || 1,
                 historialPagos: c.historialPagos,
                 createdAt: c.createdAt || c.fecha
             }];
