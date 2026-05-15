@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.9.7-UI-POLISH'; // v3.9.7-UI-POLISH
+const CACHE_NAME = 'zentra-v3.9.8-NAVBAR-FIX'; // v3.9.8-NAVBAR-FIX
 const ASSETS = [
   '/',
   '/index.html',
