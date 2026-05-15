@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.9.9-CHASSIS-FIX'; // v3.9.9-CHASSIS-FIX
+const CACHE_NAME = 'zentra-v3.9.10-GOLD-LAYOUT'; // v3.9.10-GOLD-LAYOUT
 const ASSETS = [
   '/',
   '/index.html',
