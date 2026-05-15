@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.9.8'; 
-        const CACHE_NAME = 'zentra-v3.9.8-NAVBAR-FIX'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.9.8.1'; 
+        const CACHE_NAME = 'zentra-v3.9.8.1-NAVBAR-REPAIR'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -977,7 +977,7 @@
     <main class="md:ml-64 min-h-screen pb-20 md:pb-0 flex flex-col bg-slate-950">
         <header class="glass-panel sticky top-0 z-[100] px-4 py-3 md:px-10 md:py-6 flex justify-between items-center border-b border-white/10 mb-6 relative">
             <!-- Bloque Izquierdo: Logo y Título -->
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 z-10">
                 <div class="flex items-center gap-2">
                     <img src="assets/logo.png" class="w-8 h-8 object-contain" alt="Logo">
                     <span class="text-lg font-black uppercase tracking-widest text-white hidden md:block">Zentra</span>
@@ -985,13 +985,13 @@
                 <h2 id="desktopTitle" class="text-lg font-black uppercase tracking-tight truncate md:border-l md:border-white/10 md:pl-4" style="color: var(--text-primary)">Resumen</h2>
             </div>
 
-            <!-- Bloque Central: Fecha (Posicionamiento Absoluto) -->
-            <div class="hidden sm:block absolute left-1/2 transform -translate-x-1/2 text-center font-semibold text-gray-300 tracking-wider">
-                <span id="currentDateDesktop" class="text-sm font-black uppercase tracking-widest leading-none"></span>
+            <!-- Bloque Central: Fecha (Centrado Absoluto Protegido) -->
+            <div class="hidden sm:flex absolute inset-0 items-center justify-center pointer-events-none">
+                <span id="currentDateDesktop" class="text-sm font-black uppercase tracking-widest text-gray-300 pointer-events-auto"></span>
             </div>
 
             <!-- Bloque Derecho: Botones de Acción -->
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 z-10">
                 <!-- Desktop Buttons -->
                 <div class="hidden md:flex items-center gap-3">
                     <button id="btn-privacy-desc" class="btn-privacy-toggle w-10 h-10 rounded-xl flex items-center justify-center border transition-all" style="background: var(--bg-cat-pill); border-color: var(--border-color); color: var(--text-secondary)">
