@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.9.14-FULL-WIDTH'; // v3.9.14-FULL-WIDTH
+const CACHE_NAME = 'zentra-v3.9.15-UNIVERSAL-FILTER'; // v3.9.15-UNIVERSAL-FILTER
 const ASSETS = [
   '/',
   '/index.html',

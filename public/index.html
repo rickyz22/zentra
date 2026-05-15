@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.9.14'; 
-        const CACHE_NAME = 'zentra-v3.9.14-FULL-WIDTH'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.9.15'; 
+        const CACHE_NAME = 'zentra-v3.9.15-UNIVERSAL-FILTER'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -2423,15 +2423,28 @@
         }
 
         function isMoroso(c) {
-            if (c.estado === 'Cerrado' || c.estado === 'Pagado') return false;
+            const hoy = new Date();
+            
+            // 1. Verificación por Operaciones (v3.9.15 - Unificado)
+            if (c.operaciones && c.operaciones.length > 0) {
+                const opsActivas = c.operaciones.filter(o => 
+                    !['Cerrado', 'Cancelado', 'Pagado'].includes(o.estado) && o.fechaVencimiento
+                );
+                
+                for (const op of opsActivas) {
+                    const fechaVenc = new Date(op.fechaVencimiento);
+                    const diffTime = hoy.getTime() - fechaVenc.getTime();
+                    const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
+                    if (diffDays >= 10) return true;
+                }
+            }
+            
+            // 2. Verificación Legacy (Backward Compatibility)
+            if (c.estado === 'Cerrado' || c.estado === 'Pagado' || c.estado === 'Cancelado') return false;
             if (c.categoria !== 'Préstamos' && c.categoria !== 'Electrodomésticos') return false;
             if (!c.proximoCobro) return false;
             
-            const tz = 'America/Argentina/Buenos_Aires';
-            const hoy = new Date();
             const fechaCobro = new Date(c.proximoCobro);
-            
-            // Calculamos la antigüedad en días
             const diffTime = hoy.getTime() - fechaCobro.getTime();
             const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
             
