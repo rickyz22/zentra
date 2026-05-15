@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.10.0-PROACTIVE-MOD'; // v3.10.0-PROACTIVE-MOD
+const CACHE_NAME = 'zentra-v3.11.0-PROFIT-FIX'; // v3.11.0-PROFIT-FIX
 const ASSETS = [
   '/',
   '/index.html',

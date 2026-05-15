@@ -91,13 +91,14 @@ exports.obtenerEstadisticas = async (req, res) => {
                     const target = (isP ? pStats : eStats)[moneda];
                     const costo = isP ? (Number(op.montoPrestado) || 0) : (Number(op.costoCompra) || 0);
                     const retorno = isP ? (Number(op.montoDevolver) || 0) : (Number(op.precioVenta) || 0);
-                    
-                    const pagos = op.historialPagos || [];
-                    const pagosOrdenados = [...pagos].sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
-                    let totalPagadoOp = 0;
-                    let capitalRecuperado = 0;
+                    const gananciaTotalOp = Math.max(0, retorno - costo);
+                    const cuotasTotales = Number(op.cuotasTotales) || 1;
+                    const gananciaPorCuota = gananciaTotalOp / cuotasTotales;
 
-                    pagosOrdenados.forEach(p => {
+                    const pagos = op.historialPagos || [];
+                    let totalPagadoOp = 0;
+
+                    pagos.forEach(p => {
                         const monto = Number(p.monto) || 0;
                         totalPagadoOp += monto;
                         
@@ -107,15 +108,9 @@ exports.obtenerEstadisticas = async (req, res) => {
                             if (f >= todayStart && f < todayEnd) target.recaudacionHoy += monto;
                         }
 
-                        let gananciaNeta = 0;
-                        if (capitalRecuperado < costo) {
-                            const porcionCap = Math.min(monto, costo - capitalRecuperado);
-                            gananciaNeta = Math.max(0, monto - porcionCap);
-                            capitalRecuperado += porcionCap;
-                        } else {
-                            gananciaNeta = monto;
-                        }
-
+                        // Jony Rule v3.11.0: Profit is proportional to installments
+                        const gananciaNeta = gananciaPorCuota; 
+                        
                         if (gananciaNeta > 0) {
                             const mk = getMonthKey(p.fecha);
                             if (mk) {
@@ -128,10 +123,11 @@ exports.obtenerEstadisticas = async (req, res) => {
                     });
 
                     if (!['Cerrado', 'Pagado', 'Cancelado'].includes(estado)) {
-                        target.capitalEnCalle += Math.max(0, costo - capitalRecuperado);
-                        const gananciaTotalEsperada = Math.max(0, retorno - costo);
-                        const gananciaYaCobrada = Math.max(0, totalPagadoOp - capitalRecuperado);
-                        target.gananciaPendiente += Math.max(0, gananciaTotalEsperada - gananciaYaCobrada);
+                        const gananciaRealizadaOp = gananciaPorCuota * pagos.length;
+                        const capRecuperadoOp = Math.max(0, totalPagadoOp - gananciaRealizadaOp);
+                        
+                        target.capitalEnCalle += Math.max(0, costo - capRecuperadoOp);
+                        target.gananciaPendiente += Math.max(0, gananciaTotalOp - gananciaRealizadaOp);
                     }
                 }
             });
