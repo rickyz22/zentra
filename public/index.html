@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.8.0'; 
-        const CACHE_NAME = 'zentra-v3.8.0-DUAL-MODE'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.8.1'; 
+        const CACHE_NAME = 'zentra-v3.8.1-LAYOUT-FIX'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1509,7 +1509,7 @@
         
         <!-- Modal: Calculadora de Cuotas Interna (v3.7.0) -->
         <div id="modalCalculadoraInterna" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-[110] flex items-center justify-center p-4">
-            <div class="bg-slate-900 w-full max-w-lg rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+            <div class="bg-slate-900 w-full max-w-lg rounded-[2.5rem] border border-white/10 shadow-2xl overflow-y-auto max-h-[95vh] animate-in zoom-in duration-300 custom-scrollbar">
                 <div class="p-8 border-b border-white/5 flex justify-between items-center bg-slate-950/50">
                     <div>
                         <p class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] mb-1">Herramientas Administrativas</p>
@@ -1814,7 +1814,7 @@
     </main>
 
     <script>
-        console.log('%c Zentra v3.7.0: Calculadora de Cuotas Interna %c', 'background: #00AEEF; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
+        console.log('%c Zentra v3.8.1: Calculator Layout Fix %c', 'background: #00AEEF; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
         let allClientes = [];
         let allRecordatorios = [];
         let editingClientId = null;
