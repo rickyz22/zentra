@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.5.2'; 
-        const CACHE_NAME = 'zentra-v3.5.2-PRIVACY-FIX'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.5.3'; 
+        const CACHE_NAME = 'zentra-v3.5.3-PRODUCT-ID'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1735,7 +1735,7 @@
     </main>
 
     <script>
-        console.log('%c Zentra v3.5.2: Comprobante de Pago Escalonado (Privacy Fix) %c', 'background: #10b981; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
+        console.log('%c Zentra v3.5.3: Comprobante Product ID %c', 'background: #10b981; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
         let allClientes = [];
         let allRecordatorios = [];
         let editingClientId = null;
@@ -2753,7 +2753,8 @@
                     if (ops.length > 0) {
                         comprobantesHtml += `<div class="mt-4 flex flex-col gap-2">`;
                         ops.forEach((op) => {
-                            const btnLabel = op.tipo === 'Electrodomésticos' ? '📄 Comprobante Electro' : '📄 Comprobante Préstamo';
+                            const itemName = op.producto || (op.tipo === 'Préstamos' ? 'Préstamo' : op.tipo);
+                            const btnLabel = `📄 Comprobante ${itemName}`;
                             comprobantesHtml += `
                                 <button onclick="abrirComprobanteModal('${c._id}', '${op._id}')" class="w-full py-2 bg-slate-800 text-white rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-700 hover:bg-slate-700 transition-all flex items-center justify-center gap-2">
                                     ${btnLabel}
@@ -2869,8 +2870,9 @@
             const modal = document.getElementById('modalComprobante');
             if (!modal) return;
 
+            const itemName = op.producto || (op.tipo === 'Préstamos' ? 'Préstamo' : (op.tipo || 'SERVICIO'));
             document.getElementById('comp-cliente').textContent = cliente.nombre;
-            document.getElementById('comp-categoria').textContent = op.tipo || 'Servicio';
+            document.getElementById('comp-categoria').textContent = `COMPROBANTE: ${itemName}`;
             
             const tbody = document.getElementById('comp-historial');
             tbody.innerHTML = '';
