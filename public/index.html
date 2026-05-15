@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.9.12'; 
-        const CACHE_NAME = 'zentra-v3.9.12-DASHBOARD-ONLY-FIX'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.9.13'; 
+        const CACHE_NAME = 'zentra-v3.9.13-DASHBOARD-CONSTRAIN'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1026,13 +1026,13 @@
             </div>
         </header>
 
-        <!-- Contenedor de Dashboard (v3.9.12) -->
-        <div class="flex-1 w-full mt-6 pl-8 pr-4">
+        <!-- Contenedor de Dashboard (v3.9.13 - Constrained for Visibility) -->
+        <div class="flex-1 w-full max-w-[1400px] mt-6 pl-8 pr-6">
             
              <!-- TAB: INICIO -->
             <section id="tab-inicio" class="tab-content active space-y-6">
                 <!-- Grilla de Métricas: 2 columnas en móvil, 3 en md, 5 en lg -->
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-8">
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
                     <!-- Tarjeta: Clientes Activos -->
                     <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-5 md:p-8 rounded-[2.5rem] text-white hover:scale-[1.02] transition-all">
                         <div class="w-10 h-10 md:w-12 md:h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 md:mb-6"><i data-lucide="users" class="w-5 h-5 md:w-6 md:h-6 text-white"></i></div>
@@ -1782,7 +1782,7 @@
         <!-- NOTIFICACIÓN -->
         <div id="toast" class="hidden fixed bottom-24 right-6 bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl z-[100] font-bold text-sm"></div>
 
-        </div> <!-- Fin Contenedor Dashboard v3.9.12 -->
+        </div> <!-- Fin Contenedor Dashboard v3.9.13 -->
 
         <!-- NAVEGACIÓN INFERIOR (Mobile) -->
         <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-xl border-t border-white/5 flex justify-around p-4">
