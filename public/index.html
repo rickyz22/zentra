@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.6.0'; 
-        const CACHE_NAME = 'zentra-v3.6.0-WHATSAPP'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.6.1'; 
+        const CACHE_NAME = 'zentra-v3.6.1-CANVAS-FIX'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1691,7 +1691,7 @@
 
                     <div class="w-full mb-6">
                         <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Historial Escalonado</p>
-                        <div class="max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                        <div id="comp-historial-container" class="max-h-48 overflow-y-auto custom-scrollbar pr-2 pb-6">
                             <table class="w-full">
                                 <tbody id="comp-historial">
                                     <!-- Filas dinámicas -->
@@ -1747,7 +1747,7 @@
     </main>
 
     <script>
-        console.log('%c Zentra v3.5.3: Comprobante Product ID %c', 'background: #10b981; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
+        console.log('%c Zentra v3.6.1: Comprobante Export Fix %c', 'background: #10b981; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
         let allClientes = [];
         let allRecordatorios = [];
         let editingClientId = null;
@@ -2924,17 +2924,31 @@
 
         async function compartirTicketWhatsApp() {
             const ticketElement = document.getElementById('ticket-content');
-            if (!ticketElement) return;
+            const historyContainer = document.getElementById('comp-historial-container');
+            if (!ticketElement || !historyContainer) return;
 
             showToast('Generando comprobante...', 'Por favor espera unos segundos...', 'emerald');
+
+            // --- INICIO FIX: EXPANDIR COMPROBANTE ---
+            const originalMaxH = historyContainer.style.maxHeight;
+            historyContainer.classList.remove('max-h-48', 'overflow-y-auto');
+            historyContainer.style.maxHeight = 'none';
+            
+            // Pequeño delay para re-render del DOM
+            await new Promise(resolve => setTimeout(resolve, 150));
 
             try {
                 // Generar canvas
                 const canvas = await html2canvas(ticketElement, {
-                    backgroundColor: '#0f172a', // Color slate-900 para que coincida con el fondo
-                    scale: 2, // Mayor calidad
-                    logging: false
+                    backgroundColor: '#0f172a', // slate-900
+                    scale: 2,
+                    logging: false,
+                    windowHeight: ticketElement.scrollHeight
                 });
+
+                // --- FIN FIX: RESTAURAR COMPROBANTE ---
+                historyContainer.classList.add('max-h-48', 'overflow-y-auto');
+                historyContainer.style.maxHeight = originalMaxH;
 
                 // Convertir a blob
                 canvas.toBlob(async (blob) => {
