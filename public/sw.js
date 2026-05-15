@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.9.16-STRICT-CONTROL'; // v3.9.16-STRICT-CONTROL
+const CACHE_NAME = 'zentra-v3.10.0-PROACTIVE-MOD'; // v3.10.0-PROACTIVE-MOD
 const ASSETS = [
   '/',
   '/index.html',

@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.9.16'; 
-        const CACHE_NAME = 'zentra-v3.9.16-STRICT-CONTROL'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.10.0'; 
+        const CACHE_NAME = 'zentra-v3.10.0-PROACTIVE-MOD'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -3806,13 +3806,27 @@
             // 2. Trámites Personales (TODOS, como antes) - Abajo
             const recsPersonales = recs.filter(r => r.tipo === 'personal').sort((a,b) => parseLocal(a.fecha) - parseLocal(b.fecha));
 
-            // 3. Morosos (>= 10 días de atraso)
+            // 3. Próximos Cobros (72hs) - v3.10.0 Proactivo
+            const recsProactivos = recs.filter(r => {
+                if (r.tipo !== 'Cobro Virtual') return false;
+                const fechaR = parseLocal(r.fecha);
+                const rStr = fechaR.toLocaleDateString('en-CA', { timeZone: tz });
+                
+                // Solo si es a futuro (contando desde mañana)
+                if (rStr <= hoyStr) return false;
+                
+                const diffTime = fechaR.getTime() - parseLocal(hoyStr).getTime();
+                const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
+                
+                return diffDays >= 1 && diffDays <= 3;
+            }).sort((a,b) => parseLocal(a.fecha) - parseLocal(b.fecha));
+
+            // 4. Morosos (>= 1 día de atraso - v3.9.16 Strict)
             const recsMorosos = recs.filter(r => {
                 if (r.tipo !== 'Cobro Virtual') return false;
                 const fechaR = parseLocal(r.fecha);
-                const diffTime = hoyDate.getTime() - fechaR.getTime();
-                const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
-                return diffDays >= 10;
+                const rStr = fechaR.toLocaleDateString('en-CA', { timeZone: tz });
+                return rStr < hoyStr; // Moroso estricto: ayer o antes
             });
 
             const wrapper = document.getElementById('mini-agenda-wrapper');
@@ -3880,14 +3894,54 @@
                     `;
                 }
 
+                // --- SECCIÓN 1.5: PRÓXIMOS COBROS (72hs) - v3.10.0 ---
+                if (recsProactivos.length > 0) {
+                    html += `
+                        <div class="p-6 space-y-3 bg-yellow-500/5 border-y border-yellow-500/10">
+                            <h4 class="text-[10px] font-black text-yellow-500 uppercase tracking-widest mb-3 flex items-center gap-2 px-1">
+                                <span class="w-1.5 h-1.5 bg-yellow-500 rounded-full shadow-[0_0_8px_rgba(234,179,8,0.5)]"></span>
+                                Próximos Cobros (72hs)
+                            </h4>
+                            ${recsProactivos.map(r => {
+                                const fechaR = parseLocal(r.fecha);
+                                const diffTime = fechaR.getTime() - parseLocal(hoyStr).getTime();
+                                const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
+                                const monto = formatCurrency(r.montoCuota || 0);
+                                const daysText = diffDays === 1 ? 'mañana' : `en ${diffDays} días`;
+                                
+                                return `
+                                    <div class="flex items-center justify-between p-4 bg-slate-800/40 rounded-2xl border border-yellow-500/20 hover:bg-slate-800 transition-all group">
+                                        <div class="flex-1 min-w-0 cursor-pointer" onclick="irACliente('${r.clienteId._id}')">
+                                            <p class="text-xs font-black text-white uppercase tracking-tight truncate">
+                                                ${r.clienteId.nombre}
+                                            </p>
+                                            <p class="text-[10px] font-bold text-yellow-500/80 mt-1 uppercase">
+                                                Vence ${daysText} (${monto})
+                                            </p>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <a href="${generarLinkWhatsApp(r.telefono, `Hola ${r.clienteId.nombre}, te recordamos que ${daysText} vence tu cuota de ${r.categoria} por ${monto}.`)}" target="_blank" class="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded-xl transition-all">
+                                                <i data-lucide="bell" class="w-4 h-4"></i>
+                                            </a>
+                                            <button onclick="irACliente('${r.clienteId._id}')" class="p-2 text-slate-400 hover:text-white rounded-xl transition-all">
+                                                <i data-lucide="eye" class="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                }
+
                 // Fallback si no hay nada PARA HOY (Clientes)
-                if (recsClientesHoy.length === 0) {
+                if (recsClientesHoy.length === 0 && recsProactivos.length === 0) {
                     html += `
                         <div class="p-12 flex flex-col items-center justify-center space-y-4 opacity-60 border-b border-white/5">
                             <div class="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center border border-white/5 text-slate-500">
                                 <i data-lucide="sparkles" class="w-8 h-8 text-amber-400/50 animate-pulse"></i>
                             </div>
-                            <p class="text-[10px] font-black uppercase tracking-[0.4em] text-center w-full text-slate-500">Sin tareas con clientes para hoy</p>
+                            <p class="text-[10px] font-black uppercase tracking-[0.4em] text-center w-full text-slate-500">Sin tareas ni cobros próximos</p>
                         </div>
                     `;
                 }
@@ -3923,7 +3977,7 @@
                                 <div class="flex items-center justify-between p-3 bg-rose-500/5 hover:bg-rose-500/10 rounded-xl transition-all border border-rose-500/10 mb-2">
                                     <div class="flex-1 min-w-0 cursor-pointer" onclick="window.open('${waLinkM}', '_blank')">
                                         <p class="text-xs font-bold text-rose-300 truncate tracking-tight uppercase">${m.clienteId.nombre}</p>
-                                        <p class="text-[8px] text-rose-500/60 font-black uppercase tracking-widest">Moroso (+30d): ${m.categoria}</p>
+                                        <p class="text-[8px] text-rose-500/60 font-black uppercase tracking-widest">Moroso (+1 día): ${m.categoria}</p>
                                     </div>
                                     <button onclick="irACliente('${m.clienteId._id}')" class="p-2 text-rose-500/50 hover:text-rose-400 hover:bg-rose-400/10 rounded-lg transition-all" title="Ver ficha">
                                         <i data-lucide="eye" class="w-4 h-4"></i>
@@ -3938,7 +3992,7 @@
                             <button onclick="toggleMorososDashboard()" class="w-full p-5 flex items-center justify-between group transition-all hover:bg-white/5">
                                 <div class="flex items-center space-x-3">
                                     <div class="w-2 h-2 rounded-full bg-rose-600 shadow-[0_0_10px_rgba(225,29,72,0.5)]"></div>
-                                    <span class="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em]">Morosos (+10 días) (${recsMorosos.length})</span>
+                                    <span class="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em]">Morosos (${recsMorosos.length})</span>
                                 </div>
                                 <div class="w-6 h-6 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                                     <i data-lucide="${morososExpanded ? 'minus' : 'plus'}" class="w-4 h-4"></i>
