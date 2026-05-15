@@ -116,48 +116,70 @@ exports.registrarPago = async (req, res) => {
     }
 };
 
-// Eliminar un pago del historial
+// Eliminar un pago del historial (Fullstack Senior v3.9.6)
 exports.eliminarPago = async (req, res) => {
     try {
         const { id, pagoId } = req.params;
-        const { operacionId } = req.body;
+        // Aceptar operacionId o prestamoId para compatibilidad total con el frontend
+        const operacionId = req.body.operacionId || req.body.prestamoId;
 
+        console.log(`🗑️ Solicitud Eliminación: Pago ${pagoId} | Cliente ${id} | Op: ${operacionId || 'Legacy'}`);
+
+        let result;
+        if (operacionId && operacionId !== 'legacy') {
+            // Usar $pull para eliminar de forma atómica el subdocumento del array
+            result = await Cliente.updateOne(
+                { _id: id, "operaciones._id": operacionId },
+                { $pull: { "operaciones.$.historialPagos": { _id: pagoId } } }
+            );
+        } else {
+            // Lógica Legacy
+            result = await Cliente.updateOne(
+                { _id: id },
+                { $pull: { historialPagos: { _id: pagoId } } }
+            );
+        }
+
+        console.log(`🗑️ DB Result - modifiedCount: ${result.modifiedCount}`);
+
+        // Tras el $pull, debemos recalcular saldos y estados
         const cliente = await Cliente.findById(id);
         if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
 
         if (operacionId && operacionId !== 'legacy') {
             const operacion = cliente.operaciones.id(operacionId);
-            if (!operacion) return res.status(404).json({ ok: false, msg: 'Operación no encontrada' });
-
-            operacion.historialPagos = operacion.historialPagos.filter(p => p._id.toString() !== pagoId);
-            const totalPagado = operacion.historialPagos.reduce((total, p) => total + p.monto, 0);
-            
-            const montoADevolver = operacion.montoDevolver || operacion.precioVenta || operacion.honorarios || 0;
-            operacion.saldoPendiente = montoADevolver - totalPagado;
-
-            if (operacion.saldoPendiente > 0) {
-                operacion.estado = 'Activo';
-            } else {
-                operacion.estado = 'Pagado';
-            }
-            cliente.markModified('operaciones');
-        } else {
-            // Lógica legacy
-            cliente.historialPagos = cliente.historialPagos.filter(p => p._id.toString() !== pagoId);
-            cliente.montoPagado = cliente.historialPagos.reduce((total, p) => total + p.monto, 0);
-
-            if (cliente.categoria === 'Préstamos' || cliente.categoria === 'Electrodomésticos') {
-                const totalADevolver = cliente.categoria === 'Préstamos' ? cliente.montoDevolver : cliente.precioVenta;
-                if (cliente.montoPagado < totalADevolver) {
-                    cliente.estado = 'Activo';
+            if (operacion) {
+                const totalPagado = operacion.historialPagos.reduce((total, p) => total + (p.monto || 0), 0);
+                const montoTotal = operacion.montoDevolver || operacion.precioVenta || operacion.honorarios || 0;
+                operacion.saldoPendiente = Math.max(0, montoTotal - totalPagado);
+                
+                // Si al borrar un pago vuelve a tener deuda, reactivar
+                if (operacion.saldoPendiente > 0) {
+                    operacion.estado = 'Activo';
                 }
+                cliente.markModified('operaciones');
+            }
+        } else {
+            // Recalcular Legacy
+            cliente.montoPagado = cliente.historialPagos.reduce((total, p) => total + (p.monto || 0), 0);
+            const montoTotal = cliente.montoDevolver || cliente.precioVenta || cliente.honorarios || 0;
+            if (cliente.montoPagado < montoTotal) {
+                cliente.estado = 'Activo';
             }
             cliente.markModified('historialPagos');
         }
 
+        // Sincronizar estado global del cliente
+        const tieneOpsActivas = cliente.operaciones.some(op => !['Pagado', 'Cancelado', 'Cerrado'].includes(op.estado));
+        if (tieneOpsActivas) {
+            cliente.estado = 'Activo';
+        }
+
         await cliente.save();
-        res.status(200).json({ ok: true, msg: 'Pago eliminado', cliente });
+        res.status(200).json({ ok: true, msg: '🗑️ Pago Eliminado', cliente });
     } catch (error) {
+        console.error('❌ Error Eliminar Pago:', error);
         res.status(500).json({ ok: false, msg: 'Error al eliminar pago', error: error.message });
     }
 };
+

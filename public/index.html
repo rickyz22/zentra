@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.9.5'; 
-        const CACHE_NAME = 'zentra-v3.9.5-FULL-CONTROL'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.9.6'; 
+        const CACHE_NAME = 'zentra-v3.9.6-STABILITY-FIX'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1816,6 +1816,7 @@
     <script>
         console.log('%c Zentra v3.8.1: Calculator Layout Fix %c', 'background: #00AEEF; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
         let allClientes = [];
+        let idsAbiertos = new Set(); // v3.9.6: Persistencia de vista en tarjetas
         let allRecordatorios = [];
         let editingClientId = null;
         let morososExpanded = false;
@@ -2527,14 +2528,17 @@
 
         function toggleClienteDetalle(id) {
             const detail = document.getElementById(`detail-${id}`);
+            if (!detail) return;
             const isHidden = detail.classList.contains('hidden');
-            
-            // Cerrar otros abiertos (opcional, para estilo acordeon puro)
-            document.querySelectorAll('[id^="detail-"]').forEach(d => d.classList.add('hidden'));
             
             if (isHidden) {
                 detail.classList.remove('hidden');
+                idsAbiertos.add(id);
+            } else {
+                detail.classList.add('hidden');
+                idsAbiertos.delete(id);
             }
+            if (window.lucide) lucide.createIcons();
         }
 
         function renderClientes(recs = allClientes) {
@@ -2873,7 +2877,7 @@
                     </div>
                     
                     <!-- Detalle Expandible (Acordeon) -->
-                    <div id="detail-${c._id}" class="hidden px-8 py-6 bg-white dark:bg-slate-900/50 border-t border-slate-100 dark:border-white/5 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div id="detail-${c._id}" class="${idsAbiertos.has(c._id) ? '' : 'hidden'} px-8 py-6 bg-white dark:bg-slate-900/50 border-t border-slate-100 dark:border-white/5 animate-in fade-in slide-in-from-top-2 duration-200">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                             <div class="space-y-4">
                                 <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Contacto Directo</p>
@@ -3381,8 +3385,14 @@
                 const resData = await res.json();
                 if (resData.ok) {
                     closePagoModal();
-                    await refrescarTodo();
-                    showToast('Pago Registrado', 'El Dashboard se ha actualizado.', 'emerald');
+                    // Actualización reactiva v3.9.6 (Mantiene contexto)
+                    const idx = allClientes.findIndex(c => c._id === clienteId);
+                    if (idx !== -1) allClientes[idx] = resData.cliente;
+                    renderClientes();
+                    
+                    showToast('✅ Pago Registrado', 'El historial se ha actualizado.', 'emerald');
+                    fetchEstadisticas();
+                    fetchAgenda();
                 } else {
                     showToast('Error', resData.msg || 'Error al registrar el pago', 'rose');
                 }
@@ -3542,13 +3552,19 @@
                 const res = await authFetch(`/api/clientes/${clienteId}/pago/${pagoId}`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prestamoId })
+                    body: JSON.stringify({ operacionId: prestamoId }) // Mapeo correcto para el backend
                 });
                 if (!res) return;
                 const data = await res.json();
                 if (data.ok) {
-                    await refrescarTodo();
-                    showToast('Éxito', 'Pago eliminado correctamente', 'emerald');
+                    // Actualización reactiva v3.9.6 (Mantiene contexto)
+                    const idx = allClientes.findIndex(c => c._id === clienteId);
+                    if (idx !== -1) allClientes[idx] = data.cliente;
+                    renderClientes();
+                    
+                    showToast('🗑️ Pago Eliminado', 'El saldo ha sido recalculado.', 'emerald');
+                    fetchEstadisticas();
+                    fetchAgenda();
                 } else {
                     showToast('Error', data.msg || 'No se pudo eliminar', 'rose');
                 }
