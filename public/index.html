@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.6.2'; 
-        const CACHE_NAME = 'zentra-v3.6.2-RESPONSIVE'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.6.4'; 
+        const CACHE_NAME = 'zentra-v3.6.4-BOX-FIX'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1747,7 +1747,7 @@
     </main>
 
     <script>
-        console.log('%c Zentra v3.6.2: Responsive Ops Fix %c', 'background: #10b981; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
+        console.log('%c Zentra v3.6.4: Box Mobile Fix %c', 'background: #10b981; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
         let allClientes = [];
         let allRecordatorios = [];
         let editingClientId = null;
@@ -2645,23 +2645,23 @@
                                         ` : ''}
                                     </div>
                                 </div>
-                                <div class="finance-panel bg-slate-50 border border-slate-100 rounded-xl p-3 grid grid-cols-3 gap-x-2 w-full">
+                                <div class="finance-panel bg-slate-50 border border-slate-100 rounded-xl p-3 grid grid-cols-2 sm:grid-cols-3 gap-x-2 w-full">
                                     <!-- 1. CAPITAL -->
-                                    <div class="finance-col flex flex-col items-center md:items-start text-center md:text-left min-w-0">
-                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate w-full">
+                                    <div class="finance-col hidden sm:flex flex-col items-center md:items-start text-center md:text-left min-w-0">
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest w-full">
                                             ${op.tipo === 'Préstamos' ? 'Capital' : (op.tipo === 'Electrodomésticos' ? 'Costo' : 'Honorarios')}
                                         </p>
-                                        <p class="text-xs font-black text-slate-700 truncate w-full">${formatCurrency(montoP || montoD, op.moneda)}</p>
+                                        <p class="text-xs font-black text-slate-700 w-full break-all sm:break-normal">${formatCurrency(montoP || montoD, op.moneda)}</p>
                                     </div>
                                     <!-- 2. TOTAL -->
-                                    <div class="finance-col flex flex-col items-center border-l border-slate-200 px-2 text-center min-w-0">
-                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate w-full">Total</p>
-                                        <p class="text-xs font-black text-slate-700 truncate w-full">${formatCurrency(montoD, op.moneda)}</p>
+                                    <div class="finance-col flex flex-col items-center sm:border-l border-slate-200 pr-2 sm:px-2 text-center min-w-0">
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest w-full">Total</p>
+                                        <p class="text-xs font-black text-slate-700 w-full break-all sm:break-normal">${formatCurrency(montoD, op.moneda)}</p>
                                     </div>
                                     <!-- 3. SALDO -->
                                     <div class="finance-col flex flex-col items-center md:items-end border-l border-slate-200 pl-2 text-center md:text-right min-w-0">
-                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate w-full">Saldo</p>
-                                        <p class="text-xs font-black ${saldoPend > 0 ? 'text-rose-500' : 'text-emerald-500'} truncate w-full">${formatCurrency(saldoPend, op.moneda)}</p>
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest w-full">Saldo</p>
+                                        <p class="text-xs font-black ${saldoPend > 0 ? 'text-rose-500' : 'text-emerald-500'} w-full break-all sm:break-normal">${formatCurrency(saldoPend, op.moneda)}</p>
                                     </div>
                                 </div>
                                 <div class="mt-3 border-t border-slate-100 pt-3">
@@ -2685,18 +2685,18 @@
                                 <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest flex flex-wrap items-center gap-1">${icon} ${c.categoria || 'Servicio'} (Original) - ${c.estado} <span class="text-slate-400 ml-1 md:ml-2">📅 Vence: ${fechaVenc}</span> <button onclick="abrirModalVencimiento('${c._id}', 'legacy', '${c.proximoCobro || ''}')" class="ml-1 text-blue-400 hover:text-blue-300 transition-all" title="Migrar y Reprogramar">✏️</button></p>
                                 <span class="text-[9px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold self-start md:self-auto">LEGACY</span>
                             </div>
-                            <div class="finance-panel bg-slate-50 border border-slate-100 rounded-xl p-3 grid grid-cols-3 gap-x-2 w-full">
-                                <div class="finance-col flex flex-col items-center md:items-start text-center md:text-left min-w-0">
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate w-full">Original</p>
-                                    <p class="text-xs font-black text-slate-700 truncate w-full">${formatCurrency(montoP || montoD)}</p>
+                            <div class="finance-panel bg-slate-50 border border-slate-100 rounded-xl p-3 grid grid-cols-2 sm:grid-cols-3 gap-x-2 w-full">
+                                <div class="finance-col hidden sm:flex flex-col items-center md:items-start text-center md:text-left min-w-0">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest w-full">Original</p>
+                                    <p class="text-xs font-black text-slate-700 w-full break-all sm:break-normal">${formatCurrency(montoP || montoD)}</p>
                                 </div>
-                                <div class="finance-col flex flex-col items-center border-l border-slate-200 px-2 text-center min-w-0">
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate w-full">Total</p>
-                                    <p class="text-xs font-black text-slate-700 truncate w-full">${formatCurrency(montoD)}</p>
+                                <div class="finance-col flex flex-col items-center sm:border-l border-slate-200 pr-2 sm:px-2 text-center min-w-0">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest w-full">Total</p>
+                                    <p class="text-xs font-black text-slate-700 w-full break-all sm:break-normal">${formatCurrency(montoD)}</p>
                                 </div>
                                 <div class="finance-col flex flex-col items-center md:items-end border-l border-slate-200 pl-2 text-center md:text-right min-w-0">
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate w-full">Saldo</p>
-                                    <p class="text-xs font-black text-rose-500 truncate w-full">${formatCurrency(saldoPend)}</p>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest w-full">Saldo</p>
+                                    <p class="text-xs font-black text-rose-500 w-full break-all sm:break-normal">${formatCurrency(saldoPend)}</p>
                                 </div>
                             </div>
                             <p class="text-[9px] text-slate-400 mt-2 italic">⚠️ Este cliente tiene datos antiguos. Pulsa el lápiz para migrarlos al nuevo sistema.</p>
