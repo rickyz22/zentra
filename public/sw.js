@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.9.8.1-NAVBAR-REPAIR'; // v3.9.8.1-NAVBAR-REPAIR
+const CACHE_NAME = 'zentra-v3.9.9-CHASSIS-FIX'; // v3.9.9-CHASSIS-FIX
 const ASSETS = [
   '/',
   '/index.html',
