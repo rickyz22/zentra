@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.15.0'; 
-        const CACHE_NAME = 'zentra-v3.15.0-ID-DOCS'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.15.1'; 
+        const CACHE_NAME = 'zentra-v3.15.1-ID-DOCS'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -2887,7 +2887,14 @@
                     if (ops.length > 0) {
                         comprobantesHtml += `<div class="mt-4 flex flex-col gap-2">`;
                         ops.forEach((op) => {
-                            const itemName = op.producto || (op.tipo === 'Préstamos' ? 'Préstamo' : op.tipo);
+                            const opsMismoTipo = (c.operaciones || []).filter(o => o.tipo === op.tipo);
+                            const nroOp = opsMismoTipo.findIndex(o => o._id === op._id) + 1;
+                            
+                            let tipoLindo = 'Servicio';
+                            if (op.tipo === 'Préstamos') tipoLindo = 'Préstamo';
+                            if (op.tipo === 'Electrodomésticos') tipoLindo = 'Electro';
+
+                            const itemName = `${tipoLindo} #${nroOp}`;
                             const btnLabel = `📄 Comprobante ${itemName}`;
                             comprobantesHtml += `
                                 <button onclick="abrirComprobanteModal('${c._id}', '${op._id}')" class="w-full py-2 bg-slate-800 text-white rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-700 hover:bg-slate-700 transition-all flex items-center justify-center gap-2">

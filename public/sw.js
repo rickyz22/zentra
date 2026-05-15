@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.15.0-ID-DOCS'; // v3.15.0-ID-DOCS
+const CACHE_NAME = 'zentra-v3.15.1-ID-DOCS'; // v3.15.1-ID-DOCS
 const ASSETS = [
   '/',
   '/index.html',
