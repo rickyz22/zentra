@@ -498,11 +498,11 @@ exports.reprogramarVencimiento = async (req, res) => {
     }
 };
 
-// Actualizar una operación específica (Fullstack Senior v3.9.0)
+// Actualizar una operación específica (Fullstack Senior v3.9.5)
 exports.actualizarOperacion = async (req, res) => {
     try {
         const { id, operacionId } = req.params;
-        const { producto, monto, moneda } = req.body;
+        const { producto, monto, moneda, capital, cuotas } = req.body;
 
         const cliente = await Cliente.findById(id);
         if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
@@ -511,7 +511,10 @@ exports.actualizarOperacion = async (req, res) => {
         if (!op) return res.status(404).json({ ok: false, msg: 'Operación no encontrada' });
 
         // Actualizar campos permitidos
-        if (producto !== undefined) op.producto = producto;
+        if (producto !== undefined) {
+            op.producto = producto;
+            if (op.tipo === 'Trámites') op.tramite = producto;
+        }
         if (moneda !== undefined) op.moneda = moneda;
         
         if (monto !== undefined) {
@@ -531,6 +534,16 @@ exports.actualizarOperacion = async (req, res) => {
             } else if (op.saldoPendiente > 0) {
                 op.estado = 'Activo';
             }
+        }
+
+        if (capital !== undefined) {
+            const nuevoCapital = Math.round(Number(capital));
+            if (op.tipo === 'Préstamos') op.montoPrestado = nuevoCapital;
+            else if (op.tipo === 'Electrodomésticos') op.costoCompra = nuevoCapital;
+        }
+
+        if (cuotas !== undefined) {
+            op.cuotasTotales = Number(cuotas);
         }
 
         await cliente.save();

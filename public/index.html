@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.9.0'; 
-        const CACHE_NAME = 'zentra-v3.9.0-EDIT-MODE'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.9.5'; 
+        const CACHE_NAME = 'zentra-v3.9.5-FULL-CONTROL'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -4163,6 +4163,10 @@
             document.getElementById('editOperacionProducto').value = op.producto || op.tramite || '';
             document.getElementById('editOperacionMonto').value = op.montoDevolver || op.precioVenta || op.honorarios || 0;
             document.getElementById('editOperacionMoneda').value = op.moneda || 'ARS';
+            
+            // Nuevos campos precargados (v3.9.5)
+            document.getElementById('editOperacionCapital').value = op.montoPrestado || op.costoCompra || 0;
+            document.getElementById('editOperacionCuotas').value = op.cuotasTotales || 1;
 
             document.getElementById('modalEditarOperacion').classList.remove('hidden');
         };
@@ -4177,12 +4181,14 @@
             const producto = document.getElementById('editOperacionProducto').value;
             const monto = document.getElementById('editOperacionMonto').value;
             const moneda = document.getElementById('editOperacionMoneda').value;
+            const capital = document.getElementById('editOperacionCapital').value;
+            const cuotas = document.getElementById('editOperacionCuotas').value;
 
             try {
                 const res = await authFetch(`/api/clientes/${clienteId}/operaciones/${operacionId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ producto, monto, moneda })
+                    body: JSON.stringify({ producto, monto, moneda, capital, cuotas })
                 });
                 if (!res) return;
                 const data = await res.json();
@@ -4198,6 +4204,7 @@
                 showToast('Error', 'Fallo de conexión al editar', 'rose');
             }
         };
+
 
 
         window.abrirModalVencimiento = function(clienteId, operacionId, fechaActual) {
@@ -4762,9 +4769,9 @@
     </div>
 
     <!-- Modal Eliminación Estándar (v3.2.1) -->
-    <!-- Modal Editar Operación (Fullstack Senior v3.9.0) -->
+    <!-- Modal Editar Operación (Fullstack Senior v3.9.5) -->
     <div id="modalEditarOperacion" class="hidden fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[200]">
-        <div class="bg-slate-900 border border-white/10 p-8 rounded-3xl w-full max-w-md mx-4 shadow-2xl">
+        <div class="bg-slate-900 border border-white/10 p-8 rounded-3xl w-full max-w-md mx-4 shadow-2xl overflow-y-auto max-h-[90vh]">
             <h3 class="text-xl font-black text-white uppercase tracking-widest mb-6 flex items-center">
                 <i class="fas fa-edit mr-3 text-blue-500"></i> Editar Operación
             </h3>
@@ -4788,6 +4795,16 @@
                         <option value="USD">USD - Dólares</option>
                         <option value="USDT">USDT - Crypto</option>
                     </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Capital / Costo</label>
+                        <input type="number" id="editOperacionCapital" class="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Cuotas Totales</label>
+                        <input type="number" id="editOperacionCuotas" class="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition-all">
+                    </div>
                 </div>
             </div>
 
