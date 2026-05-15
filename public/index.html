@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.5.0'; 
-        const CACHE_NAME = 'zentra-v3.5.0-TICKET'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.5.1'; 
+        const CACHE_NAME = 'zentra-v3.5.1-PATCH'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1724,7 +1724,7 @@
     </main>
 
     <script>
-        console.log('%c Zentra v3.5.0: Comprobante de Pago Escalonado %c', 'background: #10b981; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
+        console.log('%c Zentra v3.5.1: Comprobante de Pago Escalonado (Patch) %c', 'background: #10b981; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
         let allClientes = [];
         let allRecordatorios = [];
         let editingClientId = null;
@@ -2875,14 +2875,14 @@
                     const fecha = p.fechaStr || new Date(p.fecha).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
                     const hora = p.hora || '--:--hs';
                     
-                    tbody.innerHTML += \`
+                    tbody.innerHTML += `
                         <tr class="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
-                            <td class="py-3 px-2 text-xs font-bold text-slate-300">Cuota \${cuotaNro}/\${op.cuotasTotales || 1}</td>
-                            <td class="py-3 px-2 text-xs font-black text-emerald-400 text-right">\${monto}</td>
-                            <td class="py-3 px-2 text-[10px] font-bold text-slate-400 text-center">\${fecha}</td>
-                            <td class="py-3 px-2 text-[10px] font-bold text-slate-500 text-center">\${hora}</td>
+                            <td class="py-3 px-2 text-xs font-bold text-slate-300">Cuota ${cuotaNro}/${op.cuotasTotales || 1}</td>
+                            <td class="py-3 px-2 text-xs font-black text-emerald-400 text-right">${monto}</td>
+                            <td class="py-3 px-2 text-[10px] font-bold text-slate-400 text-center">${fecha}</td>
+                            <td class="py-3 px-2 text-[10px] font-bold text-slate-500 text-center">${hora}</td>
                         </tr>
-                    \`;
+                    `;
                 });
             }
 

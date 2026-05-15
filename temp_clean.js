@@ -1,0 +1,5105 @@
+
+
+          // ==========================================
+          // VERSIÓN DE LA APLICACIÓN (Cache Busting)
+          // Debe coincidir con APP_VERSION en src/index.js
+          // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
+          const APP_VERSION = '3.5.0'; 
+          const CACHE_NAME = 'zentra-v3.5.0-TICKET'; // Incrementar esto junto con APP_VERSION   // 
+==========================================
+
+      <title>Zentra CRM</title>
+
+
+
+      <!-- Anti-flash: aplicar tema ANTES de renderizar para evitar parpadeo -->
+
+          (function() {
+              var theme = localStorage.getItem('zentra_theme');
+              if (theme === 'light') {
+                  document.documentElement.classList.remove('dark');
+                  document.documentElement.classList.add('light');
+              } else {
+                  // Dark es el default
+                  document.documentElement.classList.add('dark');
+              }
+              // Anti-flash de privacidad (Indestructible)
+              if (localStorage.getItem('jony_privacy') === 'true') {
+                  document.documentElement.classList.add('privacy-mode');
+                  document.body?.setAttribute('data-privacy-hidden', 'true');
+              }
+          })();
+
+      <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght
+@400;500;700;900&family=Roboto:wght@300;400;500;700&display=swap');
+  
+          /* ========================
+             SISTEMA DE VARIABLES CSS
+             ======================== */
+          :root {
+              /* Acentos Base (Se ajustan por modo) */
+              --accent-blue:  #00AEEF;
+              --accent-green: #00FF7F;
+              --accent-red:   #FF3B3B;
+              --accent-yellow:#FFD700;
+              --transition-theme: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s 
+ease;
+          }
+  
+          /* --- DARK MODE (Tecnológico / Deportivo) --- */
+          html.dark {
+              --bg-app:        #050814; /* Negro/Azul marino profundo */
+              --bg-sidebar:    #0a0f1c;
+              --bg-card:       linear-gradient(145deg, #0f172a 0%, #0a0f1c 100%);
+              --bg-input:      rgba(0, 174, 239, 0.05);
+              --bg-header:     rgba(5, 8, 20, 0.85);
+              --bg-table-head: #0a0f1c;
+              --bg-filter-bar: #0f172a;
+              --bg-cat-pill:   rgba(0, 174, 239, 0.1);
+              --bg-cat-active: rgba(0, 174, 239, 0.2);
+              --text-primary:  #f1f5f9;
+              --text-secondary:#94a3b8;
+              --text-muted:    #475569;
+              --border-color:  rgba(0, 174, 239, 0.15);
+              --border-input:  rgba(0, 174, 239, 0.3);
+              --shadow-card:   0 4px 20px rgba(0, 0, 0, 0.5);
+              --shadow-hover:  0 0 15px rgba(0, 174, 239, 0.3);
+              --glass-bg:      rgba(10, 15, 28, 0.75);
+              
+              --font-heading:  'Orbitron', sans-serif;
+              --font-body:     'Roboto', sans-serif;
+              --glow-blue:     0 0 10px rgba(0, 174, 239, 0.6);
+              --glow-green:    0 0 10px rgba(0, 255, 127, 0.5);
+          }
+  
+          /* --- LIGHT MODE (Minimalista / Profesional) --- */
+          html.light {
+              --bg-app:        #F4F7F6;
+              --bg-sidebar:    #FFFFFF;
+              --bg-card:       #FFFFFF;
+              --bg-input:      #F8FAFC;
+              --bg-header:     rgba(255, 255, 255, 0.98);
+              --bg-table-head: #F1F5F9;
+              --bg-filter-bar: #FFFFFF;
+              --bg-cat-pill:   #EEF2F7;
+              --bg-cat-active: #E2E8F0;
+              
+              --text-primary:  #333333;
+              --text-secondary:#555555;
+              --text-muted:    #888888;
+              
+              --border-color:  #E0E0E0;
+              --border-input:  #CBD5E1;
+              
+              --shadow-card:   0 4px 12px rgba(0,0,0,0.05);
+              --shadow-hover:  0 6px 16px rgba(0,0,0,0.08);
+              --glass-bg:      rgba(255, 255, 255, 0.98);
+              
+              --font-heading:  'Inter', sans-serif;
+              --font-body:     'Inter', sans-serif;
+              --glow-blue:     none;
+              --glow-green:    none;
+  
+              /* Nuevos colores de acento corporativos para Light Mode */
+              --accent-blue:   #1D4ED8; /* Azul más corporativo (Tailwind Blue 700) */
+              --accent-green:  #28a745; /* Verde sólido esmeralda */
+          }
+  
+          /* ========================
+             BASE
+             ======================== */
+          body {
+              font-family: var(--font-body);
+              background-color: var(--bg-app);
+              color: var(--text-primary);
+              overflow-x: hidden;
+              width: 100%;
+              position: relative;
+              transition: var(--transition-theme);
+          }
+          
+          h1, h2, h3, h4, h5, h6 {
+              font-family: var(--font-heading);
+              letter-spacing: 0.5px;
+          }
+  
+          * { box-sizing: border-box; }
+  
+          main {
+              overflow-x: hidden;
+              width: 100%;
+              padding-bottom: 7rem; /* Espacio para la nueva Bottom Nav */
+          }
+  
+          /* ========================
+             GLASSMORPHISM
+             ======================== */
+          .glass-panel {
+              background: var(--glass-bg) !important;
+              backdrop-filter: blur(20px);
+              -webkit-backdrop-filter: blur(20px);
+              border: 1px solid var(--border-color) !important;
+              transition: var(--transition-theme);
+          }
+  
+          /* ========================
+             SIDEBAR LIGHT MODE
+             Plano, texto gris, sin dark backgrounds
+             ======================== */
+          html.light aside {
+              background-color: var(--bg-sidebar) !important;
+              border-right: 1px solid var(--border-color);
+              box-shadow: 2px 0 10px rgba(0,0,0,0.02); /* Sombra separadora clara */
+          }
+          html.light aside .sidebar-item {
+              color: var(--text-secondary);
+          }
+          html.light aside .sidebar-item:hover {
+              background: #F1F5F9;
+              color: var(--text-primary);
+          }
+          html.light aside .sidebar-item.active {
+              background: #EEF2F7;
+              border-left: 3px solid var(--accent-blue);
+              color: var(--accent-blue);
+          }
+          /* Titulo Zentra Light */
+          html.light #sidebar-title {
+              color: var(--text-primary) !important;
+          }
+          /* Calculadora sidebar en light mode */
+          html.light .calc-wrapper {
+              background-color: rgba(255,255,255,0.06) !important;
+              border: 1px solid rgba(255,255,255,0.08) !important;
+          }
+          html.light .calc-wrapper h4 { color: #64748B !important; }
+          html.light .calc-wrapper input {
+              background-color: rgba(0,0,0,0.2) !important;
+              border: 1px solid rgba(255,255,255,0.08) !important;
+              color: #E2E8F0 !important;
+          }
+          html.light .calc-wrapper input::placeholder { color: #64748B !important; }
+          html.light .calc-wrapper p#res-honorarios { color: #34D399 !important; }
+          
+          /* Regla global para placeholders usando el tema */
+          input::placeholder, textarea::placeholder {
+              color: var(--text-muted) !important;
+              opacity: 0.7;
+              transition: color 0.2s ease;
+          }
+  
+          /* ========================
+             SIDEBAR (BASE DARK MODE)
+             ======================== */
+          aside {
+              background-color: var(--bg-sidebar);
+              border-right: 1px solid var(--border-color);
+              transition: background-color 0.25s ease;
+          }
+          
+          html.dark aside .sidebar-item {
+              transition: all 0.3s ease;
+          }
+          html.dark aside .sidebar-item:hover {
+              box-shadow: inset 4px 0 0 var(--accent-blue), 0 0 15px rgba(0, 174, 239, 0.1);
+              color: var(--accent-blue);
+              text-shadow: 0 0 8px rgba(0, 174, 239, 0.8);
+              background: rgba(0, 174, 239, 0.05);
+          }
+          html.dark aside .sidebar-item.active {
+              background: linear-gradient(90deg, rgba(0, 174, 239, 0.15) 0%, transparent 100%);
+              border-left: 3px solid var(--accent-blue);
+              color: var(--accent-blue);
+              text-shadow: var(--glow-blue);
+          }
+  
+          /* En Light Mode, Backup y Logout solo icono + texto gris oscuro y fondo transparente */
+          html.light #btnBackup {
+              background: transparent !important;
+              border: 1px solid transparent !important;
+              color: var(--text-secondary) !important;
+              box-shadow: none !important;
+          }
+          html.light #btnBackup i { color: var(--accent-blue) !important; }
+          html.light #btnBackup:hover {
+              background: #F8FAFC !important;
+              border-color: var(--border-color) !important;
+          }
+          
+          html.light #btnLogout {
+              background: transparent !important;
+              border: 1px solid transparent !important;
+              color: var(--text-secondary) !important;
+              box-shadow: none !important;
+          }
+          html.light #btnLogout i { color: #DC2626 !important; }
+          html.light #btnLogout:hover {
+              background: #FEF2F2 !important;
+              border-color: #FCA5A5 !important;
+          }
+  
+          /* ========================
+             HEADER
+             ======================== */
+          header.glass-panel {
+              background: var(--bg-header) !important;
+          }
+          html.light header.glass-panel {
+              border-bottom: 1px solid #E2E8F0 !important;
+          }
+  
+  
+          /* ========================
+             MAIN BG
+             ======================== */
+          main {
+              background-color: var(--bg-app) !important;
+              transition: var(--transition-theme);
+          }
+  
+          /* ========================
+             TABS
+             ======================== */
+          .tab-content { display: none; }
+          .tab-content.active { display: block; animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+  
+          @keyframes slideUpFade {
+              from { opacity: 0; transform: translateY(10px); }
+              to   { opacity: 1; transform: translateY(0); }
+          }
+  
+          /* ========================
+             PRIVACIDAD
+             ======================== */
+          /* --- MODO PRIVACIDAD (BLOQUEO TOTAL) --- */
+          [data-privacy-hidden="true"] .sensitive-data,
+          body[data-privacy-hidden="true"] .sensitive-data {
+              filter: blur(10px) !important;
+              user-select: none !important;
+              pointer-events: none !important;
+              transition: filter 0.3s ease !important;
+          }
+  
+          [data-privacy-hidden="true"] .sensitive-data:hover,
+          body[data-privacy-hidden="true"] .sensitive-data:hover {
+              filter: blur(2px) !important;
+          }
+  
+          /* ========================
+             MÉTRICAS ANIMACIÓN
+             ======================== */
+          .metrics-grid-item {
+              opacity: 0;
+              transform: translateY(10px);
+              transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+          }
+          .metrics-loaded .metrics-grid-item {
+              opacity: 1;
+              transform: translateY(0);
+          }
+            /* ========================
+             TARJETAS DE CLIENTES Y MÉTRICAS
+             ======================== */
+          .client-card, .metrics-grid-item {
+              background: var(--bg-card);
+              border: 1px solid var(--border-color);
+              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+              box-shadow: var(--shadow-card);
+          }
+          .client-card { border-left-width: 6px !important; }
+          
+          html.dark .client-card:hover, html.dark .metrics-grid-item:hover {
+              transform: scale(1.005);
+              border-color: var(--accent-blue);
+              box-shadow: var(--shadow-hover);
+          }
+          
+          html.light .client-card:hover, html.light .metrics-grid-item:hover {
+              transform: translateY(-2px);
+              box-shadow: var(--shadow-hover);
+          }
+          
+          /* Ajuste de legibilidad para el saldo en modo claro */
+          html.light .client-card .text-emerald-400 {
+              color: var(--accent-green) !important;
+          }
+          html.light .client-card .bg-emerald-500\/10 {
+              background-color: rgba(40, 167, 69, 0.08) !important;
+          }
+  
+          /* 
+             ============================================================
+             FUERZA BRUTA: UNIFICACIÓN VISUAL MODO CLARO (ZENTRA LIGHT)
+             ============================================================ 
+          */
+          html.light .client-card,
+          html.light .client-card div:not(.bg-emerald-500\/10):not(.bg-emerald-50),
+          html.light .bg-slate-900\/50,
+          html.light .bg-slate-900,
+          html.light .bg-white\/5,
+          html.light .metrics-grid-item {
+              background-color: var(--bg-card) !important;
+              box-shadow: var(--shadow-card) !important;
+              border: 1px solid var(--border-color) !important;
+          }
+  
+          /* Paneles Financieros (Capital, Total, Saldo) */
+          html.light .client-card .bg-slate-100\/50,
+          html.light .client-card .finance-panel {
+              background-color: #f8fafc !important;
+              border: 1px solid #e2e8f0 !important;
+          }
+  
+          /* Reversión de Textos y Refuerzo de Títulos */
+          html.light .client-card h3,
+          html.light .client-card p:not(.text-slate-500):not(.text-slate-400),
+          html.light .client-card span:not(.text-emerald-600):not(.text-rose-500):not(.text-emerald-400) {
+              color: #1e293b !important;
+          }
+  
+          /* Títulos internos reforzados (Labels con el gris sugerido #475569) */
+          html.light .client-card p.text-\[9px\].font-black,
+          html.light .client-card p.text-\[10px\].font-bold {
+              color: #475569 !important;
+              letter-spacing: 0.1em;
+              opacity: 1 !important;
+          }
+  
+          /* Etiquetas muted */
+          html.light .client-card .text-slate-500,
+          html.light .client-card .text-slate-400 {
+              color: #64748b !important;
+          }
+  
+          /* Corregir visibilidad de iconos en modo claro */
+          html.light .client-card .text-slate-300 {
+              color: #1e293b !important;
+          }
+          
+          /* Limpiar bordes top residuales en light mode */
+          html.light #listaClientes > .client-card:first-child {
+              border-top: 1px solid var(--border-color) !important;
+          }
+          /* Primer cliente también tiene borde top igual que los divisores entre cards */
+          #listaClientes > .client-card:first-child {
+              border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
+          }
+          html.light #listaClientes > .client-card:first-child {
+              border-top: 1px solid #D1D5DB !important;
+          }
+  
+          /* Alineación Grilla Financiera - INNEGOCIABLE */
+          .finance-panel {
+              display: grid !important;
+              grid-template-columns: repeat(3, 1fr) !important;
+              gap: 10px !important;
+              align-items: start !important;
+          }
+          .finance-col {
+              display: flex !important;
+              flex-direction: column !important;
+              margin: 0 !important;
+              padding: 0 !important;
+          }
+          .finance-label {
+              height: 45px !important; /* Altura innegociable solicitada */
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+              text-align: center !important;
+              margin: 0 !important;
+              padding: 0 2px !important;
+              line-height: 1.1 !important;
+          }
+          .finance-value {
+              margin: 4px 0 0 0 !important; /* Espacio controlado solo arriba */
+              padding: 0 !important;
+              display: block !important;
+              text-align: center !important;
+          }
+  
+          /* ========================
+             SIDEBAR ITEM (MÓVIL BASE)
+             ======================== */
+          .sidebar-item.active {
+              background: linear-gradient(90deg, rgba(0, 174, 239, 0.12) 0%, transparent 100%);
+              border-left: 3px solid var(--accent-blue);
+              color: var(--accent-blue);
+          }
+  
+          /* ========================
+             SKELETON
+             ======================== */
+          @keyframes shimmer {
+              0%   { background-position: -200% 0; }
+              100% { background-position:  200% 0; }
+          }
+          html.dark .skeleton {
+              background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+              background-size: 200% 100%;
+              animation: shimmer 1.5s infinite;
+          }
+          html.light .skeleton {
+              background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+              background-size: 200% 100%;
+              animation: shimmer 1.5s infinite;
+          }
+  
+          /* ========================
+             NAVIGATION MOBILE
+             ======================== */
+          .active-nav-mobile {
+              color: var(--accent-blue) !important;
+          }
+          html.dark .active-nav-mobile {
+              filter: drop-shadow(0 0 8px rgba(0, 174, 239, 0.6));
+          }
+  
+          /* ========================
+             SUCCESS PULSE
+             ======================== */
+          @keyframes successPulse {
+              0%   { box-shadow: 0 0 0  0px rgba(0, 255, 127, 0.4); }
+              70%  { box-shadow: 0 0 0 15px rgba(0, 255, 127, 0); }
+              100% { box-shadow: 0 0 0  0px rgba(0, 255, 127, 0); }
+          }
+          .success-pulse { animation: successPulse 1s ease-out; }
+  
+          /* ========================
+             BARRA DE FILTROS (CLIENTES)
+             ======================== */
+          .filter-bar-wrapper {
+              background-color: var(--bg-filter-bar);
+              border: 1px solid var(--border-color);
+              transition: var(--transition-theme);
+          }
+  
+          /* ========================
+             PILL DE CATEGORÍAS
+             ======================== */
+          .cat-pill-container {
+              background-color: var(--bg-cat-pill);
+              transition: var(--transition-theme);
+          }
+          .cat-pill-active {
+              background-color: var(--bg-cat-active) !important;
+              color: var(--text-primary) !important;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+          }
+          html.light .cat-pill-inactive {
+              color: var(--text-secondary);
+          }
+          html.dark .cat-pill-inactive {
+              color: #64748b;
+          }
+  
+          /* ========================
+             TABLA DE CLIENTES
+             ======================== */
+          .table-header-row {
+              background-color: var(--bg-table-head);
+              border-bottom: 1px solid var(--border-color);
+              transition: var(--transition-theme);
+          }
+          html.light .table-header-row {
+              color: var(--text-muted);
+          }
+  
+          /* ========================
+             INPUTS EN LIGHT MODE
+             ======================== */
+          html.light input,
+          html.light select,
+          html.light textarea {
+              background-color: var(--bg-input) !important;
+              color: var(--text-primary) !important;
+              border: 1px solid var(--border-input) !important;
+          }
+  
+          /* CLASE DE PRUEBA DE FUEGO V1.9.12 */
+          .saldo-highlight {
+              background-color: #fef08a !important;
+              color: #854d0e !important;
+          }
+          html.light input::placeholder {
+              color: var(--text-muted) !important;
+          }
+          html.light select option {
+              background-color: #ffffff;
+              color: #111827;
+          }
+  
+          /* ========================
+             FORMULARIO DE CLIENTES
+             ======================== */
+          html.light #formContainer {
+              background-color: var(--bg-card) !important;
+              border-color: var(--border-color) !important;
+          }
+          html.light #formContainer h4 {
+              color: var(--text-primary) !important;
+          }
+  
+          /* ========================
+             BOTÓN TEMA SOL/LUNA
+             ======================== */
+          #btn-theme {
+              background: var(--bg-cat-pill);
+              border-color: var(--border-color);
+              color: var(--text-secondary);
+              transition: all 0.3s ease;
+          }
+          #btn-theme:hover {
+              background: var(--accent-blue);
+              color: #fff;
+              border-color: transparent;
+              box-shadow: var(--shadow-hover);
+          }
+  
+          /* ========================
+             CALCULADORA ARCA Y MINI AGENDA (DARK/LIGHT)
+             ======================== */
+          html.dark .calc-wrapper {
+              background: rgba(0, 174, 239, 0.03) !important;
+              border: 1px solid rgba(0, 174, 239, 0.2) !important;
+              box-shadow: inset 0 0 20px rgba(0, 174, 239, 0.05), 0 4px 15px rgba(0,0,0,0.4) !important;
+          }
+          html.dark .calc-wrapper input, html.dark .calc-wrapper button {
+              background: rgba(0, 0, 0, 0.3) !important;
+              border: 1px solid rgba(0, 174, 239, 0.3) !important;
+              box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5), inset -1px -1px 2px rgba(255,255,255,0.05); /* 
+Neumorfismo oscuro */
+          }
+          
+          html.light .calc-wrapper {
+              background-color: var(--bg-card) !important;
+              border: 1px solid var(--border-color) !important;
+              box-shadow: none !important;
+          }
+          html.light .calc-wrapper input {
+              background-color: var(--bg-input) !important;
+              border: 1px solid var(--border-input) !important;
+              color: var(--text-primary) !important;
+          }
+          html.light .calc-wrapper h4 {
+              color: var(--text-secondary) !important;
+          }
+  
+          /* TARJETAS MINI AGENDA LIGHT */
+          html.light #mini-agenda-wrapper {
+              background-color: var(--bg-card) !important;
+              border: 1px solid var(--border-color) !important;
+              color: var(--text-primary) !important;
+          }
+          html.light #mini-agenda-wrapper p {
+              color: var(--text-secondary) !important;
+              opacity: 1 !important;
+          }
+  
+          /* ========================
+             LIGHT MODE - LIMPIEZA DE SECCIONES
+             Todos usan colores claros, sin dark backgrounds
+             ======================== */
+  
+          /* --- MÉTRICAS --- */
+          html.light #tab-metricas > div {
+              background-color: var(--bg-card) !important;
+              border-color: var(--border-color) !important;
+          }
+          html.light #tab-metricas h3 {
+              color: var(--text-primary) !important;
+          }
+          html.light #tab-metricas .metrics-grid-item:not(.bg-gradient-to-br) {
+              background-color: var(--bg-input) !important;
+              border-color: var(--border-color) !important;
+          }
+          html.light #tab-metricas .metrics-grid-item h4 {
+              color: var(--text-secondary) !important;
+          }
+  
+          /* ========================
+             BOTTOM NAV PRO & CLIENT FAB
+             ======================== */
+          nav.md\:hidden {
+              height: calc(5rem + env(safe-area-inset-bottom, 0px));
+              padding-bottom: env(safe-area-inset-bottom, 0px);
+              background: rgba(10, 15, 30, 0.98) !important;
+              backdrop-filter: blur(15px);
+              -webkit-backdrop-filter: blur(15px);
+              border-top: 1px solid rgba(59, 130, 246, 0.4);
+              box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+              display: flex;
+              justify-content: space-around;
+              align-items: center;
+          }
+  
+          .active-nav-mobile {
+              color: #3b82f6 !important;
+              filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+              transform: translateY(-2px);
+              transition: all 0.3s ease;
+          }
+  
+          .active-nav-mobile span {
+              color: #3b82f6 !important;
+              font-weight: 900 !important;
+          }
+  
+          /* FAB Simple para Clientes */
+          #fab-clientes {
+              position: fixed;
+              bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+              right: 1.5rem;
+              width: 3.5rem;
+              height: 3.5rem;
+              background: #2563eb;
+              color: white;
+              border-radius: 9999px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+              border: 4px solid #0d1117;
+              z-index: 60;
+              transition: all 0.2s;
+          }
+          
+          #fab-clientes:active { transform: scale(0.9); }
+  
+          /* ========================
+             RESTAURACIÓN: FLEXBOX CARDS
+             ======================== */
+          .client-card-row {
+              display: flex !important;
+              flex-direction: row !important;
+              justify-content: space-between !important;
+              align-items: center !important;
+              width: 100% !important;
+              gap: 12px !important;
+          }
+  
+          .text-container-flex {
+              flex-grow: 1 !important;
+              min-width: 0 !important;
+              overflow: hidden !important;
+          }
+  
+          .actions-container-fixed {
+              flex-shrink: 0 !important;
+              width: 80px !important;
+              display: flex !important;
+              justify-content: flex-end !important;
+              gap: 8px !important;
+          }
+  
+          html.light .client-card h3 {
+              color: #F1F5F9 !important;
+          }
+  
+          /* ========================
+             SEPARACIÓN ESTRICTA PC/MÓVIL
+             ======================== */
+          
+          /* --- VISTA DESKTOP (> 768px) --- */
+          @media (min-width: 769px) {
+              nav.md\:hidden {
+                  display: none !important;
+              }
+              aside {
+                  display: flex !important;
+              }
+              main {
+                  padding-bottom: 2rem !important; /* Espacio mínimo en PC */
+              }
+              /* FAB solo visible en móvil (si Jony prefiere) */
+              #fab-clientes {
+                  display: none !important;
+              }
+          }
+  
+          /* --- VISTA MOBILE (<= 768px) --- */
+          @media (max-width: 768px) {
+              aside {
+                  display: none !important;
+              }
+              nav.md\:hidden {
+                  display: flex !important;
+                  z-index: 100 !important;
+              }
+              main {
+                  padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px)) !important; /* Espacio para Bottom Nav 
++ safe area iPhone */
+              }
+              #fab-clientes {
+                  display: flex !important;
+              }
+          }
+          /* Historial mensual */
+          html.light #historialMensualContainer .text-center {
+              color: #64748B !important;
+          }
+  
+          /* --- AGENDA: header y contenedores --- */
+          html.light #tab-agenda > div:first-child {
+              background-color: #1B2B3A !important;
+              border-color: rgba(255,255,255,0.08) !important;
+          }
+          html.light #tab-agenda h3 {
+              color: #F1F5F9 !important;
+          }
+          /* Calendario */
+          html.light #agenda-calendar-container > div {
+              background-color: #1B2B3A !important;
+              border-color: rgba(255,255,255,0.08) !important;
+              color: #F1F5F9 !important;
+          }
+          /* Items de agenda */
+          html.light #agendaItemsContainer > div {
+              background-color: #1B2B3A !important;
+              border-color: rgba(255,255,255,0.08) !important;
+          }
+  
+          /* --- CLIENTES: formulario y tabla --- */
+          html.light #formContainer {
+              background-color: #1B2B3A !important;
+              border-color: rgba(255,255,255,0.08) !important;
+          }
+          html.light #formContainer h4 {
+              color: #F1F5F9 !important;
+          }
+          html.light #formContainer label,
+          html.light #formContainer p {
+              color: #94A3B8 !important;
+          }
+          /* Tabla de clientes */
+          html.light #tab-clientes > div.bg-slate-900 {
+              background-color: #1B2B3A !important;
+              border-color: rgba(255,255,255,0.08) !important;
+          }
+          html.light .table-header-row {
+              background-color: #243447 !important;
+          }
+  
+          /* --- WHATSAPP: contenedor principal --- */
+          html.light #tab-whatsapp > div {
+              background-color: #1B2B3A !important;
+              border-color: rgba(255,255,255,0.08) !important;
+          }
+          html.light #tab-whatsapp h3 {
+              color: #F1F5F9 !important;
+          }
+          html.light #templateForm {
+              background-color: rgba(255,255,255,0.05) !important;
+              border-color: rgba(255,255,255,0.08) !important;
+          }
+          html.light #tplTitulo,
+          html.light #tplCuerpo {
+              background-color: rgba(0,0,0,0.2) !important;
+              border-color: rgba(255,255,255,0.08) !important;
+              color: #E2E8F0 !important;
+          }
+          html.light #tplTitulo::placeholder,
+          html.light #tplCuerpo::placeholder {
+              color: #64748B !important;
+          }
+          html.light #tab-whatsapp h4 {
+              color: #94A3B8 !important;
+          }
+  
+          /* --- MODALES (Agenda y Pago) --- */
+          html.light #agendaModal > div,
+          html.light #pagoModal > div {
+              background-color: #1B2B3A !important;
+              border-color: rgba(255,255,255,0.08) !important;
+          }
+          html.light #agendaModal label,
+          html.light #pagoModal label,
+          html.light #agendaModal p,
+          html.light #pagoModal p {
+              color: #94A3B8 !important;
+          }
+          html.light #agendaModal h3,
+          html.light #pagoModal h3 {
+              color: #F1F5F9 !important;
+          }
+          html.light #agendaModal input,
+          html.light #agendaModal select,
+          html.light #pagoModal input {
+              background-color: rgba(0,0,0,0.2) !important;
+              border-color: rgba(255,255,255,0.08) !important;
+              color: #E2E8F0 !important;
+          }
+  
+          /* --- TEXTO TAREAS AL DÍA (dinámico) --- */
+          /* El elemento se fuerza a tener texto visible siempre en light mode */
+          html.light #mini-agenda-wrapper p.opacity-40 {
+              opacity: 1 !important;
+              color: #94A3B8 !important;
+          }
+  
+          /* Toast notification */
+          html.light #toast {
+              background-color: #1B2B3A !important;
+              color: #F1F5F9 !important;
+          }
+          /* ========================
+             UPDATE BANNER (PWA)
+             ======================== */
+          #update-banner {
+              position: fixed;
+              bottom: 20px;
+              left: 50%;
+              transform: translateX(-50%) translateY(100px);
+              background: #1e293b;
+              color: #fff;
+              padding: 12px 20px;
+              border-radius: 12px;
+              display: none; /* Oculto por defecto */
+              align-items: center;
+              gap: 15px;
+              box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+              z-index: 9999;
+              transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+              width: 90%;
+              max-width: 400px;
+          }
+          #update-banner.show {
+              display: flex; /* Mostrar solo cuando hay actualización */
+              transform: translateX(-50%) translateY(0);
+          }
+          #update-banner button {
+              background: #3b82f6;
+              color: white;
+              padding: 6px 12px;
+              border-radius: 8px;
+              font-weight: bold;
+              font-size: 13px;
+              border: none;
+              cursor: pointer;
+          }
+          /* SKELETON LOADERS (Audit UX Fix) */
+          .skeleton {
+              background: linear-gradient(90deg, var(--bg-sidebar) 25%, rgba(0, 174, 239, 0.05) 50%, var(--bg-sidebar) 
+75%);
+              background-size: 200% 100%;
+              animation: skeleton-loading 1.5s infinite;
+          }
+          @keyframes skeleton-loading {
+              0% { background-position: 200% 0; }
+              100% { background-position: -200% 0; }
+          }
+      </style>
+  
+
+          // --- CONFIGURACIÓN GLOBAL ---
+          console.log(`%c Zentra CRM: Versión ${APP_VERSION} %c`, 'background: #00AEEF; color: #fff; font-weight: 
+bold; padding: 4px 8px; border-radius: 4px;', '');
+          // Chequeo temprano de sesión (existencia del token)
+          if (!localStorage.getItem('jony_token')) {
+              window.location.href = '/login.html';
+          }
+
+  </head>
+  <body>
+  
+      <!-- SIDEBAR (DESKTOP) -->
+      <aside class="hidden md:flex flex-col w-64 fixed inset-y-0 left-0 bg-slate-900 text-slate-400 z-[150]">
+          <div class="px-6 py-8">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 10px;">
+                  <img src="assets/logo.png" style="width: 40px; height: 40px; object-fit: contain;" alt="Zentra Logo">
+                  <span id="sidebar-title" style="font-size: 1.5rem; font-weight: bold; color: 
+var(--text-primary);">Zentra</span>
+              </div>
+          </div>
+          
+          <nav class="flex-1 px-4 space-y-2">
+              <button onclick="switchTab('inicio')" id="side-inicio" class="sidebar-item active w-full flex 
+items-center px-4 py-3 rounded-xl transition-all hover:bg-white/5 hover:text-white group">
+                  <i data-lucide="home" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform 
+text-blue-400"></i>
+                  <span class="font-bold text-sm">Inicio</span>
+              </button>
+              <button onclick="switchTab('clientes')" id="side-clientes" class="sidebar-item w-full flex items-center 
+px-4 py-3 rounded-xl transition-all hover:bg-white/5 hover:text-white group">
+                  <i data-lucide="users" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform 
+text-orange-500"></i>
+                  <span class="font-bold text-sm">Clientes</span>
+              </button>
+              <button onclick="switchTab('agenda')" id="side-agenda" class="sidebar-item w-full flex items-center px-4 
+py-3 rounded-xl transition-all hover:bg-white/5 hover:text-white group">
+                  <i data-lucide="calendar" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform 
+text-violet-500"></i>
+                  <span class="font-bold text-sm">Agenda</span>
+              </button>
+              <button onclick="switchTab('metricas')" id="side-metricas" class="sidebar-item w-full flex items-center 
+px-4 py-3 rounded-xl transition-all hover:bg-white/5 hover:text-white group">
+                  <i data-lucide="bar-chart-2" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform 
+text-emerald-500"></i>
+                  <span class="font-bold text-sm">Métricas</span>
+              </button>
+              <button onclick="switchTab('whatsapp')" id="side-whatsapp" class="sidebar-item w-full flex items-center 
+px-4 py-3 rounded-xl transition-all hover:bg-white/5 hover:text-white group">
+                  <i data-lucide="message-square" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform 
+text-emerald-400"></i>
+                  <span class="font-bold text-sm">WhatsApp</span>
+              </button>
+              <div class="pt-10 space-y-2">
+                  <button onclick="descargarExcel()" class="w-full flex items-center px-4 py-3 rounded-xl 
+transition-all text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 group font-bold text-sm">
+                      <i data-lucide="download" class="w-5 h-5 mr-3 group-hover:-translate-y-1 
+transition-transform"></i>
+                      Descargar Backup
+                  </button>
+                  <button onclick="logout()" class="w-full flex items-center px-4 py-3 rounded-xl transition-all 
+text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 group font-bold text-sm">
+                      <i data-lucide="log-out" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform"></i>
+                      Cerrar Sesión
+                  </button>
+              </div>
+          </nav>
+  
+          <!-- Sidebar Calculator (SOLO DESKTOP) -->
+          <div class="hidden md:block mt-auto p-4 mb-4">
+              <div class="calc-wrapper p-4 rounded-2xl border shadow-xl" style="background: var(--bg-card); 
+border-color: var(--border-color)">
+                  <h4 class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4 
+text-center">Calculadora ARCA</h4>
+                  <div class="space-y-3">
+                      <input type="number" id="calc-monto" placeholder="Monto $" class="w-full p-2.5 bg-slate-900 
+border border-slate-700 rounded-lg text-white text-xs font-bold outline-none focus:ring-1 focus:ring-blue-500 
+transition-all">
+                      <input type="number" id="calc-perc" value="35" class="w-full p-2.5 bg-slate-900 border 
+border-slate-700 rounded-lg text-white text-xs font-bold outline-none focus:ring-1 focus:ring-blue-500 transition-all">
+                      
+                      <div class="pt-2 border-t border-slate-700">
+                          <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Total a 
+Devolver</p>
+                          <p id="res-honorarios" class="text-lg font-black text-emerald-400">$ 0</p>
+                      </div>
+  
+                      <div class="grid grid-cols-2 gap-2 mt-2">
+                          <button onclick="reiniciarCalculadora()" class="py-2 bg-slate-700 text-slate-300 text-[10px] 
+font-black rounded-lg hover:bg-slate-600">Reset</button>
+                          <button onclick="calcularPorcentaje()" class="py-2 bg-blue-600 text-white text-[10px] 
+font-black rounded-lg hover:bg-blue-700">Calcular</button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </aside>
+  
+      <!-- MAIN CONTENT -->
+      <main class="md:ml-64 min-h-screen pb-20 md:pb-0 flex flex-col bg-slate-950">
+          <header class="glass-panel sticky top-0 z-[100] p-4 md:px-10 md:py-6 flex justify-between items-center 
+border-b border-white/10 mb-6">
+              <!-- Grupo Izquierdo (Título + Fecha + Ojo en PC) -->
+              <div class="flex items-center gap-6 min-w-0">
+                  <h2 id="desktopTitle" class="text-xl font-black uppercase tracking-tight truncate" style="color: 
+var(--text-primary)">Resumen</h2>
+                  <div class="hidden md:flex items-center gap-4 border-l pl-6" style="border-color: 
+var(--border-color)">
+                      <span id="currentDateDesktop" class="text-sm font-black uppercase tracking-widest leading-none" 
+style="color: var(--text-secondary)"></span>
+                      <button id="btn-privacy-desc" class="btn-privacy-toggle w-10 h-10 rounded-xl flex items-center 
+justify-center border transition-all" style="background: var(--bg-cat-pill); border-color: var(--border-color); color: 
+var(--text-secondary)">
+                          <i data-lucide="eye" id="icon-eye-desc" class="w-5 h-5"></i>
+                          <i data-lucide="eye-off" id="icon-eye-off-desc" class="w-5 h-5 hidden"></i>
+                      </button>
+                      <button onclick="toggleTheme()" id="btn-theme" class="w-10 h-10 rounded-xl flex items-center 
+justify-center border transition-all" style="background: var(--bg-cat-pill); border-color: var(--border-color); color: 
+var(--text-secondary)">
+                          <!-- Sol: visible en Dark mode (para pasar a Light) -->
+                          <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 
+0 24 24" stroke="currentColor" stroke-width="2">
+                              <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 
+18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                          </svg>
+                          <!-- Luna: visible en Light mode (para pasar a Dark) -->
+                          <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 hidden" fill="none" 
+viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                          </svg>
+                      </button>
+                  </div>
+              </div>
+  
+              <!-- Grupo Derecho (Mobile: Fecha + Ojo + Tema) -->
+              <div class="flex md:hidden items-center gap-3 shrink-0">
+                  <span id="currentDateMobile" class="text-[10px] font-black uppercase tracking-tighter" style="color: 
+var(--text-secondary)"></span>
+                  <button class="btn-privacy-toggle w-9 h-9 rounded-xl flex items-center justify-center border 
+transition-all" style="background: var(--bg-cat-pill); border-color: var(--border-color); color: 
+var(--text-secondary)">
+                      <i data-lucide="eye" id="icon-eye-mob" class="w-4 h-4"></i>
+                      <i data-lucide="eye-off" id="icon-eye-off-mob" class="w-4 h-4 hidden"></i>
+                  </button>
+                  <button onclick="toggleTheme()" class="w-9 h-9 rounded-xl flex items-center justify-center border 
+transition-all" style="background: var(--bg-cat-pill); border-color: var(--border-color); color: 
+var(--text-secondary)">
+                      <!-- Sol: visible en Dark mode -->
+                      <svg id="icon-sun-mob" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 
+0 24 24" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 
+1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                      </svg>
+                      <!-- Luna: visible en Light mode -->
+                      <svg id="icon-moon-mob" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hidden" fill="none" 
+viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                      </svg>
+                  </button>
+              </div>
+          </header>
+  
+          <div class="max-w-7xl w-full mx-auto p-4 md:p-8 flex-1">
+              
+               <!-- TAB: INICIO -->
+              <section id="tab-inicio" class="tab-content active space-y-6">
+                  <!-- Grilla de Métricas: 2 columnas en móvil, 3 en md, 5 en lg -->
+                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+                      <!-- Tarjeta: Clientes Activos -->
+                      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-5 md:p-8 rounded-[2.5rem] text-white 
+hover:scale-[1.02] transition-all">
+                          <div class="w-10 h-10 md:w-12 md:h-12 bg-white/20 backdrop-blur-md rounded-2xl flex 
+items-center justify-center mb-4 md:mb-6"><i data-lucide="users" class="w-5 h-5 md:w-6 md:h-6 text-white"></i></div>
+                          <h3 id="metric-clientes" class="text-2xl md:text-4xl font-black mb-1">0</h3>
+                          <p class="text-[8px] md:text-[10px] font-bold uppercase tracking-widest opacity-70">Clientes 
+Activos</p>
+                      </div>
+                      <!-- Tarjeta: Trámites Mes -->
+                      <div class="bg-gradient-to-br from-slate-800 to-slate-950 p-5 md:p-8 rounded-[2.5rem] border 
+border-white/5 transition-all hover:border-white/20">
+                          <div class="w-10 h-10 md:w-12 md:h-12 bg-slate-800 text-slate-500 rounded-2xl flex 
+items-center justify-center mb-4 md:mb-6 border border-white/5"><i data-lucide="file-text" class="w-5 h-5 md:w-6 
+md:h-6"></i></div>
+                          <h3 id="num-tramites" class="text-2xl md:text-4xl font-black text-white">0</h3>
+                          <p class="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase 
+tracking-widest">Trámites Mes</p>
+                      </div>
+                      <!-- Tarjeta: Pendientes -->
+                      <div class="bg-gradient-to-br from-slate-800 to-slate-950 p-5 md:p-8 rounded-[2.5rem] border 
+border-white/5 transition-all hover:border-white/20">
+                          <div class="w-10 h-10 md:w-12 md:h-12 bg-slate-800 text-slate-500 rounded-2xl flex 
+items-center justify-center mb-4 md:mb-6 border border-white/5"><i data-lucide="clock" class="w-5 h-5 md:w-6 
+md:h-6"></i></div>
+                          <h3 id="num-pendientes" class="text-2xl md:text-4xl font-black text-white">0</h3>
+                          <p class="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase 
+tracking-widest">Pendientes</p>
+                      </div>
+                      <!-- Tarjeta: Recaudación Hoy -->
+                      <div onclick="switchTab('metricas')" class="metrics-grid-item cursor-pointer bg-gradient-to-br 
+from-slate-900 to-slate-950 p-5 md:p-8 rounded-[2.5rem] border border-white/5 transition-all 
+hover:border-emerald-500/30">
+                          <div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex 
+items-center justify-center mb-4 md:mb-6 border border-emerald-500/20"><i data-lucide="dollar-sign" class="w-5 h-5 
+md:w-6 md:h-6"></i></div>
+                          <div id="num-recaudacion-hoy" class="sensitive-data">
+                              <h3 class="text-xl md:text-3xl font-black text-emerald-400">$ 0</h3>
+                          </div>
+                          <p class="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase 
+tracking-widest">Recaudación Hoy</p>
+                      </div>
+                      <!-- Tarjeta: Ganancia Total -->
+                      <div onclick="switchTab('metricas')" class="metrics-grid-item cursor-pointer bg-gradient-to-br 
+from-slate-900 to-slate-950 p-5 md:p-8 rounded-[2.5rem] border border-white/5 transition-all 
+hover:border-emerald-500/30">
+                          <div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex 
+items-center justify-center mb-4 md:mb-6 border border-emerald-500/20"><i data-lucide="trending-up" class="w-5 h-5 
+md:w-6 md:h-6"></i></div>
+                          <div id="num-ganancia-total" class="sensitive-data">
+                              <h3 class="text-xl md:text-3xl font-black text-emerald-400">$ 0</h3>
+                          </div>
+                          <p class="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase 
+tracking-widest">Ganancia Total</p>
+                      </div>
+                  </div>
+  
+                  <div id="mini-agenda-wrapper" class="bg-slate-900 border border-white/5 rounded-3xl overflow-hidden 
+flex flex-col">
+                      <div class="p-8"><p class="opacity-40 text-xs font-bold uppercase">Cargando agenda de 
+hoy...</p></div>
+                  </div>
+  
+              </section>
+  
+              <!-- TAB: CALCULADORA (Móvil) -->
+              <section id="tab-calc" class="tab-content hidden space-y-6">
+                  <div class="bg-slate-900 p-8 rounded-[2.5rem] border border-white/5 shadow-2x">
+                      <h4 class="text-xs font-black uppercase tracking-widest mb-6 flex items-center text-white">
+                          <i data-lucide="calculator" class="w-5 h-5 mr-3 text-blue-400"></i>Calculadora ARCA
+                      </h4>
+                      <div class="space-y-6">
+                          <div>
+                              <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 
+px-1">Monto Percibido ($)</label>
+                              <input type="number" id="calc-monto-mobile" placeholder="0.00" inputmode="decimal"
+                                  class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-white 
+font-bold text-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                          </div>
+                          <div>
+                              <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 
+px-1">Porcentaje (%)</label>
+                              <input type="number" id="calc-perc-mobile" value="35" inputmode="decimal"
+                                  class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-white 
+font-bold text-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                          </div>
+                          <div class="pt-6 border-t border-white/5">
+                              <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 
+px-1">Total a Devolver</p>
+                              <p id="res-honorarios-mobile" class="text-5xl font-black text-emerald-400">$ 0</p>
+                          </div>
+                          <div class="grid grid-cols-2 gap-4 pt-2">
+                              <button onclick="reiniciarCalculadoraMobile()" class="w-full py-4 bg-white/5 
+text-slate-400 font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-white/10 
+transition-all">Borrar</button>
+                              <button onclick="calcularPorcentajeMobile()" class="w-full py-4 bg-blue-600 text-white 
+font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-900/40 
+transition-all">Calcular</button>
+                          </div>
+                      </div>
+                  </div>
+                  <p class="text-center text-[10px] text-slate-600 font-bold uppercase tracking-widest px-10">Calculá 
+rápidamente las retenciones de ARCA / AFIP para tus trámites.</p>
+              </section>
+  
+              <!-- TAB: CLIENTES -->
+              <section id="tab-clientes" class="tab-content space-y-6 overflow-x-hidden">
+                  <div class="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center 
+filter-bar-wrapper p-4 rounded-3xl w-full max-w-full overflow-hidden">
+                      <div class="flex gap-2 w-full md:w-96 shrink-0">
+                          <div class="relative flex-1">
+                              <i data-lucide="search" class="absolute left-4 top-3 w-4 h-4 text-slate-400"></i>
+                              <input type="text" id="searchInput" oninput="filtrarClientes()" placeholder="Ej: Juan, 
+ARCA, Toyota..." class="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm font-bold outline-none focus:ring-2 
+focus:ring-blue-500 border" style="background: var(--bg-input); color: var(--text-primary); border-color: 
+var(--border-input);">
+                          </div>
+                          <button onclick="setFiltroMorosos(!filtroSoloMorosos)" id="btnFiltroMorosos" title="Filtrar 
+Morosos" class="w-12 h-[42px] md:h-auto md:w-auto md:px-5 md:py-2.5 bg-slate-100 text-slate-500 hover:bg-rose-100 
+hover:text-rose-700 rounded-xl text-sm font-black outline-none transition-all flex items-center justify-center 
+shrink-0">
+                              <i data-lucide="alert-circle" class="w-5 h-5 md:mr-1"></i>
+                              <span class="hidden md:inline">Morosos</span>
+                          </button>
+                      </div>
+                      <div class="flex gap-3 md:gap-4 w-full md:w-auto items-center overflow-x-auto pb-1 md:pb-0 
+hide-scrollbar" style="-ms-overflow-style: none; scrollbar-width: none;">
+                          <style>.hide-scrollbar::-webkit-scrollbar { display: none; }</style>
+                          <div class="cat-pill-container p-1 flex rounded-xl items-center shrink-0">
+                              <button onclick="setFiltroCategoria('Todos')" id="btnCatTodos" class="px-3 py-1.5 
+cat-pill-active rounded-lg text-xs font-black transition-all outline-none">Todos <span id="countCatTodos" 
+class="opacity-50 ml-0.5"></span></button>
+                              <button onclick="setFiltroCategoria('Préstamos')" id="btnCatPrestamos" class="px-3 
+py-1.5 cat-pill-inactive rounded-lg text-xs font-black transition-all outline-none">Préstamos <span 
+id="countCatPrestamos" class="opacity-50 ml-0.5"></span></button>
+                              <button onclick="setFiltroCategoria('Electrodomésticos')" id="btnCatElectro" 
+class="px-3 py-1.5 cat-pill-inactive rounded-lg text-xs font-black transition-all outline-none">Electro <span 
+id="countCatElectro" class="opacity-50 ml-0.5"></span></button>
+                              <button onclick="setFiltroCategoria('Trámites')" id="btnCatTramites" class="px-3 py-1.5 
+cat-pill-inactive rounded-lg text-xs font-black transition-all outline-none">Trámites <span id="countCatTramites" 
+class="opacity-50 ml-0.5"></span></button>
+                          </div>
+                          <button onclick="toggleForm()" class="hidden md:block px-6 py-2.5 bg-blue-600 text-white 
+rounded-xl text-sm font-black whitespace-nowrap outline-none transition-all">Nuevo Cliente</button>
+                      </div>
+                  </div>
+  
+  
+                  <!-- FAB Simple (Solo para Clientes) -->
+                  <button id="fab-clientes" onclick="toggleForm()" class="md:hidden">
+                      <i data-lucide="plus" class="w-8 h-8"></i>
+                  </button>
+  
+                  <div id="formContainer" class="hidden bg-slate-900 p-10 rounded-[2.5rem] border border-white/10 
+shadow-2xl shadow-black">
+                      <h4 id="formTitle" class="text-xl font-black text-white mb-8 flex items-center"><i 
+data-lucide="user-plus" class="w-6 h-6 mr-3 text-orange-500"></i>Ingresar Datos del Cliente</h4>
+                      <form id="clienteForm" class="flex flex-col gap-6">
+                          <input type="hidden" name="categoria" id="categoriaSelect" value="Trámites">
+  
+                          <!-- STEP 1: SELECTOR -->
+                          <div id="step-selector" class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in 
+zoom-in duration-300">
+                              <button type="button" onclick="mostrarPaso('step-datos-tramite', 'Trámites')" 
+class="flex flex-col items-center justify-center p-8 bg-slate-950 border border-white/5 rounded-3xl 
+hover:border-orange-500 hover:shadow-[0_0_30px_rgba(249,115,22,0.2)] transition-all group">
+                                  <div class="w-16 h-16 bg-orange-500/10 rounded-2xl flex items-center justify-center 
+mb-4 group-hover:scale-110 transition-transform">
+                                      <i data-lucide="zap" class="w-8 h-8 text-orange-500"></i>
+                                  </div>
+                                  <h5 class="text-white font-black text-lg">Trámite</h5>
+                                  <p class="text-slate-500 text-xs text-center mt-2">Monotributo, AFIP, etc.</p>
+                              </button>
+                              <button type="button" onclick="mostrarPaso('step-datos-prestamo', 'Préstamos')" 
+class="flex flex-col items-center justify-center p-8 bg-slate-950 border border-white/5 rounded-3xl 
+hover:border-emerald-500 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] transition-all group">
+                                  <div class="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center 
+mb-4 group-hover:scale-110 transition-transform">
+                                      <i data-lucide="banknote" class="w-8 h-8 text-emerald-500"></i>
+                                  </div>
+                                  <h5 class="text-white font-black text-lg">Préstamo</h5>
+                                  <p class="text-slate-500 text-xs text-center mt-2">Dinero en efectivo</p>
+                              </button>
+                              <button type="button" onclick="mostrarPaso('step-datos-electro', 'Electrodomésticos')" 
+class="flex flex-col items-center justify-center p-8 bg-slate-950 border border-white/5 rounded-3xl 
+hover:border-blue-500 hover:shadow-[0_0_30px_rgba(59,130,246,0.2)] transition-all group">
+                                  <div class="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center 
+mb-4 group-hover:scale-110 transition-transform">
+                                      <i data-lucide="tv" class="w-8 h-8 text-blue-500"></i>
+                                  </div>
+                                  <h5 class="text-white font-black text-lg">Venta Electro</h5>
+                                  <p class="text-slate-500 text-xs text-center mt-2">Electrodomésticos</p>
+                              </button>
+                              <div class="col-span-1 md:col-span-3 flex justify-end mt-4">
+                                  <button type="button" onclick="cancelarEdicion()" class="px-6 py-3 text-sm font-bold 
+text-slate-400 hover:text-slate-600 transition-colors">Cerrar</button>
+                              </div>
+                          </div>
+  
+                          <!-- STEP 2: TRÁMITES -->
+                          <div id="step-datos-tramite" class="hidden wizard-step animate-in fade-in 
+slide-in-from-right-8 duration-300">
+                              <div class="flex justify-between items-center mb-6">
+                                  <button type="button" onclick="mostrarPaso('step-selector')" class="flex 
+items-center text-slate-400 hover:text-white transition-colors text-sm font-bold"><i data-lucide="arrow-left" 
+class="w-4 h-4 mr-2"></i> Volver</button>
+                                  <span class="px-3 py-1 bg-orange-500/20 text-orange-500 text-xs font-black uppercase 
+tracking-widest rounded-lg">Trámite</span>
+                              </div>
+                              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                  <div class="space-y-4">
+                                      <h5 class="text-white font-black text-sm flex items-center"><i 
+data-lucide="file-text" class="w-4 h-4 mr-2 text-slate-400"></i>Detalles del Trámite</h5>
+                                      <select name="subTipoTramite" class="w-full p-4 bg-slate-950 border 
+border-white/5 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500 transition-all 
+text-white">
+                                          <option value="" disabled selected>Seleccione el Tipo de Trámite</option>
+                                          <option value="ARCA / AFIP">ARCA / AFIP</option>
+                                          <option value="Monotributo">Monotributo</option>
+                                          <option value="Devolución">Devolución</option>
+                                          <option value="Deducción Impuesto a las Ganancias">Deducción Impuesto a 
+las Ganancias</option>
+                                          <option value="Otro">Otro</option>
+                                      </select>
+                                      <select name="empresa" onchange="const c = 
+this.parentElement.querySelector('.legajo'); if(this.value==='Toyota') c.classList.remove('hidden'); else 
+{c.classList.add('hidden'); c.querySelector('input').value='';}" class="w-full p-4 bg-slate-950 border border-white/5 
+rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+                                          <option value="" disabled selected>Seleccione Empresa / Empleador</option>
+                                          <option value="Toyota">Toyota</option>
+                                          <option value="Casasco">Casasco</option>
+                                          <option value="Otra">Otra</option>
+                                      </select>
+                                      <div class="legajo hidden">
+                                          <input type="text" name="legajoToyota" placeholder="Legajo Toyota" 
+class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none 
+focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                      </div>
+                                      <div class="mt-4">
+                                          <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest 
+pl-1 mb-2">Monto Abonado Ahora (Opcional)</p>
+                                          <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" 
+name="pagoInicial" placeholder="Ej: 5000" class="w-full p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-2xl 
+text-sm font-bold text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500 transition-all 
+placeholder:text-emerald-700/50">
+                                      </div>
+                                  </div>
+                                  <div class="space-y-4">
+                                      <h5 class="text-white font-black text-sm flex items-center"><i 
+data-lucide="user" class="w-4 h-4 mr-2 text-slate-400"></i>Datos Personales</h5>
+                                      <input type="text" name="nombre" required placeholder="Nombre Completo" 
+class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none 
+focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                      <input type="tel" name="telefono" required oninput="this.value = 
+this.value.replace(/[^0-9]/g, '');" placeholder="WhatsApp (Solo números)" class="w-full p-4 bg-slate-950 border 
+border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 transition-all 
+placeholder:text-slate-600">
+                                      <input type="text" name="dni" placeholder="DNI (Opcional)" class="w-full p-4 
+bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 
+focus:ring-orange-500 transition-all placeholder:text-slate-600">
+                                      
+                                      <div class="pt-2">
+                                          <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest 
+pl-1 mb-2">Fecha de Ingreso</p>
+                                          <input type="date" name="fechaIngreso" class="w-full p-4 bg-slate-950 border 
+border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-orange-500 
+transition-all">
+                                          <p class="text-[9px] text-slate-600 pl-1 mt-1">Por defecto: hoy. Útil para 
+registros previos.</p>
+                                      </div>
+                                  </div>
+                              </div>
+                              <div class="flex justify-end gap-4 mt-8 pt-6 border-t border-white/10">
+                                  <button type="submit" class="px-12 py-4 bg-orange-500 text-white font-black 
+rounded-2xl hover:bg-orange-600 active:scale-95 transition-all uppercase tracking-widest text-xs">Guardar 
+Trámite</button>
+                              </div>
+                          </div>
+  
+                          <!-- STEP 2: PRÉSTAMOS -->
+                          <div id="step-datos-prestamo" class="hidden wizard-step animate-in fade-in 
+slide-in-from-right-8 duration-300">
+                              <div class="flex justify-between items-center mb-6">
+                                  <button type="button" onclick="mostrarPaso('step-selector')" class="flex 
+items-center text-slate-400 hover:text-white transition-colors text-sm font-bold"><i data-lucide="arrow-left" 
+class="w-4 h-4 mr-2"></i> Volver</button>
+                                  <span class="px-3 py-1 bg-emerald-500/20 text-emerald-500 text-xs font-black 
+uppercase tracking-widest rounded-lg">Préstamo</span>
+                              </div>
+                              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                  <div class="space-y-4">
+                                      <h5 class="text-white font-black text-sm flex items-center"><i 
+data-lucide="banknote" class="w-4 h-4 mr-2 text-slate-400"></i>Detalles Financieros</h5>
+                                      <div class="flex gap-2 p-1 bg-slate-950 rounded-2xl border border-white/5 mb-2">
+                                          <button type="button" onclick="setMoneda(this, 'ARS')" class="flex-1 py-2 
+text-[10px] font-black rounded-xl transition-all bg-emerald-500 text-white moneda-btn">ARS</button>
+                                          <button type="button" onclick="setMoneda(this, 'USD')" class="flex-1 py-2 
+text-[10px] font-black rounded-xl transition-all text-slate-500 hover:text-white moneda-btn">USD</button>
+                                          <input type="hidden" name="moneda" value="ARS">
+                                      </div>
+                                      <div class="grid grid-cols-2 gap-4">
+                                          <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); 
+this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="montoPrestado" placeholder="Monto 
+Prestado ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white 
+outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
+                                          <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); 
+this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="montoDevolver" placeholder="Monto a 
+Devolver ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white 
+outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
+                                      </div>
+                                      <input type="number" name="cuotasTotales" placeholder="Cantidad de Cuotas" 
+class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none 
+focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
+                                  </div>
+                                  <div class="space-y-4">
+                                      <h5 class="text-white font-black text-sm flex items-center"><i 
+data-lucide="user" class="w-4 h-4 mr-2 text-slate-400"></i>Datos Personales</h5>
+                                      <input type="text" name="nombre" required placeholder="Nombre Completo" 
+class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none 
+focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
+                                      <input type="tel" name="telefono" required oninput="this.value = 
+this.value.replace(/[^0-9]/g, '');" placeholder="WhatsApp (Solo números)" class="w-full p-4 bg-slate-950 border 
+border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 
+transition-all placeholder:text-slate-600">
+                                      <input type="text" name="dni" placeholder="DNI (Opcional)" class="w-full p-4 
+bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 
+focus:ring-emerald-500 transition-all placeholder:text-slate-600">
+                                      <input type="text" name="direccion" placeholder="Dirección (Opcional)" 
+class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none 
+focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-600">
+                                      <input type="text" name="garante" placeholder="Garante (Opcional)" class="w-full 
+p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 
+focus:ring-emerald-500 transition-all placeholder:text-slate-600">
+                                      
+                                      <div class="grid grid-cols-2 gap-4 pt-2">
+                                          <div>
+                                              <p class="text-[10px] font-black text-slate-500 uppercase 
+tracking-widest pl-1 mb-2">Ingreso</p>
+                                              <input type="date" name="fechaIngreso" class="w-full p-4 bg-slate-950 
+border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 
+transition-all">
+                                              <p class="text-[8px] text-slate-600 mt-1">Default: hoy</p>
+                                          </div>
+                                          <div>
+                                              <p class="text-[10px] font-black text-slate-500 uppercase 
+tracking-widest pl-1 mb-2">1° Vencimiento</p>
+                                              <input type="date" name="fechaVencimiento" class="w-full p-4 
+bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 
+focus:ring-emerald-500 transition-all">
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                              <div class="flex justify-end gap-4 mt-8 pt-6 border-t border-white/10">
+                                  <button type="submit" class="px-12 py-4 bg-emerald-500 text-white font-black 
+rounded-2xl hover:bg-emerald-600 active:scale-95 transition-all uppercase tracking-widest text-xs">Guardar 
+Préstamo</button>
+                              </div>
+                          </div>
+  
+                          <!-- STEP 2: ELECTRODOMÉSTICOS -->
+                          <div id="step-datos-electro" class="hidden wizard-step animate-in fade-in 
+slide-in-from-right-8 duration-300">
+                              <div class="flex justify-between items-center mb-6">
+                                  <button type="button" onclick="mostrarPaso('step-selector')" class="flex 
+items-center text-slate-400 hover:text-white transition-colors text-sm font-bold"><i data-lucide="arrow-left" 
+class="w-4 h-4 mr-2"></i> Volver</button>
+                                  <span class="px-3 py-1 bg-blue-500/20 text-blue-500 text-xs font-black uppercase 
+tracking-widest rounded-lg">Electrodomésticos</span>
+                              </div>
+                              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                  <div class="space-y-4">
+                                      <h5 class="text-white font-black text-sm flex items-center"><i data-lucide="tv" 
+class="w-4 h-4 mr-2 text-slate-400"></i>Detalles del Producto</h5>
+                                      <div class="flex gap-2 p-1 bg-slate-950 rounded-2xl border border-white/5 mb-2">
+                                          <button type="button" onclick="setMoneda(this, 'ARS')" class="flex-1 py-2 
+text-[10px] font-black rounded-xl transition-all bg-blue-500 text-white moneda-btn">ARS</button>
+                                          <button type="button" onclick="setMoneda(this, 'USD')" class="flex-1 py-2 
+text-[10px] font-black rounded-xl transition-all text-slate-500 hover:text-white moneda-btn">USD</button>
+                                          <input type="hidden" name="moneda" value="ARS">
+                                      </div>
+                                      <input type="text" name="producto" placeholder="Producto/Modelo (Ej: Heladera 
+Patrick)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none 
+focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                      <div class="grid grid-cols-2 gap-4">
+                                          <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); 
+this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="costoCompra" placeholder="Costo 
+Compra ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none 
+focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                          <input type="text" inputmode="numeric" oninput="maskInputCurrency(event); 
+this.style.borderColor = (unmaskCurrency(this.value) > 0) ? '' : '#ef4444';" name="precioVenta" placeholder="Precio 
+Venta ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none 
+focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                      </div>
+                                      <input type="number" name="cuotasTotales" placeholder="Cantidad de Cuotas" 
+class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none 
+focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                  </div>
+                                  <div class="space-y-4">
+                                      <h5 class="text-white font-black text-sm flex items-center"><i 
+data-lucide="user" class="w-4 h-4 mr-2 text-slate-400"></i>Datos Personales</h5>
+                                      <input type="text" name="nombre" required placeholder="Nombre Completo" 
+class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none 
+focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                      <input type="tel" name="telefono" required oninput="this.value = 
+this.value.replace(/[^0-9]/g, '');" placeholder="WhatsApp (Solo números)" class="w-full p-4 bg-slate-950 border 
+border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all 
+placeholder:text-slate-600">
+                                      <input type="text" name="dni" placeholder="DNI (Opcional)" class="w-full p-4 
+bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 
+focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                      <input type="text" name="direccion" placeholder="Dirección (Opcional)" 
+class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none 
+focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                      <input type="text" name="garante" placeholder="Garante (Opcional)" class="w-full 
+p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 
+focus:ring-blue-500 transition-all placeholder:text-slate-600">
+                                      
+                                      <div class="grid grid-cols-2 gap-4 pt-2">
+                                          <div>
+                                              <p class="text-[10px] font-black text-slate-500 uppercase 
+tracking-widest pl-1 mb-2">Ingreso</p>
+                                              <input type="date" name="fechaIngreso" class="w-full p-4 bg-slate-950 
+border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 
+transition-all">
+                                          </div>
+                                          <div>
+                                              <p class="text-[10px] font-black text-slate-500 uppercase 
+tracking-widest pl-1 mb-2">1° Vencimiento</p>
+                                              <input type="date" name="fechaVencimiento" class="w-full p-4 
+bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 
+focus:ring-blue-500 transition-all">
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                              <div class="flex justify-end gap-4 mt-8 pt-6 border-t border-white/10">
+                                  <button type="submit" class="px-12 py-4 bg-blue-500 text-white font-black 
+rounded-2xl hover:bg-blue-600 active:scale-95 transition-all uppercase tracking-widest text-xs">Guardar 
+Electro</button>
+                              </div>
+                          </div>
+  
+                      </form>
+                  </div>
+  
+                  <div class="bg-slate-900 rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+                      <!-- Table Header -->
+                      <div class="grid grid-cols-12 gap-4 px-8 py-4 bg-slate-950 border-b border-white/5">
+                          <div class="col-span-5 text-[10px] font-black text-slate-500 uppercase 
+tracking-widest">Cliente / Trámite</div>
+                          <div class="col-span-4 text-[10px] font-black text-slate-500 uppercase tracking-widest 
+text-center">Estado</div>
+                          <div class="col-span-3 text-[10px] font-black text-slate-500 uppercase tracking-widest 
+text-right">Acciones</div>
+                      </div>
+                      <!-- Fixed Height List with Scroll -->
+                      <div id="listaClientes" class="max-h-[560px] overflow-y-auto overflow-x-hidden space-y-2 
+p-2"></div>
+                  </div>
+              </section>
+  
+              <!-- TAB: AGENDA -->
+              <section id="tab-agenda" class="tab-content space-y-6">
+                  <!-- Header -->
+                  <div class="flex flex-col md:flex-row gap-6 justify-between items-center bg-slate-900/50 
+backdrop-blur-xl border border-white/5 p-6 rounded-[2.5rem] shadow-sm px-8">
+                      <h3 class="text-xl font-black text-white tracking-tight">Centro de Operaciones</h3>
+                      <button onclick="openAgendaModal(null, null)" class="w-full md:w-auto bg-violet-600 text-white 
+px-8 py-3 rounded-2xl text-xs font-black hover:bg-violet-700 transition-all uppercase tracking-widest flex 
+items-center justify-center">
+                          <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Agendar Trámite
+                      </button>
+                  </div>
+  
+                  <!-- Interactive Calendar Container -->
+                  <div id="agenda-calendar-container" class="max-w-xl mx-auto">
+                      <!-- Dinámico: renderCalendar() -->
+                  </div>
+  
+                  <!-- Recordatorios Detalle -->
+                  <div class="space-y-4">
+                      <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pl-2">Vencimientos 
+Próximos</h4>
+                      <div id="agendaItemsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                  </div>
+              </section>
+  
+              <!-- TAB: MÉTRICAS & HERRAMIENTAS -->
+              <section id="tab-metricas" class="tab-content space-y-6 pb-10">
+  
+                  <!-- Bloque Trámites -->
+                  <div class="border rounded-3xl p-6 md:p-8" style="background: var(--bg-card); border-color: 
+var(--border-color)">
+                      <h3 class="text-xs font-black uppercase tracking-[0.2em] mb-5 flex items-center gap-2" 
+style="color: var(--text-muted)">
+                          <span class="bg-indigo-500/10 text-indigo-400 w-7 h-7 rounded-lg flex items-center 
+justify-center text-base">⚡</span>
+                          Trámites
+                      </h3>
+                      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <!-- Hoy: tarjeta destacada con gradiente, SIN sombra -->
+                          <div class="metrics-grid-item bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-2xl">
+                              <p class="text-[10px] font-black text-white/50 uppercase tracking-widest mb-3">Hoy</p>
+                              <h4 id="val-tramites-hoy" class="text-3xl font-black text-white sensitive-data">$ 0</h4>
+                          </div>
+                          <!-- Mes -->
+                          <div class="metrics-grid-item p-6 rounded-2xl border" style="background: var(--bg-app); 
+border-color: var(--border-color)">
+                              <div class="flex items-center justify-between mb-3">
+                                  <p class="text-[10px] font-black uppercase tracking-widest" style="color: 
+var(--text-muted)">Recaudación Mes</p>
+                                  <div class="w-7 h-7 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                                      <i data-lucide="calendar" class="w-4 h-4 text-blue-400"></i>
+                                  </div>
+                              </div>
+                              <h4 id="val-tramites-mes" class="text-2xl font-black sensitive-data" style="color: 
+var(--text-primary)">$ 0</h4>
+                          </div>
+                          <!-- Histórica -->
+                          <div class="metrics-grid-item p-6 rounded-2xl border" style="background: var(--bg-app); 
+border-color: var(--border-color)">
+                              <div class="flex items-center justify-between mb-3">
+                                  <p class="text-[10px] font-black uppercase tracking-widest" style="color: 
+var(--text-muted)">Ganancia Histórica</p>
+                                  <div class="w-7 h-7 bg-emerald-500/10 rounded-lg flex items-center justify-center">
+                                      <i data-lucide="award" class="w-4 h-4 text-emerald-400"></i>
+                                  </div>
+                              </div>
+                              <h4 id="val-tramites-hist" class="text-2xl font-black sensitive-data" style="color: 
+var(--text-primary)">$ 0</h4>
+                          </div>
+                      </div>
+                  </div>
+  
+                  <!-- Bloque Préstamos -->
+                  <div class="border rounded-3xl p-6 md:p-8" style="background: var(--bg-card); border-color: 
+var(--border-color)">
+                      <h3 class="text-xs font-black uppercase tracking-[0.2em] mb-5 flex items-center gap-2" 
+style="color: var(--text-muted)">
+                          <span class="bg-emerald-600/15 text-emerald-400 w-7 h-7 rounded-lg flex items-center 
+justify-center text-base">💵</span>
+                          Préstamos
+                      </h3>
+                      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div class="metrics-grid-item p-6 rounded-2xl border" style="background: var(--bg-app); 
+border-color: var(--border-color)">
+                              <div class="flex items-center justify-between mb-3">
+                                  <p class="text-[10px] font-black uppercase tracking-widest" style="color: 
+var(--text-muted)">Capital en Calle</p>
+                                  <div class="w-7 h-7 bg-emerald-600/15 rounded-lg flex items-center justify-center">
+                                      <i data-lucide="building" class="w-4 h-4 text-emerald-400"></i>
+                                  </div>
+                              </div>
+                              <h4 id="val-prestamos-calle" class="text-2xl font-black sensitive-data" style="color: 
+var(--text-primary)">$ 0</h4>
+                          </div>
+                          <div class="metrics-grid-item p-6 rounded-2xl border" style="background: var(--bg-app); 
+border-color: var(--border-color)">
+                              <div class="flex items-center justify-between mb-3">
+                                  <p class="text-[10px] font-black uppercase tracking-widest" style="color: 
+var(--text-muted)">Ganancia Pendiente</p>
+                                  <div class="w-7 h-7 bg-emerald-600/15 rounded-lg flex items-center justify-center">
+                                      <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i>
+                                  </div>
+                              </div>
+                              <h4 id="val-prestamos-pend" class="text-2xl font-black sensitive-data" style="color: 
+var(--text-primary)">$ 0</h4>
+                          </div>
+                          <div class="metrics-grid-item p-6 rounded-2xl border" style="background: var(--bg-app); 
+border-color: var(--border-color)">
+                              <div class="flex items-center justify-between mb-3">
+                                  <p class="text-[10px] font-black uppercase tracking-widest" style="color: 
+var(--text-muted)">Ganancia Realizada</p>
+                                  <div class="w-7 h-7 bg-emerald-500/10 rounded-lg flex items-center justify-center">
+                                      <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+                                  </div>
+                              </div>
+                              <h4 id="val-prestamos-real" class="text-2xl font-black text-emerald-400 
+sensitive-data">$ 0</h4>
+                          </div>
+                      </div>
+                  </div>
+  
+                  <!-- Bloque Electrodomésticos -->
+                  <div class="border rounded-3xl p-6 md:p-8" style="background: var(--bg-card); border-color: 
+var(--border-color)">
+                      <h3 class="text-xs font-black uppercase tracking-[0.2em] mb-5 flex items-center gap-2" 
+style="color: var(--text-muted)">
+                          <span class="bg-amber-500/10 text-amber-400 w-7 h-7 rounded-lg flex items-center 
+justify-center text-base">📦</span>
+                          Electrodomésticos
+                      </h3>
+                      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div class="metrics-grid-item p-6 rounded-2xl border" style="background: var(--bg-app); 
+border-color: var(--border-color)">
+                              <div class="flex items-center justify-between mb-3">
+                                  <p class="text-[10px] font-black uppercase tracking-widest" style="color: 
+var(--text-muted)">Capital en Calle</p>
+                                  <div class="w-7 h-7 bg-amber-500/10 rounded-lg flex items-center justify-center">
+                                      <i data-lucide="building" class="w-4 h-4 text-amber-400"></i>
+                                  </div>
+                              </div>
+                              <h4 id="val-electro-calle" class="text-2xl font-black sensitive-data" style="color: 
+var(--text-primary)">$ 0</h4>
+                          </div>
+                          <div class="metrics-grid-item p-6 rounded-2xl border" style="background: var(--bg-app); 
+border-color: var(--border-color)">
+                              <div class="flex items-center justify-between mb-3">
+                                  <p class="text-[10px] font-black uppercase tracking-widest" style="color: 
+var(--text-muted)">Ganancia Pendiente</p>
+                                  <div class="w-7 h-7 bg-violet-500/10 rounded-lg flex items-center justify-center">
+                                      <i data-lucide="trending-up" class="w-4 h-4 text-violet-400"></i>
+                                  </div>
+                              </div>
+                              <h4 id="val-electro-pend" class="text-2xl font-black sensitive-data" style="color: 
+var(--text-primary)">$ 0</h4>
+                          </div>
+                          <div class="metrics-grid-item p-6 rounded-2xl border" style="background: var(--bg-app); 
+border-color: var(--border-color)">
+                              <div class="flex items-center justify-between mb-3">
+                                  <p class="text-[10px] font-black uppercase tracking-widest" style="color: 
+var(--text-muted)">Ganancia Realizada</p>
+                                  <div class="w-7 h-7 bg-emerald-500/10 rounded-lg flex items-center justify-center">
+                                      <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+                                  </div>
+                              </div>
+                              <h4 id="val-electro-real" class="text-2xl font-black text-emerald-400 sensitive-data">$ 
+0</h4>
+                          </div>
+                      </div>
+                  </div>
+  
+                  <!-- Bloque Historial Mensual -->
+                  <div class="border rounded-3xl p-6 md:p-8" style="background: var(--bg-card); border-color: 
+var(--border-color)">
+                      <h3 class="text-xs font-black uppercase tracking-[0.2em] mb-5 flex items-center gap-2" 
+style="color: var(--text-muted)">
+                          <span class="bg-emerald-500/10 text-emerald-400 w-7 h-7 rounded-lg flex items-center 
+justify-center text-base">📈</span>
+                          Historial de Ganancias Mensuales
+                      </h3>
+                      <div id="historialMensualContainer" class="space-y-3">
+                          <div class="text-center font-bold py-4" style="color: var(--text-muted)">Cargando 
+historial...</div>
+                      </div>
+                  </div>
+              </section>
+  
+  
+              <!-- TAB: WHATSAPP -->
+              <section id="tab-whatsapp" class="tab-content space-y-6">
+                  <div class="bg-slate-900 border border-white/10 p-6 md:p-10 rounded-[2.5rem] shadow-2xl">
+                      <h3 class="text-xl font-black text-white flex items-center mb-6">
+                          <i data-lucide="message-square" class="w-6 h-6 mr-3 text-emerald-400"></i> Gestor de 
+Plantillas
+                      </h3>
+                      
+                      <form id="templateForm" class="space-y-6 mb-10 bg-slate-950/50 p-6 rounded-3xl border 
+border-white/5">
+                          <input type="hidden" id="formTemplateId">
+                          <div>
+                              <input type="text" id="tplTitulo" required placeholder="T�tulo (ej: Recordatorio 
+Monotributo)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white 
+outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-slate-600">
+                          </div>
+                          <div>
+                              <textarea id="tplCuerpo" required rows="4" placeholder="Escrib� el mensaje acá..." 
+class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none 
+focus:ring-2 focus:ring-emerald-500 placeholder:text-slate-600"></textarea>
+                              <div class="mt-2 text-[10px] font-bold text-slate-500 flex flex-wrap gap-2 uppercase 
+tracking-widest leading-loose">
+                                  <span>Etiquetas válidas:</span>
+                                  <span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded cursor-pointer 
+hover:bg-emerald-500/20 transition-colors" onclick="insertTplTag('{{nombre}}')">{{nombre}}</span>
+                                  <span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded cursor-pointer 
+hover:bg-emerald-500/20 transition-colors" onclick="insertTplTag('{{monto}}')">{{monto}}</span>
+                                  <span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded cursor-pointer 
+hover:bg-emerald-500/20 transition-colors" onclick="insertTplTag('{{vencimiento}}')">{{vencimiento}}</span>
+                                  <span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded cursor-pointer 
+hover:bg-emerald-500/20 transition-colors" onclick="insertTplTag('{{tramite}}')">{{tramite}}</span>
+                              </div>
+                          </div>
+                          <div class="flex justify-end gap-4">
+                              <button type="button" onclick="resetTemplateForm()" class="px-6 py-4 font-bold 
+text-slate-500 hover:text-white">Cancelar</button>
+                              <button type="submit" class="px-10 py-4 bg-emerald-500 text-white font-black rounded-2xl 
+hover:bg-emerald-600 uppercase tracking-widest text-xs transition-all flex items-center">
+                                  <i data-lucide="save" class="w-4 h-4 mr-2"></i> Guardar
+                              </button>
+                          </div>
+                      </form>
+  
+                      <div class="space-y-4">
+                          <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Plantillas 
+Guardadas</h4>
+                          <div id="templatesContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                      </div>
+                  </div>
+              </section>
+          </div>
+  
+          <!-- Modal: Detalle Diario -->
+          <div id="modalDayDetails" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-[110] flex items-center 
+justify-center p-4">
+              <div class="bg-slate-900 w-full max-w-lg rounded-[2.5rem] border border-white/10 shadow-2xl 
+overflow-hidden animate-in zoom-in duration-300">
+                  <div class="p-8 border-b border-white/5 flex justify-between items-center bg-slate-950/50">
+                      <div>
+                          <p class="text-[9px] font-black text-violet-400 uppercase tracking-[0.2em] mb-1">Agenda del 
+d�a</p>
+                          <h3 id="modalDayTitle" class="text-lg font-black text-white capitalize">Viernes, 21 de 
+Mayo</h3>
+                      </div>
+                      <button onclick="closeDayDetailsModal()" class="w-10 h-10 bg-white/5 hover:bg-rose-500/10 
+text-slate-400 hover:text-rose-500 rounded-xl flex items-center justify-center transition-all">
+                          <i data-lucide="x" class="w-5 h-5"></i>
+                      </button>
+                  </div>
+                  <div id="dayDetailsList" class="p-6 space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
+                      <!-- Dinámico -->
+                  </div>
+                  <div class="p-6 bg-slate-950/50 border-t border-white/5 flex justify-end">
+                      <button onclick="closeDayDetailsModal()" class="px-6 py-2.5 bg-white/5 text-slate-400 rounded-xl 
+text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">
+                          Cerrar
+                      </button>
+                  </div>
+              </div>
+          </div>
+  
+          <div id="modalAgenda" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center 
+justify-center p-4">
+              <div class="bg-slate-900 w-full max-w-md rounded-[2.5rem] p-10 border border-white/10 shadow-2xl">
+                  <h4 class="text-2xl font-black text-white mb-2">Agendar Vencimiento</h4>
+                  <p id="modalClientName" class="text-xs text-slate-500 font-bold uppercase tracking-widest 
+mb-8">Seleccionar Cliente</p>
+                  <form id="agendaForm" class="space-y-6">
+                      <input type="hidden" name="clienteId" id="agenda-clienteId">
+                      <div id="clientSelectContainer">
+                          <select id="agenda-client-select" name="clienteIdSelect" class="w-full p-4 bg-slate-950 
+border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500"></select>
+                      </div>
+                      <div>
+                          <input type="text" name="titulo" required placeholder="T�tulo del trámite" class="w-full 
+p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 
+focus:ring-blue-500 placeholder:text-slate-600">
+                      </div>
+                      <div>
+                          <input type="date" name="fecha" required class="w-full p-4 bg-slate-950 border 
+border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
+                      </div>
+                      <div id="honorariosContainer">
+                          <input type="text" id="agenda-honorarios" inputmode="numeric" 
+oninput="maskInputCurrency(event)" name="honorarios" placeholder="Honorarios a Cobrar ($)" class="w-full p-4 
+bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 
+focus:ring-blue-500 placeholder:text-slate-600">
+                      </div>
+                      <div class="flex gap-4 pt-4">
+                          <button type="button" onclick="closeAgendaModal()" class="flex-1 font-bold 
+text-slate-500">Cancelar</button>
+                          <button type="submit" class="flex-[2] py-4 bg-blue-600 text-white font-black rounded-2xl 
+hover:bg-blue-700 transition-all">AGENDAR</button>
+                      </div>
+                  </form>
+              </div>
+          </div>
+  
+          <!-- MODAL REGISTRAR PAGO -->
+          <div id="modalPago" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center 
+justify-center p-4">
+              <div class="bg-slate-900 w-full max-w-md rounded-[2.5rem] p-10 border border-white/10 shadow-2xl">
+                  <h4 class="text-2xl font-black text-white mb-2">Registrar Pago</h4>
+                  <p id="modalPagoName" class="text-xs text-slate-500 font-bold uppercase tracking-widest mb-8">Nombre 
+Cliente</p>
+                  <form id="pagoForm" class="space-y-6">
+                      <input type="hidden" name="clienteId" id="pago-clienteId">
+                      <input type="hidden" name="prestamoId" id="pago-prestamoId">
+                      <div>
+                          <div class="flex justify-between items-center mb-2">
+                              <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest">Monto a 
+Abonar</h4>
+                              <!-- Botón de Recargo (Audit v3.2.1 - Condicional) -->
+                              <button type="button" id="btnAplicarRecargo" onclick="aplicarRecargo15()" class="hidden 
+px-3 py-1.5 bg-rose-500 text-white text-[10px] font-black rounded-lg uppercase tracking-widest hover:bg-rose-600 
+transition-all flex items-center shadow-lg shadow-rose-500/20">
+                                  <i data-lucide="zap" class="w-3 h-3 mr-1"></i> +15% Mora
+                              </button>
+                          </div>
+                          <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="monto" 
+id="pago-monto" required placeholder="Ej: 50000" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl 
+text-2xl font-black text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-slate-700">
+                      </div>
+                      <div>
+                          <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block 
+mb-2">Método de Pago / Detalle</label>
+                          <input type="text" name="metodo" id="pago-metodo" required placeholder="Ej: MercadoPago, 
+Efectivo..." class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white 
+outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-slate-600">
+                      </div>
+                      <div>
+                          <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block 
+mb-2">Fecha del Pago (Opcional - para pagos atrasados)</label>
+                          <input type="date" name="fechaPago" id="pago-fechaPago" class="w-full p-4 bg-slate-950 
+border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500">
+                          <p class="text-[10px] text-slate-600 pl-1 mt-1">Dejalo vacío para usar la fecha de hoy.</p>
+                      </div>
+                      <p class="text-xs text-slate-500 italic block -mt-2">Se sumará al total pagado y renovará el 
+vencimiento por 30 d�as.</p>
+                      <div class="flex gap-4 pt-4">
+                          <button type="button" onclick="closePagoModal()" class="flex-1 font-bold 
+text-slate-500">Cancelar</button>
+                          <button type="submit" class="flex-[2] py-4 bg-emerald-500 text-white font-black rounded-2xl 
+hover:bg-emerald-600 transition-all">CONFIRMAR PAGO</button>
+                      </div>
+                  </form>
+              </div>
+          </div>
+  
+          <!-- MODAL NUEVO SERVICIO / OPERACION -->
+          <div id="modalNuevaOperacion" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex 
+items-center justify-center p-4">
+              <div class="bg-slate-900 w-full max-w-md rounded-[2.5rem] p-10 border border-white/10 shadow-2xl 
+overflow-y-auto max-h-[90vh] custom-scrollbar">
+                  <h4 class="text-2xl font-black text-white mb-2">Nuevo Servicio</h4>
+                  <p id="modalNuevaOperacionName" class="text-xs text-slate-500 font-bold uppercase tracking-widest 
+mb-8">Cliente</p>
+                  <form id="nuevaOperacionForm" class="space-y-6">
+                      <input type="hidden" name="clienteId" id="no-clienteId">
+                      
+                      <div>
+                          <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block 
+mb-2">Tipo de Servicio</label>
+                          <select name="tipo" id="no-tipo" required onchange="toggleNuevaOperacionCampos()" 
+class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none 
+focus:ring-2 focus:ring-blue-500">
+                              <option value="Préstamos">Préstamo</option>
+                              <option value="Electrodomésticos">Electrodoméstico</option>
+                              <option value="Trámites">Trámite</option>
+                          </select>
+                      </div>
+  
+                      <div id="no-moneda-container" class="flex gap-2 p-1 bg-slate-950 rounded-2xl border 
+border-white/5">
+                          <button type="button" onclick="setMoneda(this, 'ARS')" class="flex-1 py-2 text-[10px] 
+font-black rounded-xl transition-all bg-emerald-500 text-white moneda-btn">ARS</button>
+                          <button type="button" onclick="setMoneda(this, 'USD')" class="flex-1 py-2 text-[10px] 
+font-black rounded-xl transition-all text-slate-500 hover:text-white moneda-btn">USD</button>
+                          <input type="hidden" name="moneda" id="no-moneda" value="ARS">
+                      </div>
+  
+                      <!-- Campos Préstamo -->
+                      <div id="no-campos-prestamo" class="grid grid-cols-2 gap-4">
+                          <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" 
+name="montoPrestado" id="no-montoPrestado" placeholder="Capital Prestado ($)" class="w-full p-4 bg-slate-950 border 
+border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
+                          <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" 
+name="montoDevolver" id="no-montoDevolver" placeholder="A Devolver ($)" class="w-full p-4 bg-slate-950 border 
+border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
+                      </div>
+  
+                      <!-- Campos Electro -->
+                      <div id="no-campos-electro" class="hidden space-y-4">
+                          <input type="text" name="producto" id="no-producto" placeholder="Producto vendido" 
+class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none 
+focus:ring-2 focus:ring-amber-500">
+                          <div class="grid grid-cols-2 gap-4">
+                              <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" 
+name="costoCompra" id="no-costoCompra" placeholder="Costo ($)" class="w-full p-4 bg-slate-950 border border-white/5 
+rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-amber-500">
+                              <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" 
+name="precioVenta" id="no-precioVenta" placeholder="Precio Venta ($)" class="w-full p-4 bg-slate-950 border 
+border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-amber-500">
+                          </div>
+                      </div>
+  
+                      <!-- Campos Trámite -->
+                      <div id="no-campos-tramite" class="hidden space-y-4">
+                          <input type="text" name="tramite" id="no-tramite" placeholder="Nombre del Trámite" 
+class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none 
+focus:ring-2 focus:ring-violet-500">
+                          <input type="text" name="subTipoTramite" id="no-subTipoTramite" placeholder="Detalle 
+adicional" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none 
+focus:ring-2 focus:ring-violet-500">
+                          <input type="text" inputmode="numeric" oninput="maskInputCurrency(event)" name="honorarios" 
+id="no-honorarios" placeholder="Honorarios ($)" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl 
+text-sm font-bold text-white outline-none focus:ring-2 focus:ring-violet-500">
+                      </div>
+  
+                      <!-- Cuotas (Común para Préstamos y Electro) -->
+                      <div id="no-campos-cuotas" class="hidden">
+                          <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 
+px-1">Cantidad de Cuotas</label>
+                          <input type="number" name="cuotasTotales" id="no-cuotasTotales" placeholder="Ej: 1" 
+value="1" min="1" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white 
+outline-none focus:ring-2 focus:ring-blue-500">
+                      </div>
+  
+                      <div>
+                          <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 
+px-1">Primer Vencimiento (Opcional)</label>
+                          <input type="date" name="fechaVencimiento" id="no-fechaVencimiento" class="w-full p-4 
+bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 
+focus:ring-blue-500">
+                      </div>
+  
+                      <div class="flex gap-4 pt-4">
+                          <button type="button" onclick="closeNuevaOperacionModal()" class="flex-1 font-bold 
+text-slate-500">Cancelar</button>
+                          <button type="submit" class="flex-[2] py-4 bg-blue-600 text-white font-black rounded-2xl 
+hover:bg-blue-700 transition-all">CREAR</button>
+                      </div>
+                  </form>
+              </div>
+          </div>
+  
+  
+          <!-- MODAL COMPROBANTE (TICKET DIGITAL) -->
+          <div id="modalComprobante" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex 
+items-center justify-center p-4">
+              <div class="bg-slate-900 w-full max-w-sm rounded-[2rem] p-8 border border-white/10 shadow-2xl 
+overflow-hidden relative">
+                  <!-- Decoración Ticket superior -->
+                  <div class="absolute -top-4 -left-4 w-8 h-8 bg-black/80 rounded-full"></div>
+                  <div class="absolute -top-4 -right-4 w-8 h-8 bg-black/80 rounded-full"></div>
+                  
+                  <div class="text-center mb-6 pb-6 border-b border-dashed border-white/20">
+                      <h3 class="text-xl font-black text-white tracking-widest uppercase mb-1">ZENTRA</h3>
+                      <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]">Comprobante de 
+Pago</p>
+                      <p id="comp-cliente" class="text-sm font-black text-emerald-400 mt-4 leading-tight"></p>
+                      <p id="comp-categoria" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest 
+mt-1"></p>
+                  </div>
+  
+                  <div class="w-full mb-6">
+                      <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Historial 
+Escalonado</p>
+                      <div class="max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                          <table class="w-full">
+                              <tbody id="comp-historial">
+                                  <!-- Filas dinámicas -->
+                              </tbody>
+                          </table>
+                      </div>
+                  </div>
+  
+                  <div class="mt-4 pt-4 border-t border-dashed border-white/20 flex justify-between items-end">
+                      <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Pagado</p>
+                      <p id="comp-total" class="text-xl font-black text-white"></p>
+                  </div>
+                  
+                  <!-- Decoración Ticket inferior -->
+                  <div class="absolute -bottom-4 -left-4 w-8 h-8 bg-black/80 rounded-full"></div>
+                  <div class="absolute -bottom-4 -right-4 w-8 h-8 bg-black/80 rounded-full"></div>
+  
+                  <button onclick="cerrarComprobanteModal()" class="w-full mt-8 py-4 bg-slate-800 text-white 
+font-black rounded-xl hover:bg-slate-700 transition-all uppercase tracking-widest text-xs border 
+border-white/5">CERRAR TICKET</button>
+              </div>
+          </div>
+  
+          <!-- NOTIFICACIÓN -->
+          <div id="toast" class="hidden fixed bottom-24 right-6 bg-slate-900 text-white px-8 py-4 rounded-2xl 
+shadow-2xl z-[100] font-bold text-sm"></div>
+  
+          <!-- NAVEGACIÓN INFERIOR (Mobile) -->
+          <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-xl border-t 
+border-white/5 flex justify-around p-4">
+              <button onclick="switchTab('inicio')" id="mobile-nav-inicio" class="flex flex-col items-center space-y-1 
+active-nav-mobile">
+                  <i data-lucide="home" class="w-6 h-6"></i>
+                  <span class="text-[10px] font-black uppercase">Inicio</span>
+              </button>
+              <button onclick="switchTab('clientes')" id="mobile-nav-clientes" class="flex flex-col items-center 
+space-y-1 text-slate-500">
+                  <i data-lucide="users" class="w-6 h-6"></i>
+                  <span class="text-[10px] font-black uppercase">Clientes</span>
+              </button>
+              <button onclick="switchTab('agenda')" id="mobile-nav-agenda" class="flex flex-col items-center space-y-1 
+text-slate-500">
+                  <i data-lucide="calendar" class="w-6 h-6"></i>
+                  <span class="text-[10px] font-black uppercase">Agenda</span>
+              </button>
+              <button onclick="switchTab('calc')" id="mobile-nav-calc" class="flex flex-col items-center space-y-1 
+text-slate-500">
+                  <i data-lucide="calculator" class="w-6 h-6"></i>
+                  <span class="text-[10px] font-black uppercase">Calc</span>
+              </button>
+              <button onclick="switchTab('metricas')" id="mobile-nav-metricas" class="flex flex-col items-center 
+space-y-1 text-slate-500">
+                  <i data-lucide="bar-chart-2" class="w-6 h-6"></i>
+                  <span class="text-[10px] font-black uppercase">Métricas</span>
+              </button>
+              <button onclick="switchTab('whatsapp')" id="mobile-nav-whatsapp" class="flex flex-col items-center 
+space-y-1 text-slate-500">
+                  <i data-lucide="message-square" class="w-6 h-6"></i>
+                  <span class="text-[10px] font-black uppercase">WApp</span>
+              </button>
+              <!-- Logout mobile: siempre visible en bottom nav -->
+              <button onclick="logout()" class="flex flex-col items-center space-y-1 text-rose-500/70 
+hover:text-rose-400 transition-colors">
+                  <i data-lucide="log-out" class="w-6 h-6"></i>
+                  <span class="text-[10px] font-black uppercase">Salir</span>
+              </button>
+          </nav>
+      </main>
+  
+
+          console.log('%c Zentra v3.5.0: Comprobante de Pago Escalonado %c', 'background: #10b981; color: #fff; 
+font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
+          let allClientes = [];
+          let allRecordatorios = [];
+          let editingClientId = null;
+          let morososExpanded = false;
+          let personalesExpanded = true; // Jony: Nuevo estado para acordeón
+          let allTemplates = [];
+          let filtroCategoriaActual = 'Todos';
+          
+          // --- VARIABLES DE PAGINACIÓN (Audit v2) ---
+          let currentPage = 1;
+          let totalPages = 1;
+          let isLoadingMore = false;
+          let hasMore = true;
+  
+          // --- FUNCIONES UTILITARIAS ---
+          function escapeHTML(str) {
+              if (!str) return '';
+              return String(str)
+                  .replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;")
+                  .replace(/"/g, "&quot;")
+                  .replace(/'/g, "&#039;");
+          }
+  
+          function generarLinkWhatsApp(telefono, mensaje = '') {
+              if (!telefono) return '#';
+              // Limpieza total: solo números
+              let num = telefono.replace(/[^\d]/g, '');
+              // Si es Argentina y no tiene el prefijo de país, agregar 549 (formato internacional para móvil)
+              // Un número de Argentina típico tiene 10 dígitos (cod area + numero)
+              if (num.length >= 10 && !num.startsWith('54')) {
+                  num = '549' + num;
+              }
+              const base = `https://wa.me/${num}`;
+              return mensaje ? `${base}?text=${encodeURIComponent(mensaje)}` : base;
+          }
+  
+          let calendarView = new Date(); // Fecha actual para la vista del calendario
+          let isPrivacyMode = localStorage.getItem('jony_privacy') === 'true';
+  
+          function togglePrivacy() {
+              isPrivacyMode = !isPrivacyMode;
+              localStorage.setItem('jony_privacy', isPrivacyMode);
+              syncPrivacyUI();
+          }
+  
+          function syncPrivacyUI() {
+              const state = localStorage.getItem('jony_privacy') === 'true';
+              isPrivacyMode = state; // Sincronizar variable global
+              
+              // Aplicar al body (Selector indestructible)
+              if (state) {
+                  document.body.setAttribute('data-privacy-hidden', 'true');
+                  document.documentElement.classList.add('privacy-mode');
+              } else {
+                  document.body.removeAttribute('data-privacy-hidden');
+                  document.documentElement.classList.remove('privacy-mode');
+              }
+  
+              // Sincronizar iconos
+              const iconsEye = [document.getElementById('icon-eye-desc'), document.getElementById('icon-eye-mob')];
+              const iconsEyeOff = [document.getElementById('icon-eye-off-desc'), 
+document.getElementById('icon-eye-off-mob')];
+              
+              iconsEye.forEach(i => i?.classList.toggle('hidden', state));
+              iconsEyeOff.forEach(i => i?.classList.toggle('hidden', !state));
+  
+              if (window.lucide) lucide.createIcons();
+          }
+  
+          // Watchdog de Privacidad: Verifica sincronización cada 30 segundos
+          setInterval(syncPrivacyUI, 30000);
+  
+          document.addEventListener('click', (e) => {
+              if (e.target.closest('.btn-privacy-toggle')) {
+                  togglePrivacy();
+              }
+          });
+  
+          // ========================
+          // SISTEMA LIGHT / DARK MODE
+          // ========================
+          function toggleTheme() {
+              const isDark = document.documentElement.classList.contains('dark');
+              if (isDark) {
+                  document.documentElement.classList.remove('dark');
+                  document.documentElement.classList.add('light');
+                  localStorage.setItem('zentra_theme', 'light');
+              } else {
+                  document.documentElement.classList.remove('light');
+                  document.documentElement.classList.add('dark');
+                  localStorage.setItem('zentra_theme', 'dark');
+              }
+              applyThemeIcons();
+              lucide.createIcons();
+          }
+  
+          function applyThemeIcons() {
+              const isDark = document.documentElement.classList.contains('dark');
+              // Desktop icons
+              document.getElementById('icon-sun')?.classList.toggle('hidden', !isDark);
+              document.getElementById('icon-moon')?.classList.toggle('hidden', isDark);
+              // Mobile icons
+              document.getElementById('icon-sun-mob')?.classList.toggle('hidden', !isDark);
+              document.getElementById('icon-moon-mob')?.classList.toggle('hidden', isDark);
+          }
+  
+          // --- FORCE LOGOUT (con aviso visual para sesiones expiradas) ---
+          function forceLogout() {
+              console.warn('🔒 Sesión expirada. Redirigiendo a login...');
+              // Preservar borrador del formulario si estaba abierto
+              const formContainer = document.getElementById('formContainer');
+              const form = document.getElementById('clienteForm');
+              if (form && formContainer && !formContainer.classList.contains('hidden')) {
+                  try {
+                      const borrador = Object.fromEntries(new FormData(form));
+                      localStorage.setItem('zentra_form_draft', JSON.stringify(borrador));
+                  } catch(e) { /* silencioso */ }
+              }
+              localStorage.removeItem('jony_token');
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              sessionStorage.removeItem('jony_retry_session');
+              alert('Tu sesión ha expirado. Por favor, volvé a iniciar sesión.');
+              window.location.href = '/login.html';
+          }
+  
+          // --- FETCH AUTENTICADO (manejo centralizado de 401) ---
+          async function authFetch(url, options = {}) {
+              const token = localStorage.getItem('jony_token');
+              if (!token) { forceLogout(); return null; }
+              
+              const headers = { ...options.headers, 'Authorization': `Bearer ${token}` };
+              const res = await fetch(url, { ...options, headers });
+              
+              if (res.status === 401 || res.status === 403) {
+                  forceLogout();
+                  return null;
+              }
+              return res;
+          }
+  
+          // --- VALIDAR SESIÓN CONTRA EL SERVIDOR ---
+          async function validarSesion() {
+              try {
+                  const token = localStorage.getItem('jony_token');
+                  if (!token) return false;
+                  
+                  // Usar un endpoint protegido para verificar que el token sea válido
+                  const res = await fetch('/api/clientes?page=1&limit=1', {
+                      headers: { 'Authorization': `Bearer ${token}` }
+                  });
+                  
+                  if (res.status === 401 || res.status === 403) {
+                      console.warn('⚠️ Token expirado o inválido.');
+                      return false;
+                  }
+                  
+                  return res.ok;
+              } catch (e) {
+                  console.warn('❌ Error validando sesión:', e);
+                  // Error de red (servidor dormido), no forzar logout
+                  return true; // Dar beneficio de la duda si es error de red
+              }
+          }
+  
+          document.addEventListener('DOMContentLoaded', async () => {
+              syncPrivacyUI();
+              applyThemeIcons();
+              lucide.createIcons();
+              
+              // PASO 1: Validar que el token sea válido antes de cargar datos
+              const sesionValida = await validarSesion();
+              if (!sesionValida) {
+                  forceLogout();
+                  return; // No continuar cargando datos
+              }
+              
+              // PASO 2: Sesión válida, cargar todo
+              await refrescarTodo();
+              
+              fetchTemplates();
+              updateDate();
+          });
+  
+          // Función maestra solicitada por Jony para reactividad total
+          async function refrescarTodo() {
+              try {
+                  console.log('🔄 Refrescando sistema...');
+                  
+                  // Indicador visual de carga en las métricas
+                  const recHoy = document.getElementById('num-recaudacion-hoy');
+                  if (recHoy) recHoy.classList.add('animate-pulse', 'text-amber-400');
+  
+                  // 1. Obtener datos frescos del servidor
+                  await fetchClientes();
+                  
+                  // 2. Actualizar Agenda y Dashboard (con su limpieza interna)
+                  await fetchAgenda();
+                  
+                  // 3. Actualizar Lista General de Clientes
+                  renderClientes();
+                  
+                  // 4. Actualizar Métricas Financieras
+                  await cargarMetricas();
+  
+                  syncPrivacyUI(); // Garantizar privacidad tras recarga masiva
+  
+                  // Quitar indicador visual tras éxito
+                  if (recHoy) {
+                      recHoy.classList.remove('animate-pulse', 'text-amber-400');
+                      showToast('Sincronizado', 'Datos actualizados', 'blue');
+                  }
+              } catch (err) {
+                  console.error('Error en refrescarTodo:', err);
+                  showToast('Error', 'No se pudo sincronizar el dashboard', 'rose');
+              }
+          }
+  
+          function switchTab(tab) {
+              // Haptic Feedback (Audit v2) - Solo en móviles
+              if (window.navigator.vibrate) {
+                  window.navigator.vibrate(10);
+              }
+  
+              // Ocultar todos los contenidos de pestañas
+              document.querySelectorAll('.tab-content').forEach(s => {
+                  s.classList.add('hidden');
+                  s.classList.remove('active');
+              });
+              
+              // Mostrar la pestaña seleccionada
+              const target = document.getElementById('tab-' + tab);
+              if (target) {
+                  target.classList.remove('hidden');
+                  target.classList.add('active');
+              }
+  
+              // Sidebar desktop (remover activo de todos y poner en el actual)
+              document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+              const sideBtn = document.getElementById('side-' + tab);
+              if (sideBtn) sideBtn.classList.add('active');
+  
+              // Bottom Nav mobile
+              document.querySelectorAll('nav.md\\:hidden button').forEach(b => {
+                  b.classList.remove('active-nav-mobile');
+                  b.classList.add('text-slate-500');
+              });
+              
+              const mobBtn = document.getElementById('mobile-nav-' + tab);
+              if (mobBtn) {
+                  mobBtn.classList.add('active-nav-mobile');
+                  mobBtn.classList.remove('text-slate-500');
+              }
+  
+              if (tab === 'metricas') cargarMetricas();
+              if (tab === 'clientes') fetchClientes();
+              if (tab === 'agenda') fetchAgenda();
+              if (tab === 'whatsapp') fetchTemplates();
+              lucide.createIcons();
+          }
+  
+          function formatCurrency(val, moneda = 'ARS') {
+              const sym = moneda === 'USD' ? 'U$S' : '$';
+              return `${sym} ${Number(val || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, 
+maximumFractionDigits: 0 })}`;
+          }
+  
+          function setMoneda(btn, moneda) {
+              const container = btn.parentElement;
+              container.querySelectorAll('.moneda-btn').forEach(b => {
+                  b.classList.remove('bg-emerald-500', 'bg-blue-500', 'text-white');
+                  b.classList.add('text-slate-500');
+              });
+              const isElectro = container.closest('#step-datos-electro');
+              btn.classList.add(isElectro ? 'bg-blue-500' : 'bg-emerald-500', 'text-white');
+              btn.classList.remove('text-slate-500');
+              container.querySelector('input[name="moneda"]').value = moneda;
+          }
+  
+          async function verificarConexion() {
+              try {
+                  const res = await authFetch('/api/version');
+                  if (!res) return false; // authFetch ya maneja 401
+                  if (!res.ok) {
+                      console.warn('⚠️ [VerificarConexion] Falló ping: HTTP ' + res.status);
+                      return false;
+                  }
+                  console.log('✅ [VerificarConexion] OK.');
+                  return true;
+              } catch (e) {
+                  console.warn('❌ [VerificarConexion] Error de red:', e);
+                  return false;
+              }
+          }
+  
+          let metricasCargadasPorPrimeraVez = false;
+          async function cargarMetricas(esReintento = false, retryDelay = 5000) {
+              try {
+                  // Pequeño delay inicial de 1.5s al cargar la página por primera vez (para dar tiempo a Render)
+                  if (!metricasCargadasPorPrimeraVez && !esReintento) {
+                      metricasCargadasPorPrimeraVez = true;
+                      await new Promise(r => setTimeout(r, 1500));
+                  }
+  
+                  const token = localStorage.getItem('jony_token');
+                  if (!token) { forceLogout(); return; }
+  
+                  const res = await authFetch('/api/clientes/stats');
+                  if (!res) return; // authFetch ya manejó 401 → forceLogout
+                  
+                  if (!res.ok) {
+                      if (res.status >= 500) {
+                          console.warn('⚠️ [Server] Error ' + res.status + ': Render despertando o fallando.');
+                      }
+                      throw new Error(`HTTP Error ${res.status}`);
+                  }
+                  
+                  const data = await res.json();
+                  // Validación de Datos: Si vuelve vacío
+                  if (!data || !data.ok || Object.keys(data).length <= 1) {
+                      console.warn('⚠️ [Métricas] Datos vacíos. Verificando conexión...');
+                      const conectado = await verificarConexion();
+                      if (!conectado) throw new Error('Servidor no responde correctamente.');
+                      return;
+                  }
+                  
+                  // Limpiar flag de reintento si fue exitoso
+                  sessionStorage.removeItem('jony_retry_session');
+  
+                  // Update tab inicio
+                  if (data.global) {
+                      const elHoy = document.getElementById('num-recaudacion-hoy');
+                      if (elHoy) {
+                          elHoy.innerHTML = `
+                              <h3 class="text-xl md:text-3xl font-black 
+text-emerald-400">${formatCurrency(data.global.recaudacionHoy.ARS, 'ARS')}</h3>
+                              <div class="w-full h-px bg-white/5 my-1.5"></div>
+                              <h4 class="text-base md:text-lg font-bold 
+text-emerald-500/80">${formatCurrency(data.global.recaudacionHoy.USD, 'USD')}</h4>
+                          `;
+                      }
+                  }
+                  
+                  const ganTotalARS = (data.tramites?.ARS?.gananciaHistorica || 0) + 
+(data.prestamos?.ARS?.gananciaRealizada || 0) + (data.electro?.ARS?.gananciaRealizada || 0);
+                  const ganTotalUSD = (data.tramites?.USD?.gananciaHistorica || 0) + 
+(data.prestamos?.USD?.gananciaRealizada || 0) + (data.electro?.USD?.gananciaRealizada || 0);
+  
+                  const elTot = document.getElementById('num-ganancia-total');
+                  if (elTot) {
+                      elTot.innerHTML = `
+                          <h3 class="text-xl md:text-3xl font-black text-emerald-400">${formatCurrency(ganTotalARS, 
+'ARS')}</h3>
+                          <div class="w-full h-px bg-white/5 my-1.5"></div>
+                          <h4 class="text-base md:text-lg font-bold text-emerald-500/80">${formatCurrency(ganTotalUSD, 
+'USD')}</h4>
+                      `;
+                  }
+  
+                  // Trámites
+                  if (data.tramites) {
+                      const t = data.tramites;
+                      const renderM = (id, vals) => {
+                          const el = document.getElementById(id);
+                          if(!el) return;
+                          el.innerHTML = `
+                              <div class="flex flex-col">
+                                  <span class="text-xl font-black" style="color: 
+var(--text-primary)">${formatCurrency(vals.ARS, 'ARS')}</span>
+                                  <div class="w-full h-px bg-slate-800 my-1"></div>
+                                  <span class="text-sm font-bold opacity-60" style="color: 
+var(--text-secondary)">${formatCurrency(vals.USD, 'USD')}</span>
+                              </div>
+                          `;
+                      };
+                      
+                      const elHoyT = document.getElementById('val-tramites-hoy');
+                      if(elHoyT) elHoyT.textContent = formatCurrency(t.ARS.recaudacionHoy, 'ARS');
+  
+                      renderM('val-tramites-mes', { ARS: t.ARS.recaudacionMes, USD: t.USD.recaudacionMes });
+                      renderM('val-tramites-hist', { ARS: t.ARS.gananciaHistorica, USD: t.USD.gananciaHistorica });
+                  }
+  
+                  // Préstamos
+                  if (data.prestamos) {
+                      const p = data.prestamos;
+                      const renderM = (id, key) => {
+                          const el = document.getElementById(id);
+                          if(!el) return;
+                          el.innerHTML = `
+                              <div class="flex flex-col">
+                                  <span class="text-xl font-black" style="color: 
+var(--text-primary)">${formatCurrency(p.ARS[key], 'ARS')}</span>
+                                  <div class="w-full h-px bg-slate-800 my-1"></div>
+                                  <span class="text-sm font-bold opacity-60" style="color: 
+var(--text-secondary)">${formatCurrency(p.USD[key], 'USD')}</span>
+                              </div>
+                          `;
+                      };
+                      renderM('val-prestamos-calle', 'capitalEnCalle');
+                      renderM('val-prestamos-pend', 'gananciaPendiente');
+                      renderM('val-prestamos-real', 'gananciaRealizada');
+                  }
+  
+                  // Electrodomésticos
+                  if (data.electro) {
+                      const e = data.electro;
+                      const renderM = (id, key) => {
+                          const el = document.getElementById(id);
+                          if(!el) return;
+                          el.innerHTML = `
+                              <div class="flex flex-col">
+                                  <span class="text-xl font-black" style="color: 
+var(--text-primary)">${formatCurrency(e.ARS[key], 'ARS')}</span>
+                                  <div class="w-full h-px bg-slate-800 my-1"></div>
+                                  <span class="text-sm font-bold opacity-60" style="color: 
+var(--text-secondary)">${formatCurrency(e.USD[key], 'USD')}</span>
+                              </div>
+                          `;
+                      };
+                      renderM('val-electro-calle', 'capitalEnCalle');
+                      renderM('val-electro-pend', 'gananciaPendiente');
+                      renderM('val-electro-real', 'gananciaRealizada');
+                  }
+  
+                  // Historial Mensual
+                  const histCont = document.getElementById('historialMensualContainer');
+                  if (data.historialMensual && data.historialMensual.length > 0) {
+                      histCont.innerHTML = '';
+                      data.historialMensual.forEach(mes => {
+                          const isCurrent = mes.id === `${new Date().getFullYear()}-${(new Date().getMonth() + 
+1).toString().padStart(2, '0')}`;
+                          const badge = isCurrent ? `<span class="bg-blue-600 text-white text-[8px] uppercase 
+font-black px-2 py-0.5 rounded-full ml-2">Actual</span>` : '';
+                          
+                          histCont.innerHTML += `
+                              <div class="bg-slate-950/50 border ${isCurrent ? 'border-blue-500/30' : 
+'border-slate-800'} rounded-2xl p-4 transition-all hover:bg-slate-800/80">
+                                  <div class="flex items-center justify-between">
+                                      <h4 class="text-sm font-black text-white uppercase 
+tracking-wider">${mes.etiqueta}${badge}</h4>
+                                      <div class="text-right">
+                                          <p class="text-lg font-black text-emerald-400 
+sensitive-data">${formatCurrency(mes.totalARS, 'ARS')}</p>
+                                          <p class="text-[10px] font-bold text-emerald-500/60 
+sensitive-data">${formatCurrency(mes.totalUSD, 'USD')}</p>
+                                      </div>
+                                      <div class="px-2 md:px-4">
+                                          <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest 
+mb-1"><span class="opacity-50 mr-1">📦</span> Electro</p>
+                                          <p class="text-sm md:text-lg font-bold text-white 
+sensitive-data">${formatCurrency(mes.valores.electro)}</p>
+                                      </div>
+                                      <div class="px-2 md:px-4">
+                                          <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest 
+mb-1"><span class="opacity-50 mr-1">⚡</span> Trámites</p>
+                                          <p class="text-sm md:text-lg font-bold text-white 
+sensitive-data">${formatCurrency(mes.valores.tramites)}</p>
+                                      </div>
+                                  </div>
+                              </div>
+                          `;
+                      });
+                  } else if (histCont) {
+                      histCont.innerHTML = '<div class="text-center text-slate-600 font-bold py-8">No hay ganancias 
+registradas todav�a.</div>';
+                  }
+  
+                  // Activar visibilidad de métricas
+                  document.body.classList.add('metrics-loaded');
+                  
+                  lucide.createIcons();
+                  syncPrivacyUI();
+              } catch (err) { 
+                  console.error('Error renderizando métricas:', err); 
+                  
+                  const histCont = document.getElementById('historialMensualContainer');
+                  if (histCont) {
+                      histCont.innerHTML = `
+                          <div class="bg-slate-900/50 border border-rose-500/30 rounded-2xl p-8 text-center flex 
+flex-col items-center justify-center space-y-4">
+                              <div class="w-12 h-12 bg-rose-500/10 rounded-full flex items-center justify-center 
+text-rose-500">
+                                  <i data-lucide="server-crash" class="w-6 h-6"></i>
+                              </div>
+                              <div>
+                                  <h4 class="text-rose-400 font-black uppercase tracking-widest text-sm">El servidor 
+no responde</h4>
+                                  <p class="text-slate-400 text-xs mt-1 max-w-xs mx-auto">Render podr�a estar 
+despertando de la inactividad o hay un problema de conexión.</p>
+                              </div>
+                              <button onclick="cargarMetricas(true, 5000)" class="mt-4 px-6 py-2.5 bg-rose-500 
+hover:bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all flex 
+items-center gap-2 shadow-lg shadow-rose-500/20">
+                                  <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                  Reintentar Ahora
+                              </button>
+                              <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-2 
+animate-pulse">Reintentando automáticamente en ${retryDelay / 1000}s...</p>
+                          </div>
+                      `;
+                      lucide.createIcons();
+                  }
+  
+                  // Exponential Backoff (Máximo 30 segundos)
+                  const nextDelay = Math.min(retryDelay * 2, 30000);
+                  setTimeout(() => {
+                      cargarMetricas(true, nextDelay);
+                  }, retryDelay);
+              }
+          }
+  
+          function calcularPorcentaje() {
+              const monto = parseFloat(document.getElementById('calc-monto').value);
+              const perc = parseFloat(document.getElementById('calc-perc').value) || 35;
+              if (isNaN(monto)) return alert('Por favor, ingresá un monto válido');
+              const h = monto * (perc / 100);
+              document.getElementById('res-honorarios').textContent = formatCurrency(h);
+          }
+  
+          function reiniciarCalculadora() {
+              document.getElementById('calc-monto').value = '';
+              document.getElementById('calc-perc').value = '35';
+              document.getElementById('res-honorarios').textContent = '$ 0';
+          }
+  
+          // --- Calculadora MÓVIL (IDs separados para no colisionar) ---
+          function calcularPorcentajeMobile() {
+              const monto = parseFloat(document.getElementById('calc-monto-mobile').value);
+              const perc = parseFloat(document.getElementById('calc-perc-mobile').value) || 35;
+              if (isNaN(monto)) return alert('Por favor, ingresá un monto válido');
+              const h = monto * (perc / 100);
+              document.getElementById('res-honorarios-mobile').textContent = formatCurrency(h);
+          }
+  
+          function reiniciarCalculadoraMobile() {
+              document.getElementById('calc-monto-mobile').value = '';
+              document.getElementById('calc-perc-mobile').value = '35';
+              document.getElementById('res-honorarios-mobile').textContent = '$ 0';
+          }
+  
+          // --- CLIENTS ---
+          async function fetchClientes(isInitial = true) {
+              if (isLoadingMore || (!hasMore && !isInitial)) return;
+              
+              const tableBody = document.getElementById('clientesTableBody');
+              if (isInitial) {
+                  currentPage = 1;
+                  allClientes = [];
+                  hasMore = true;
+                  // SKELETON LOADER inicial
+                  if (tableBody) {
+                      tableBody.innerHTML = Array(5).fill(0).map(() => `
+                          <tr class="animate-pulse">
+                              <td class="px-8 py-6"><div class="h-4 bg-slate-800 rounded w-3/4 skeleton"></div></td>
+                              <td class="px-8 py-6"><div class="h-4 bg-slate-800 rounded w-1/2 skeleton"></div></td>
+                              <td class="px-8 py-6"><div class="h-4 bg-slate-800 rounded w-1/2 skeleton"></div></td>
+                              <td class="px-8 py-6"><div class="h-4 bg-slate-800 rounded w-1/4 skeleton"></div></td>
+                          </tr>
+                      `).join('');
+                  }
+              }
+  
+              isLoadingMore = true;
+              try {
+                  const res = await authFetch(`/api/clientes?page=${currentPage}&limit=20`);
+                  if (!res) return; // authFetch ya manejó 401
+                  const data = await res.json();
+                  
+                  if (data.ok) {
+                      const nuevosClientes = data.clientes || [];
+                      if (isInitial) {
+                          allClientes = nuevosClientes;
+                      } else {
+                          allClientes = [...allClientes, ...nuevosClientes];
+                      }
+                      
+                      totalPages = data.totalPages;
+                      hasMore = currentPage < totalPages;
+                      currentPage++;
+  
+                      document.getElementById('metric-clientes').textContent = data.total || allClientes.length;
+                      actualizarContadoresCategorias(data.total);
+                      renderClientes();
+                  }
+              } catch (err) { 
+                  console.error(err);
+                  if (isInitial && tableBody) tableBody.innerHTML = '<tr><td colspan="4" class="p-8 text-center 
+text-rose-400 font-bold">Error al cargar clientes</td></tr>';
+              } finally {
+                  isLoadingMore = false;
+              }
+          }
+  
+          function actualizarContadoresCategorias(totalServer) {
+              if (!allClientes) return;
+              const counts = {
+                  Todos: totalServer || allClientes.length,
+                  Préstamos: allClientes.filter(c => c.categoria === 'Préstamos').length,
+                  Electro: allClientes.filter(c => c.categoria === 'Electrodomésticos').length,
+                  Trámites: allClientes.filter(c => c.categoria === 'Trámites').length
+              };
+  
+              if(document.getElementById('countCatTodos')) document.getElementById('countCatTodos').textContent = 
+`(${counts.Todos})`;
+              if(document.getElementById('countCatPrestamos')) 
+document.getElementById('countCatPrestamos').textContent = `(${counts.Préstamos})`;
+              if(document.getElementById('countCatElectro')) document.getElementById('countCatElectro').textContent = 
+`(${counts.Electro})`;
+              if(document.getElementById('countCatTramites')) document.getElementById('countCatTramites').textContent 
+= `(${counts.Trámites})`;
+          }
+  
+          // --- INFINITE SCROLL (Audit v2) ---
+          window.addEventListener('scroll', () => {
+              const currentTab = document.querySelector('.tab-content.active');
+              if (currentTab && currentTab.id === 'tab-clientes') {
+                  if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+                      fetchClientes(false);
+                  }
+              }
+          });
+  
+          let filtroSoloMorosos = false;
+  
+          function setFiltroMorosos(estado) {
+              filtroSoloMorosos = estado;
+              const btn = document.getElementById('btnFiltroMorosos');
+              if (estado) {
+                  btn.className = 'px-5 py-2.5 bg-rose-100 text-rose-700 rounded-xl text-sm font-black 
+whitespace-nowrap outline-none transition-all shadow-sm border border-rose-200';
+              } else {
+                  btn.className = 'px-5 py-2.5 bg-slate-100 text-slate-500 hover:bg-rose-100 hover:text-rose-700 
+rounded-xl text-sm font-black whitespace-nowrap outline-none transition-all';
+              }
+              filtrarClientes();
+          }
+  
+          function isMoroso(c) {
+              if (c.estado === 'Cerrado' || c.estado === 'Pagado') return false;
+              if (c.categoria !== 'Préstamos' && c.categoria !== 'Electrodomésticos') return false;
+              if (!c.proximoCobro) return false;
+              
+              const tz = 'America/Argentina/Buenos_Aires';
+              const hoy = new Date();
+              const fechaCobro = new Date(c.proximoCobro);
+              
+              // Calculamos la antigüedad en días
+              const diffTime = hoy.getTime() - fechaCobro.getTime();
+              const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
+              
+              return diffDays >= 10; // Moroso a partir de los 10 días de atraso
+          }
+  
+          function setFiltroCategoria(cat) {
+              filtroCategoriaActual = cat;
+              
+              if (cat === 'Todos') {
+                  filtroSoloMorosos = false;
+                  document.getElementById('btnFiltroMorosos').className = 'px-5 py-2.5 bg-slate-100 text-slate-500 
+hover:bg-rose-100 hover:text-rose-700 rounded-xl text-sm font-black whitespace-nowrap outline-none transition-all';
+                  document.getElementById('searchInput').value = '';
+              }
+              
+              const btns = {
+                  'Todos': 'btnCatTodos',
+                  'Préstamos': 'btnCatPrestamos',
+                  'Electrodomésticos': 'btnCatElectro',
+                  'Trámites': 'btnCatTramites'
+              };
+              
+              // Resetear todas las pills a inactivo
+              Object.values(btns).forEach(id => {
+                  const btn = document.getElementById(id);
+                  if(btn) {
+                      btn.classList.remove('cat-pill-active');
+                      btn.classList.add('cat-pill-inactive');
+                  }
+              });
+  
+              // Activar la pill seleccionada
+              const btnActivo = document.getElementById(btns[cat]);
+              if(btnActivo) {
+                  btnActivo.classList.remove('cat-pill-inactive');
+                  btnActivo.classList.add('cat-pill-active');
+              }
+              
+              filtrarClientes();
+          }
+  
+          function filtrarClientes() {
+              const queryRaw = document.getElementById('searchInput').value.toLowerCase();
+              const query = queryRaw.trim();
+              // Para búsqueda numérica: limpiar TODOS los espacios (Jony pega números con espacios)
+              const queryNumeric = queryRaw.replace(/\s+/g, ''); 
+              
+              // Si no hay query, mostrar todos según filtros de pestaña
+              if (!query) {
+                  let allItems = [...allClientes];
+                  if (filtroCategoriaActual !== 'Todos') {
+                      allItems = allItems.filter(c => (c.categoria || 'Trámites') === filtroCategoriaActual);
+                  }
+                  if (filtroSoloMorosos) {
+                      allItems = allItems.filter(c => isMoroso(c));
+                  }
+                  return renderClientes(allItems);
+              }
+              
+              let filtered = allClientes.filter(c => {
+                  // Normalización de campos para búsqueda flexible
+                  const nombre = (c.nombre || '').toLowerCase();
+                  const apellido = (c.apellido || '').toLowerCase(); // Soportar campo apellido si existe
+                  const empresa = (c.empresa || '').toLowerCase();
+                  const dni = String(c.dni || '').toLowerCase();
+                  const telefono = String(c.telefono || '').toLowerCase();
+                  const categoria = (c.categoria || '').toLowerCase();
+                  const subTipo = (c.subTipoTramite || '').toLowerCase();
+                  const tramite = (c.tramite || '').toLowerCase();
+                  const producto = (c.producto || '').toLowerCase();
+                  
+                  // Prioridad Numérica Fluida (DNI o Teléfono sin espacios)
+                  if (/^\d+$/.test(queryNumeric) && queryNumeric.length > 2) {
+                      if (dni.replace(/\s+/g, '').includes(queryNumeric) || 
+                          telefono.replace(/\s+/g, '').includes(queryNumeric)) return true;
+                  }
+  
+                  // Búsqueda General (Includes)
+                  return nombre.includes(query) || 
+                         apellido.includes(query) ||
+                         empresa.includes(query) || 
+                         dni.includes(query) || 
+                         telefono.includes(query) ||
+                         categoria.includes(query) ||
+                         subTipo.includes(query) ||
+                         tramite.includes(query) ||
+                         producto.includes(query);
+              });
+              
+              // Filtros de pestaña aplicados sobre el resultado
+              if (filtroCategoriaActual !== 'Todos') {
+                  filtered = filtered.filter(c => (c.categoria || 'Trámites') === filtroCategoriaActual);
+              }
+              if (filtroSoloMorosos) {
+                  filtered = filtered.filter(c => isMoroso(c));
+              }
+              renderClientes(filtered);
+          }
+  
+          function toggleClienteDetalle(id) {
+              const detail = document.getElementById(`detail-${id}`);
+              const isHidden = detail.classList.contains('hidden');
+              
+              // Cerrar otros abiertos (opcional, para estilo acordeon puro)
+              document.querySelectorAll('[id^="detail-"]').forEach(d => d.classList.add('hidden'));
+              
+              if (isHidden) {
+                  detail.classList.remove('hidden');
+              }
+          }
+  
+          function renderClientes(recs = allClientes) {
+              const container = document.getElementById('listaClientes');
+              container.innerHTML = '';
+              
+              if (recs.length === 0) {
+                  container.innerHTML = '<div class="py-20 text-center text-slate-400 font-bold uppercase 
+tracking-widest">No se encontraron clientes</div>';
+                  return;
+              }
+  
+              recs.forEach((rawC, idx) => {
+                  const c = { 
+                      ...rawC, 
+                      nombre: escapeHTML(rawC.nombre), 
+                      telefono: escapeHTML(rawC.telefono),
+                      producto: escapeHTML(rawC.producto),
+                      empresa: escapeHTML(rawC.empresa),
+                      tramite: escapeHTML(rawC.tramite),
+                      subTipoTramite: escapeHTML(rawC.subTipoTramite),
+                      notas: escapeHTML(rawC.notas),
+                      promesaPago: escapeHTML(rawC.promesaPago)
+                  };
+                  if (c.historialPagos) {
+                      c.historialPagos = c.historialPagos.map(p => ({ ...p, metodo: escapeHTML(p.metodo) }));
+                  }
+  
+                  let subtitulo = c.subTipoTramite || c.tramite || c.categoria;
+                  if (c.categoria === 'Electrodomésticos' && c.producto) {
+                      subtitulo = `Producto: ${c.producto}`;
+                  }
+                  
+                  // Lógica de Etiqueta Dinámica de Inicio (v3.3.4)
+                  let labelInicio = 'Inicio/Prestamo:';
+                  const catNorm = (c.categoria || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                  if (catNorm.includes('electro')) labelInicio = 'Inicio/Electro:';
+                  else if (catNorm.includes('tramite')) labelInicio = 'Inicio/Tramite:';
+                  else if (catNorm.includes('prestam')) labelInicio = 'Inicio/Prestamo:';
+  
+                  const row = document.createElement('div');
+                  const moroso = isMoroso(c);
+                  const isEven = idx % 2 === 0;
+                  
+                  let borderColor = 'border-white/5';
+                  if (moroso) borderColor = 'border-rose-500/60';
+                  else if (c.estado === 'Cerrado') borderColor = 'border-slate-800';
+                  else if (c.categoria === 'Préstamos') borderColor = 'border-emerald-600/50';
+                  else if (c.categoria === 'Electrodomésticos') borderColor = 'border-amber-500/40';
+                  else if (c.categoria === 'Trámites') borderColor = 'border-violet-500/40';
+  
+                  row.className = `client-card mb-0 rounded-xl border ${borderColor} border-l-4 transition-all`;
+                  row.style.animationDelay = `${idx * 0.05}s`;
+                  
+                  // Avatar: inicial + color por categoría
+                  let avatarBg = 'bg-slate-700 text-slate-300';
+                  let avatarBorder = 'border-slate-600';
+                  if (c.categoria === 'Préstamos')             { avatarBg = 'bg-emerald-600/20 text-emerald-300'; 
+avatarBorder = 'border-emerald-600/40'; }
+                  else if (c.categoria === 'Electrodomésticos') { avatarBg = 'bg-amber-500/20 text-amber-300'; 
+avatarBorder = 'border-amber-500/30'; }
+                  else if (c.categoria === 'Trámites')     { avatarBg = 'bg-violet-500/20 text-violet-300'; 
+avatarBorder = 'border-violet-500/30'; }
+                  if (moroso)                               { avatarBg = 'bg-rose-500/20 text-rose-300';   
+avatarBorder = 'border-rose-500/30'; }
+                  const inicial = (c.nombre || '?')[0].toUpperCase();
+                  const avatarHtml = `<div class="w-9 h-9 ${avatarBg} border ${avatarBorder} rounded-full flex 
+items-center justify-center font-black text-sm shrink-0">${inicial}</div>`;
+  
+                  // Mostrar empresa si existe (Trámites)
+                  if (c.categoria === 'Trámites' && c.empresa) {
+                      subtitulo += ` · ${c.empresa}`;
+                  }
+  
+                  if (c.categoria !== 'Trámites' && c.proximoCobro && c.estado !== 'Cerrado') {
+                      const diffDays = Math.ceil((new Date(c.proximoCobro).getTime() - new Date().getTime()) / (1000 * 
+3600 * 24));
+                      let dayText = diffDays > 0 ? `Faltan ${diffDays} d�as` : (moroso ? `Vencido hace 
+${Math.abs(diffDays)} d�as` : 'Vence hoy');
+                      subtitulo += ` • ${dayText}`;
+                  }
+  
+                  // Calcular próximo vencimiento
+                  let proximoVtoStr = '';
+                  if (c.operaciones && c.operaciones.length > 0) {
+                      const opsActivas = c.operaciones.filter(o => !['Cerrado', 'Cancelado', 
+'Pagado'].includes(o.estado) && o.fechaVencimiento);
+                      if (opsActivas.length > 0) {
+                          const fechas = opsActivas.map(o => new Date(o.fechaVencimiento)).filter(d => 
+!isNaN(d.getTime()));
+                          if (fechas.length > 0) {
+                              const minFecha = new Date(Math.min(...fechas));
+                              proximoVtoStr = minFecha.toLocaleDateString('es-AR', { timeZone: 'UTC' });
+                          }
+                      }
+                  }
+  
+                  let badgeHtml = c.estado === 'Cerrado' 
+                      ? `<span class="px-3 py-1 bg-slate-800/50 text-slate-500 text-[9px] font-black rounded-full 
+uppercase tracking-widest border border-slate-700">CERRADO</span>`
+                      : (c.estado === 'Pagado'
+                          ? `<span class="px-3 py-1 bg-emerald-500 text-white text-[9px] font-black rounded-full 
+uppercase tracking-widest border border-emerald-400 shadow-lg shadow-emerald-500/20">PAGADO</span>`
+                          : (moroso
+                              ? `<span class="px-3 py-1 bg-rose-500/10 text-rose-500 text-[9px] font-black 
+rounded-full uppercase tracking-widest border border-rose-500/20">MOROSO</span>`
+                              : `<span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[9px] font-black 
+rounded-full uppercase tracking-widest border border-emerald-500/20">ACTIVO</span>`));
+  
+                  if (proximoVtoStr) {
+                      badgeHtml += `<span class="ml-4 text-[10px] text-slate-500 font-bold tracking-widest 
+uppercase">🗓️ Vto: ${proximoVtoStr}</span>`;
+                  }
+  
+                  // Template Options
+                  let optionsTpl = '<option value="">Plantilla...</option>';
+                  allTemplates.forEach(t => {
+                      optionsTpl += `<option value="${t._id}">${t.titulo}</option>`;
+                  });
+  
+                  let operacionesHtml = '';
+                  const opsReales = (c.operaciones || []).filter(op => op._id !== 'legacy');
+                  const tieneOperacionesNuevas = opsReales.length > 0;
+  
+                  if (tieneOperacionesNuevas) {
+                      opsReales.forEach((op, index) => {
+                          const icon = op.tipo === 'Préstamos' ? '💸' : (op.tipo === 'Electrodomésticos' ? '📺' 
+: '📋');
+                          const montoP = op.montoPrestado || op.costoCompra || 0;
+                          const montoD = op.montoDevolver || op.precioVenta || op.honorarios || 0;
+                          const saldoPend = op.saldoPendiente || 0;
+                          
+                          const cuotasPagadas = op.historialPagos ? op.historialPagos.length : 0;
+                          const cuotasTotales = op.cuotasTotales || op.cuotas || 1;
+                          const valorCuota = cuotasTotales > 0 ? (montoD / cuotasTotales) : 0;
+                          const fechaVenc = op.fechaVencimiento ? new 
+Date(op.fechaVencimiento).toLocaleDateString('es-AR', { timeZone: 'UTC' }) : 'N/A';
+                          
+                          let itemsHtml = '<p class="text-[10px] text-slate-400 italic mt-2">Sin pagos 
+registrados</p>';
+                          if (op.historialPagos && op.historialPagos.length > 0) {
+                              const reversos = [...op.historialPagos].sort((a,b) => new Date(b.fecha) - new 
+Date(a.fecha));
+                              itemsHtml = '<div class="mt-2 space-y-1.5 max-h-32 overflow-y-auto pr-2 
+custom-scrollbar">';
+                              reversos.forEach(p => {
+                                  const opciones = { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', 
+month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
+                                  let dStr = new Date(p.fecha).toLocaleString('es-AR', opciones);
+                                  dStr = dStr.replace(',', ' -') + ' hs';
+                                  
+                                  
+                                  const mntStr = formatCurrency(p.monto || 0, op.moneda);
+                                  const msj = `Hola ${c.nombre}! Confirmo que recib� tu pago de ${mntStr} el d�a 
+${dStr.split(' - ')[0]} a las ${dStr.split(' - ')[1].replace(' hs', '')} hs. Tu saldo pendiente es 
+${formatCurrency(saldoPend, op.moneda)}. ¡Muchas gracias!`;
+                                  const waLink = generarLinkWhatsApp(c.telefono, msj);
+  
+                                  itemsHtml += `
+                                      <div class="flex justify-between items-center bg-slate-50 px-3 py-1.5 rounded-lg 
+border border-slate-100/50 hover:border-slate-200 transition-colors group/wa">
+                                          <div class="flex items-center gap-2">
+                                              <span class="text-[9px] font-bold text-slate-500">${dStr} - <span 
+class="text-emerald-600">${mntStr}</span></span>
+                                          </div>
+                                          <div class="flex items-center gap-2">
+                                              <span class="text-[9px] font-bold text-slate-400 italic truncate 
+max-w-[80px]" title="${p.metodo || ''}">(${p.metodo || ''})</span>
+                                              <a href="${waLink}" target="_blank" class="opacity-0 
+group-hover/wa:opacity-100 text-emerald-500 hover:text-emerald-600 p-0.5 flex items-center justify-center rounded 
+hover:bg-emerald-100 transition-all border border-emerald-200 shadow-sm">
+                                                  <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                                              </a>
+                                              <button onclick="borrarPago('${c._id}', '${p._id}', '${op._id}'); 
+event.stopPropagation();" class="opacity-0 group-hover/wa:opacity-100 text-rose-500 hover:text-rose-600 p-0.5 flex 
+items-center justify-center rounded hover:bg-rose-100 transition-all border border-rose-200 shadow-sm">
+                                                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                              </button>
+                                          </div>
+                                      </div>
+                                  `;
+                              });
+                              itemsHtml += '</div>';
+                          }
+  
+                          let detalleSecundario = '';
+                          if (op.tipo === 'Electrodomésticos') detalleSecundario = op.producto || '';
+                          else if (op.tipo === 'Trámites') detalleSecundario = op.tramite || '';
+  
+                          operacionesHtml += `
+                              <div class="mb-4 border border-slate-200 dark:border-white/10 rounded-2xl p-4 bg-white 
+dark:bg-slate-900 shadow-sm">
+                                  <div class="flex justify-between items-center mb-3">
+                                      <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest flex 
+items-center gap-1">${icon} ${op.tipo} ${op._id === 'legacy' ? '(Original)' : `#${index + 1}`} - ${op.estado} 
+${detalleSecundario ? `<span class="text-slate-400 lowercase ml-1">(${detalleSecundario})</span>` : ''} <span 
+class="text-slate-400 ml-2">📅 Vence: ${fechaVenc}</span> <button onclick="abrirModalVencimiento('${c._id}', 
+'${op._id}', '${op.fechaVencimiento || ''}')" class="ml-1 text-blue-400 hover:text-blue-300 transition-all" 
+title="Reprogramar fecha">✏️</button></p>
+                                      <div class="flex items-center gap-4">
+                                          ${op.tipo !== 'Trámites' ? `<span class="font-black text-slate-400 
+text-[10px] uppercase tracking-widest">Cuota: ${cuotasPagadas}/${cuotasTotales} (${formatCurrency(valorCuota, 
+op.moneda)})</span>` : ''}
+                                          ${op.estado !== 'Cerrado' && op.estado !== 'Cancelado' && op.estado !== 
+'Pagado' ? `
+                                              <div class="flex gap-2">
+                                                  <button onclick="openPagoModal('${c._id}', '${c.nombre}', 
+'${op._id}', ${valorCuota}, '${op.fechaVencimiento || ''}')" class="py-1 px-3 bg-emerald-500 text-white rounded-lg 
+text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center">
+                                                      <i data-lucide="dollar-sign" class="w-3 h-3 mr-1"></i> Cobrar
+                                                  </button>
+                                                  <button onclick="eliminarOperacion('${c._id}', '${op._id}')" 
+class="py-1 px-2 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg text-[9px] font-black 
+uppercase tracking-widest transition-all flex items-center" title="Eliminar Operación">
+                                                      <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                                  </button>
+                                              </div>
+                                          ` : ''}
+                                      </div>
+                                  </div>
+                                  <div class="finance-panel bg-slate-50 border border-slate-100 rounded-xl p-3 grid 
+grid-cols-3 gap-x-2 w-full">
+                                      <!-- 1. CAPITAL -->
+                                      <div class="finance-col flex flex-col items-center md:items-start text-center 
+md:text-left min-w-0">
+                                          <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest 
+truncate w-full">
+                                              ${op.tipo === 'Préstamos' ? 'Capital' : (op.tipo === 
+'Electrodomésticos' ? 'Costo' : 'Honorarios')}
+                                          </p>
+                                          <p class="text-xs font-black text-slate-700 truncate 
+w-full">${formatCurrency(montoP || montoD, op.moneda)}</p>
+                                      </div>
+                                      <!-- 2. TOTAL -->
+                                      <div class="finance-col flex flex-col items-center border-l border-slate-200 
+px-2 text-center min-w-0">
+                                          <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest 
+truncate w-full">Total</p>
+                                          <p class="text-xs font-black text-slate-700 truncate 
+w-full">${formatCurrency(montoD, op.moneda)}</p>
+                                      </div>
+                                      <!-- 3. SALDO -->
+                                      <div class="finance-col flex flex-col items-center md:items-end border-l 
+border-slate-200 pl-2 text-center md:text-right min-w-0">
+                                          <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest 
+truncate w-full">Saldo</p>
+                                          <p class="text-xs font-black ${saldoPend > 0 ? 'text-rose-500' : 
+'text-emerald-500'} truncate w-full">${formatCurrency(saldoPend, op.moneda)}</p>
+                                      </div>
+                                  </div>
+                                  <div class="mt-3 border-t border-slate-100 pt-3">
+                                      <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest 
+mb-1">Historial</p>
+                                      ${itemsHtml}
+                                  </div>
+                              </div>
+                          `;
+                      });
+                  } else if (!tieneOperacionesNuevas && (c.categoria !== 'Trámites' || (c.honorarios && c.honorarios 
+> 0))) {
+                      // Muestra una operación "virtual" basada en los datos raíz para clientes legacy
+                      const icon = c.categoria === 'Préstamos' ? '💸' : (c.categoria === 'Electrodomésticos' ? 
+'📺' : '📋');
+                      const montoD = c.montoDevolver || c.precioVenta || c.honorarios || 0;
+                      const montoP = c.montoPrestado || c.costoCompra || 0;
+                      const saldoPend = Math.max(0, montoD - (c.montoPagado || 0));
+                      const fechaVenc = c.proximoCobro ? new Date(c.proximoCobro).toLocaleDateString('es-AR', { 
+timeZone: 'UTC' }) : 'N/A';
+                      
+                      operacionesHtml = `
+                          <div class="mb-4 border border-slate-200 dark:border-white/10 rounded-2xl p-4 bg-white 
+dark:bg-slate-900 shadow-sm opacity-80">
+                              <div class="flex justify-between items-center mb-3">
+                                  <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest flex 
+items-center gap-1">${icon} ${c.categoria || 'Servicio'} (Original) - ${c.estado} <span class="text-slate-400 
+ml-2">📅 Vence: ${fechaVenc}</span> <button onclick="abrirModalVencimiento('${c._id}', 'legacy', '${c.proximoCobro 
+|| ''}')" class="ml-1 text-blue-400 hover:text-blue-300 transition-all" title="Migrar y 
+Reprogramar">✏️</button></p>
+                                  <span class="text-[9px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full 
+font-bold">LEGACY</span>
+                              </div>
+                              <div class="finance-panel bg-slate-50 border border-slate-100 rounded-xl p-3 grid 
+grid-cols-3 gap-x-2 w-full">
+                                  <div class="finance-col flex flex-col items-center md:items-start text-center 
+md:text-left min-w-0">
+                                      <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest 
+truncate w-full">Original</p>
+                                      <p class="text-xs font-black text-slate-700 truncate 
+w-full">${formatCurrency(montoP || montoD)}</p>
+                                  </div>
+                                  <div class="finance-col flex flex-col items-center border-l border-slate-200 px-2 
+text-center min-w-0">
+                                      <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest 
+truncate w-full">Total</p>
+                                      <p class="text-xs font-black text-slate-700 truncate 
+w-full">${formatCurrency(montoD)}</p>
+                                  </div>
+                                  <div class="finance-col flex flex-col items-center md:items-end border-l 
+border-slate-200 pl-2 text-center md:text-right min-w-0">
+                                      <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest 
+truncate w-full">Saldo</p>
+                                      <p class="text-xs font-black text-rose-500 truncate 
+w-full">${formatCurrency(saldoPend)}</p>
+                                  </div>
+                              </div>
+                              <p class="text-[9px] text-slate-400 mt-2 italic">�️ Este cliente tiene datos 
+antiguos. Pulsa el lápiz para migrarlos al nuevo sistema.</p>
+                          </div>
+                      `;
+                  } else {
+                      operacionesHtml = '<p class="text-[10px] text-slate-400 italic">No hay operaciones 
+registradas.</p>';
+                  }
+  
+                  // --- Cálculo de Saldo Total Consolidado (v3.4.3) ---
+                  let totalDeudaARS = 0;
+                  let totalDeudaUSD = 0;
+                  
+                  const calcConsolidado = (op) => {
+                      if (['Cerrado', 'Pagado', 'Cancelado'].includes(op.estado)) return;
+                      const mD = op.montoDevolver || op.precioVenta || op.honorarios || 0;
+                      const pagos = op.historialPagos || [];
+                      const pagado = pagos.reduce((sum, p) => sum + p.monto, 0);
+                      const saldo = Math.max(0, mD - pagado);
+                      if (saldo > 0) {
+                          if (op.moneda === 'USD') totalDeudaUSD += saldo;
+                          else totalDeudaARS += saldo;
+                      }
+                  };
+  
+                  if (c.operaciones && c.operaciones.length > 0) {
+                      const opsRealesCons = c.operaciones.filter(op => op._id !== 'legacy');
+                      if (opsRealesCons.length > 0) {
+                          opsRealesCons.forEach(calcConsolidado);
+                      } else {
+                          if (!['Cerrado', 'Pagado', 'Cancelado'].includes(c.estado)) {
+                              const mD = c.montoDevolver || c.precioVenta || c.honorarios || 0;
+                              const pagado = c.montoPagado || 0;
+                              const saldo = Math.max(0, mD - pagado);
+                              if (saldo > 0) {
+                                  if (c.moneda === 'USD') totalDeudaUSD += saldo;
+                                  else totalDeudaARS += saldo;
+                              }
+                          }
+                      }
+                  }
+  
+                  let saldoConsolidadoHtml = '';
+                  if (totalDeudaARS > 0 || totalDeudaUSD > 0) {
+                      let saldosHtml = '';
+                      if (totalDeudaARS > 0) {
+                          saldosHtml += `<p class="text-sm font-black text-rose-500 
+sensitive-data">${formatCurrency(totalDeudaARS, 'ARS')}</p>`;
+                      }
+                      if (totalDeudaUSD > 0) {
+                          saldosHtml += `<p class="text-xs font-bold text-rose-500/80 sensitive-data 
+mt-1">${formatCurrency(totalDeudaUSD, 'USD')}</p>`;
+                      }
+  
+                      saldoConsolidadoHtml = `
+                          <div class="mt-5 p-4 bg-rose-500/5 border border-rose-500/20 rounded-2xl w-full text-center">
+                              <p class="text-[9px] font-black text-rose-500/80 uppercase tracking-widest mb-2 flex 
+items-center justify-center">
+                                  <i data-lucide="alert-circle" class="w-3 h-3 mr-1"></i> SALDO TOTAL CONSOLIDADO
+                              </p>
+                              ${saldosHtml}
+                          </div>
+                      `;
+                  }
+  
+                  let comprobantesHtml = '';
+                  if (c.operaciones && c.operaciones.length > 0) {
+                      const ops = c.operaciones.filter(op => op._id !== 'legacy' && (op.tipo === 'Electrodomésticos' 
+|| op.tipo === 'Préstamos'));
+                      if (ops.length > 0) {
+                          comprobantesHtml += `<div class="mt-4 flex flex-col gap-2">`;
+                          ops.forEach((op) => {
+                              const btnLabel = op.tipo === 'Electrodomésticos' ? '📄 Comprobante Electro' : '📄 
+Comprobante Préstamo';
+                              comprobantesHtml += `
+                                  <button onclick="abrirComprobanteModal('${c._id}', '${op._id}')" class="w-full py-2 
+bg-slate-800 text-white rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-700 
+hover:bg-slate-700 transition-all flex items-center justify-center gap-2">
+                                      ${btnLabel}
+                                  </button>
+                              `;
+                          });
+                          comprobantesHtml += `</div>`;
+                      }
+                  }
+  
+                  row.innerHTML = `
+                      <div onclick="toggleClienteDetalle('${c._id}')" class="flex flex-col md:grid md:grid-cols-12 
+gap-4 px-5 py-4 md:px-8 cursor-pointer items-start md:items-center" style="transition: background 0.15s; 
+border-radius: inherit;" onmouseenter="this.style.background='rgba(255,255,255,0.04)'" 
+onmouseleave="this.style.background=''">
+                          <!-- Info Principal con Restauración Flexbox -->
+                          <div class="w-full md:col-span-12 client-card-row">
+                              <div class="flex items-center space-x-3 overflow-hidden text-container-flex">
+                                  ${avatarHtml}
+                                  <div class="min-w-0">
+                                      <p class="text-sm font-black truncate leading-tight" style="color: 
+var(--text-primary)">${c.nombre}</p>
+                                      <p class="text-[9px] font-bold uppercase tracking-widest truncate mt-0.5 
+${moroso ? 'text-rose-400' : ''}" style="${moroso ? '' : 'color: var(--text-muted)'}">${subtitulo}</p>
+                                  </div>
+                              </div>
+                              <!-- Acciones (Ancho Fijo y Alineado a la Derecha) -->
+                              <div class="actions-container-fixed">
+                                  <button onclick="event.stopPropagation(); prepararEdicion('${c._id}')" class="p-2 
+bg-white/5 text-slate-400 hover:text-blue-400 rounded-xl transition-all border border-white/5 shadow-sm"><i 
+data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                  <button onclick="event.stopPropagation(); abrirModalEliminar('${c._id}')" class="p-2 
+bg-rose-500/10 text-rose-400 hover:text-rose-500 rounded-xl transition-all border border-rose-500/10 shadow-sm"><i 
+data-lucide="trash-2" class="w-4 h-4"></i></button>
+                              </div>
+                          </div>
+                          
+                          <!-- Status Badge (Mantenido como fila si es necesario) -->
+                          <div class="hidden md:flex md:col-span-12 justify-start items-center border-t border-white/5 
+pt-2 mt-1">
+                               <p class="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] mr-4">ESTADO 
+ACTUAL:</p>
+                               ${badgeHtml}
+                          </div>
+                      </div>
+                      
+                      <!-- Detalle Expandible (Acordeon) -->
+                      <div id="detail-${c._id}" class="hidden px-8 py-6 bg-white dark:bg-slate-900/50 border-t 
+border-slate-100 dark:border-white/5 animate-in fade-in slide-in-from-top-2 duration-200">
+                          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                              <div class="space-y-4">
+                                  <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Contacto 
+Directo</p>
+                                  <div class="flex items-center space-x-3">
+                                      <div class="w-8 h-8 bg-slate-50 text-slate-600 rounded-lg flex items-center 
+justify-center"><i data-lucide="phone" class="w-4 h-4"></i></div>
+                                      <span class="text-sm font-bold text-slate-700">${c.telefono}</span>
+                                  </div>
+                                  <div class="flex items-center space-x-3 mt-4">
+                                      <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center 
+justify-center"><i data-lucide="calendar-days" class="w-4 h-4"></i></div>
+                                      <div class="flex flex-col">
+                                          <span class="text-sm font-bold 
+text-slate-700"><strong>${labelInicio}</strong> ${c.fechaIngreso ? new 
+Date(c.fechaIngreso).toLocaleDateString('es-AR', { timeZone: 'UTC' }) : 'Sin fecha registrada'}</span>
+                                      </div>
+                                  </div>
+                                  <div class="flex gap-2">
+                                      <a href="${generarLinkWhatsApp(c.telefono)}" target="_blank" class="flex-1 flex 
+items-center justify-center space-x-2 py-3 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase 
+tracking-widest hover:bg-emerald-100 transition-all border border-emerald-200">
+                                          <i data-lucide="message-circle" class="w-4 h-4"></i>
+                                          <span>Libre</span>
+                                      </a>
+                                      <select onchange="sendTemplateWA(this, '${c._id}')" class="flex-[2] text-[10px] 
+uppercase font-black tracking-widest bg-emerald-500 text-white rounded-xl px-2 py-3 outline-none border-none 
+hover:bg-emerald-600 transition-all cursor-pointer">
+                                          ${optionsTpl}
+                                      </select>
+                                  </div>
+                                  ${saldoConsolidadoHtml}
+                                  ${comprobantesHtml}
+                              </div>
+                              <div class="col-span-2 md:border-l border-slate-100 md:pl-8 flex flex-col 
+justify-between">
+                                  <div>
+                                      ${operacionesHtml}
+                                  </div>
+                                  <div class="pt-6 flex flex-wrap gap-3">
+                                      <button onclick="openAgendaModal('${c._id}', '${c.nombre}')" class="flex 
+items-center justify-center space-x-2 flex-1 md:flex-none px-4 py-2 bg-violet-600 text-white rounded-lg text-[10px] 
+font-black uppercase tracking-widest hover:bg-violet-700 transition-all">
+                                          <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                          <span>Nueva Tarea/Cita</span>
+                                      </button>
+                                      <button onclick="openNuevaOperacionModal('${c._id}', '${c.nombre}')" class="flex 
+items-center justify-center space-x-2 flex-1 md:flex-none px-4 py-2 bg-blue-600 text-white rounded-lg text-[10px] 
+font-black uppercase tracking-widest hover:bg-blue-700 transition-all">
+                                          <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                                          <span>➕ Nuevo Servicio</span>
+                                      </button>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  `;
+                  container.appendChild(row);
+              });
+              syncPrivacyUI();
+              lucide.createIcons();
+          }
+  
+  
+  
+          function toggleLegajoToyota() {
+              const empresaInput = document.getElementById('fEmpresa');
+              const legajoContainer = document.getElementById('legajoToyotaContainer');
+              if (!empresaInput || !legajoContainer) return;
+              if (empresaInput.value === 'Toyota') {
+                  legajoContainer.classList.remove('hidden');
+              } else {
+                  legajoContainer.classList.add('hidden');
+                  const legajoInput = document.getElementById('fLegajoToyota');
+                  if (legajoInput) legajoInput.value = '';
+              }
+          }
+  
+          function cerrarComprobanteModal() {
+              const m = document.getElementById('modalComprobante');
+              if (m) m.classList.add('hidden');
+          }
+  
+          function abrirComprobanteModal(clienteId, opId) {
+              const cliente = allClientes.find(c => c._id === clienteId);
+              if (!cliente) return;
+              const op = cliente.operaciones.find(o => o._id === opId);
+              if (!op) return;
+  
+              const modal = document.getElementById('modalComprobante');
+              if (!modal) return;
+  
+              document.getElementById('comp-cliente').textContent = cliente.nombre;
+              document.getElementById('comp-categoria').textContent = op.tipo || 'Servicio';
+              
+              const tbody = document.getElementById('comp-historial');
+              tbody.innerHTML = '';
+              
+              const pagos = op.historialPagos || [];
+              if (pagos.length === 0) {
+                  tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-xs text-slate-400 font-bold 
+uppercase tracking-widest">Sin pagos registrados</td></tr>';
+              } else {
+                  const reversos = [...pagos].sort((a,b) => new Date(a.fecha) - new Date(b.fecha)); // cronológico
+                  reversos.forEach((p, idx) => {
+                      const cuotaNro = p.cuotaNro || (idx + 1);
+                      const monto = formatCurrency(p.monto, p.moneda || op.moneda);
+                      const fecha = p.fechaStr || new Date(p.fecha).toLocaleDateString('es-AR', { timeZone: 
+'America/Argentina/Buenos_Aires' });
+                      const hora = p.hora || '--:--hs';
+                      
+                      tbody.innerHTML += `
+                          <tr class="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
+                              <td class="py-3 px-2 text-xs font-bold text-slate-300">Cuota 
+${cuotaNro}/${op.cuotasTotales || 1}</td>
+                              <td class="py-3 px-2 text-xs font-black text-emerald-400 text-right">${monto}</td>
+                              <td class="py-3 px-2 text-[10px] font-bold text-slate-400 text-center">${fecha}</td>
+                              <td class="py-3 px-2 text-[10px] font-bold text-slate-500 text-center">${hora}</td>
+                          </tr>
+                      `;
+                  });
+              }
+  
+              const pagado = pagos.reduce((s, p) => s + p.monto, 0);
+              document.getElementById('comp-total').textContent = formatCurrency(pagado, op.moneda);
+              
+              modal.classList.remove('hidden');
+          }
+  
+          function prepararEdicion(id) {
+              const c = allClientes.find(x => x._id === id);
+              editingClientId = id;
+              document.getElementById('formContainer').classList.remove('hidden');
+              const f = document.getElementById('clienteForm');
+              
+              const categoria = c.categoria || 'Trámites';
+              f.querySelector('#categoriaSelect').value = categoria;
+              
+              let stepId = 'step-datos-tramite';
+              if (categoria === 'Préstamos') stepId = 'step-datos-prestamo';
+              if (categoria === 'Electrodomésticos') stepId = 'step-datos-electro';
+              
+              mostrarPaso(stepId, categoria);
+              
+              // Llenar campos comunes en todos los pasos
+              f.querySelectorAll('[name="nombre"]').forEach(i => i.value = c.nombre || '');
+              f.querySelectorAll('[name="telefono"]').forEach(i => i.value = c.telefono || '');
+              f.querySelectorAll('[name="dni"]').forEach(i => i.value = c.dni || '');
+              f.querySelectorAll('[name="direccion"]').forEach(i => i.value = c.direccion || '');
+              f.querySelectorAll('[name="garante"]').forEach(i => i.value = c.garante || '');
+  
+              // Calcular fechaIngreso
+              let fiValue = "";
+              if (c.fechaIngreso) {
+                  const dateObj = new Date(c.fechaIngreso);
+                  const year = dateObj.getFullYear();
+                  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                  const day = String(dateObj.getDate()).padStart(2, '0');
+                  fiValue = `${year}-${month}-${day}`;
+              } else {
+                  fiValue = new Date().toISOString().split('T')[0];
+              }
+              f.querySelectorAll('[name="fechaIngreso"]').forEach(i => i.value = fiValue);
+  
+              // Calcular fechaVencimiento
+              let fvValue = "";
+              if (c.fechaVencimiento || c.proximoCobro) {
+                  const dateObj = new Date(c.fechaVencimiento || c.proximoCobro);
+                  const year = dateObj.getFullYear();
+                  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                  const day = String(dateObj.getDate()).padStart(2, '0');
+                  fvValue = `${year}-${month}-${day}`;
+              }
+              f.querySelectorAll('[name="fechaVencimiento"]').forEach(i => i.value = fvValue);
+  
+              // Prellenar específicos según categoría
+              if (categoria === 'Trámites') {
+                  const step = document.getElementById('step-datos-tramite');
+                  step.querySelector('[name="subTipoTramite"]').value = c.subTipoTramite || c.tramite || '';
+                  const empSelect = step.querySelector('[name="empresa"]');
+                  empSelect.value = c.empresa || '';
+                  
+                  const legajoCont = step.querySelector('.legajo');
+                  if ((c.empresa || '').toLowerCase().includes('toyota')) {
+                      legajoCont.classList.remove('hidden');
+                      step.querySelector('[name="legajoToyota"]').value = c.legajoToyota || '';
+                  } else {
+                      legajoCont.classList.add('hidden');
+                      step.querySelector('[name="legajoToyota"]').value = '';
+                  }
+                  const hInput = step.querySelector('[name="honorarios"]');
+                  if (hInput) hInput.value = c.honorarios || '';
+              } else if (categoria === 'Préstamos') {
+                  const step = document.getElementById('step-datos-prestamo');
+                  step.querySelector('[name="montoPrestado"]').value = c.montoPrestado || '';
+                  step.querySelector('[name="montoDevolver"]').value = c.montoDevolver || '';
+                  step.querySelector('[name="cuotasTotales"]').value = c.cuotasTotales || 1;
+              } else if (categoria === 'Electrodomésticos') {
+                  const step = document.getElementById('step-datos-electro');
+                  step.querySelector('[name="producto"]').value = c.producto || '';
+                  step.querySelector('[name="costoCompra"]').value = c.costoCompra || '';
+                  step.querySelector('[name="precioVenta"]').value = c.precioVenta || '';
+                  step.querySelector('[name="cuotasTotales"]').value = c.cuotasTotales || 1;
+              }
+  
+              document.getElementById('formTitle').innerHTML = '<i data-lucide="edit" class="w-5 h-5 mr-3 
+text-blue-500"></i>Editar Cliente';
+              
+              // Actualizar botones de submit en el wizard
+              f.querySelectorAll('button[type="submit"]').forEach(btn => btn.textContent = 'Guardar Cambios');
+              
+              lucide.createIcons();
+              document.getElementById('formContainer').scrollIntoView({ behavior: 'smooth' });
+          }
+  
+          function cancelarEdicion() {
+              toggleForm();
+          }
+  
+          document.getElementById('clienteForm').addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const data = Object.fromEntries(new FormData(e.target));
+              
+              // FIX: Capturar fechaVencimiento solo del input ACTIVO (habilitado) del wizard
+              const activeVto = Array.from(e.target.querySelectorAll('input[name="fechaVencimiento"]')).find(i => 
+!i.disabled && i.value);
+              if (activeVto) data.fechaVencimiento = activeVto.value;
+  
+              if (data.cuotasTotales) data.cuotasTotales = parseInt(data.cuotasTotales) || 1;
+              
+              // Unmasking de montos por categoría
+              if (data.categoria === 'Trámites') {
+                  if (data.honorarios) data.honorarios = unmaskCurrency(data.honorarios);
+                  if (data.pagoInicial) data.pagoInicial = unmaskCurrency(data.pagoInicial);
+                  delete data.montoPrestado; delete data.montoDevolver; delete data.costoCompra; delete 
+data.precioVenta; delete data.cuotasTotales; delete data.producto;
+              } else if (data.categoria === 'Préstamos') {
+                  if (data.montoPrestado) data.montoPrestado = unmaskCurrency(data.montoPrestado);
+                  if (data.montoDevolver) data.montoDevolver = unmaskCurrency(data.montoDevolver);
+                  if (data.pagoInicial) data.pagoInicial = unmaskCurrency(data.pagoInicial);
+                  delete data.subTipoTramite; delete data.honorarios; delete data.costoCompra; delete 
+data.precioVenta; delete data.producto; delete data.empresa;
+              } else if (data.categoria === 'Electrodomésticos') {
+                  if (data.costoCompra) data.costoCompra = unmaskCurrency(data.costoCompra);
+                  if (data.precioVenta) data.precioVenta = unmaskCurrency(data.precioVenta);
+                  if (data.pagoInicial) data.pagoInicial = unmaskCurrency(data.pagoInicial);
+                  delete data.subTipoTramite; delete data.honorarios; delete data.montoPrestado; delete 
+data.montoDevolver; delete data.empresa;
+              }
+  
+              console.log('DEBUG: Datos finales a enviar (Audit v3.3.1):', data);
+  
+              const method = editingClientId ? 'PUT' : 'POST';
+              const url = editingClientId ? `/api/clientes/${editingClientId}` : '/api/clientes';
+              
+              // Validación frontend de montos obligatorios (Audit Pre-Entrega)
+              if (data.categoria === 'Préstamos' && (!data.montoPrestado || !data.montoDevolver)) {
+                  showToast('Error', 'Completá Monto Prestado y Monto a Devolver', 'rose');
+                  return;
+              }
+              if (data.categoria === 'Electrodomésticos' && (!data.costoCompra || !data.precioVenta)) {
+                  showToast('Error', 'Completá Costo de Compra y Precio de Venta', 'rose');
+                  return;
+              }
+  
+              try {
+                  const res = await authFetch(url, {
+                      method, headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(data)
+                  });
+                  if (!res) return; // authFetch ya redirigió al login
+                  const resData = await res.json();
+                  if (resData.ok) {
+                      toggleForm(); 
+                      await refrescarTodo();
+                      showToast('¡Éxito!', editingClientId ? 'Cliente actualizado' : 'Cliente registrado', 
+'emerald');
+                  } else {
+                      showToast('Error', resData.msg || 'Fallo de validación', 'rose');
+                  }
+              } catch(e) { 
+                  console.error('Error guardando cliente:', e); 
+                  showToast('Error', 'Fallo de conexión al guardar.', 'rose');
+              }
+          });
+  
+          // --- PAGO MODAL ---
+          function openPagoModal(id, nombre, prestamoId = 'legacy', montoSugerido = 0, fechaVencimiento = null) {
+              document.getElementById('pago-clienteId').value = id;
+              document.getElementById('pago-prestamoId').value = prestamoId;
+              document.getElementById('modalPagoName').textContent = `Cliente: ${nombre}`;
+              
+              // Lógica de Visibilidad de Recargo por Mora (v3.2.1)
+              const btnRecargo = document.getElementById('btnAplicarRecargo');
+              if (fechaVencimiento) {
+                  const vto = new Date(fechaVencimiento);
+                  const hoy = new Date();
+                  hoy.setHours(0,0,0,0);
+                  vto.setHours(0,0,0,0);
+                  
+                  if (vto < hoy) {
+                      btnRecargo.classList.remove('hidden');
+                  } else {
+                      btnRecargo.classList.add('hidden');
+                  }
+              } else {
+                  btnRecargo.classList.add('hidden');
+              }
+  
+              const montoInput = document.getElementById('pago-monto');
+              if (montoSugerido > 0) {
+                  montoInput.value = Math.round(montoSugerido);
+                  maskInputCurrency({ target: montoInput });
+              } else {
+                  montoInput.value = '';
+              }
+  
+              document.getElementById('pago-metodo').value = '';
+              const fechaPagoInput = document.getElementById('pago-fechaPago');
+              if (fechaPagoInput) fechaPagoInput.value = '';
+              document.getElementById('modalPago').classList.remove('hidden');
+          }
+  
+          function closePagoModal() {
+              document.getElementById('modalPago').classList.add('hidden');
+              // Resetear color y recargo
+              const montoInput = document.getElementById('pago-monto');
+              if (montoInput) montoInput.style.color = '';
+              const inputRecargo = document.getElementById('pago-conRecargo');
+              if (inputRecargo) inputRecargo.value = 'false';
+          }
+  
+          function aplicarRecargo15() {
+              const inputMonto = document.getElementById('pago-monto');
+              const montoActual = unmaskCurrency(inputMonto.value) || 0;
+              
+              if (montoActual <= 0) {
+                  showToast('Aviso', 'Ingresá un monto primero', 'amber');
+                  return;
+              }
+              
+              const recargo = Math.round(montoActual * 0.15);
+              const totalConRecargo = montoActual + recargo;
+              
+              // Actualizar input con formato (sin el símbolo $ para el input)
+              inputMonto.value = new Intl.NumberFormat('es-AR').format(totalConRecargo);
+              
+              // Feedback Visual
+              inputMonto.style.color = '#fb7185'; // rose-400
+              inputMonto.classList.add('animate-pulse');
+              setTimeout(() => inputMonto.classList.remove('animate-pulse'), 1000);
+              
+              showToast('Recargo Aplicado', `+15% de mora ($${recargo.toLocaleString('es-AR')})`, 'rose');
+              
+              // Hidden flag para el backend
+              let inputRecargo = document.getElementById('pago-conRecargo');
+              if (!inputRecargo) {
+                  inputRecargo = document.createElement('input');
+                  inputRecargo.type = 'hidden';
+                  inputRecargo.name = 'conRecargo';
+                  inputRecargo.id = 'pago-conRecargo';
+                  document.getElementById('pagoForm').appendChild(inputRecargo);
+              }
+              inputRecargo.value = 'true';
+          }
+  
+          // --- NUEVO SERVICIO MODAL ---
+          function toggleNuevaOperacionCampos() {
+              const tipo = document.getElementById('no-tipo').value;
+              document.getElementById('no-campos-prestamo').classList.add('hidden');
+              document.getElementById('no-campos-electro').classList.add('hidden');
+              document.getElementById('no-campos-tramite').classList.add('hidden');
+              document.getElementById('no-campos-cuotas').classList.add('hidden');
+              
+              if (tipo === 'Préstamos') {
+                  document.getElementById('no-campos-prestamo').classList.remove('hidden');
+                  document.getElementById('no-campos-cuotas').classList.remove('hidden');
+              }
+              if (tipo === 'Electrodomésticos') {
+                  document.getElementById('no-campos-electro').classList.remove('hidden');
+                  document.getElementById('no-campos-cuotas').classList.remove('hidden');
+              }
+              if (tipo === 'Trámites') {
+                  document.getElementById('no-campos-tramite').classList.remove('hidden');
+              }
+          }
+  
+          function openNuevaOperacionModal(id, nombre) {
+              document.getElementById('no-clienteId').value = id;
+              document.getElementById('modalNuevaOperacionName').textContent = `Cliente: ${nombre}`;
+              document.getElementById('nuevaOperacionForm').reset();
+              toggleNuevaOperacionCampos();
+              document.getElementById('modalNuevaOperacion').classList.remove('hidden');
+          }
+  
+          function closeNuevaOperacionModal() {
+              document.getElementById('modalNuevaOperacion').classList.add('hidden');
+          }
+  
+          document.getElementById('nuevaOperacionForm').addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const clienteId = document.getElementById('no-clienteId').value;
+              
+              const payload = {
+                  tipo: document.getElementById('no-tipo').value,
+                  montoPrestado: unmaskCurrency(document.getElementById('no-montoPrestado').value),
+                  montoDevolver: unmaskCurrency(document.getElementById('no-montoDevolver').value),
+                  producto: document.getElementById('no-producto').value,
+                  costoCompra: unmaskCurrency(document.getElementById('no-costoCompra').value),
+                  precioVenta: unmaskCurrency(document.getElementById('no-precioVenta').value),
+                  tramite: document.getElementById('no-tramite').value,
+                  subTipoTramite: document.getElementById('no-subTipoTramite').value,
+                  honorarios: unmaskCurrency(document.getElementById('no-honorarios').value),
+                  cuotasTotales: document.getElementById('no-cuotasTotales').value,
+                  fechaVencimiento: document.getElementById('no-fechaVencimiento').value,
+                  moneda: document.getElementById('no-moneda').value || 'ARS'
+              };
+              
+              try {
+                  const res = await authFetch(`/api/clientes/${clienteId}/operaciones`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(payload)
+                  });
+                  if (!res) return;
+                  const data = await res.json();
+                  if (data.ok) {
+                      closeNuevaOperacionModal();
+                      await refrescarTodo();
+                      showToast('¡Éxito!', 'Nuevo servicio agregado', 'emerald');
+                  } else {
+                      showToast('Error', data.msg || 'Error al agregar servicio', 'rose');
+                  }
+              } catch (err) {
+                  console.error(err);
+                  showToast('Error', 'Fallo de conexión.', 'rose');
+              }
+          });
+  
+          document.getElementById('pagoForm').addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const clienteId = document.getElementById('pago-clienteId').value;
+              const operacionId = document.getElementById('pago-prestamoId').value;
+              const montoStr = document.getElementById('pago-monto').value;
+              const metodo = document.getElementById('pago-metodo').value;
+              const fechaPago = document.getElementById('pago-fechaPago')?.value || '';
+              const conRecargo = document.getElementById('pago-conRecargo')?.value === 'true';
+              const montoLimpio = unmaskCurrency(montoStr);
+              
+              try {
+                  const payloadPago = { monto: montoLimpio, metodo, operacionId, conRecargo };
+                  if (fechaPago) payloadPago.fechaPago = fechaPago;
+                  const res = await authFetch(`/api/clientes/${clienteId}/pago`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(payloadPago)
+                  });
+                  if (!res) return; // authFetch ya redirigió al login
+                  const resData = await res.json();
+                  if (resData.ok) {
+                      closePagoModal();
+                      await refrescarTodo();
+                      showToast('Pago Registrado', 'El Dashboard se ha actualizado.', 'emerald');
+                  } else {
+                      showToast('Error', resData.msg || 'Error al registrar el pago', 'rose');
+                  }
+              } catch(err) {
+                  console.error(err);
+                  showToast('Error', 'Fallo de conexión al registrar pago.', 'rose');
+              }
+          });
+  
+          // --- AGENDA ---
+          async function fetchAgenda() {
+              const wrapper = document.getElementById('mini-agenda-wrapper');
+              const container = document.getElementById('agenda-container');
+              try {
+                  // SKELETON LOADER (UX Audit)
+                  if (wrapper) wrapper.innerHTML = '<div class="p-8 space-y-4"><div class="h-20 bg-slate-800 
+rounded-3xl skeleton"></div><div class="h-20 bg-slate-800 rounded-3xl skeleton"></div></div>';
+                  if (container) container.innerHTML = '<div class="col-span-full p-8 grid grid-cols-1 md:grid-cols-3 
+gap-6"><div class="h-48 bg-slate-800 rounded-[2.5rem] skeleton"></div><div class="h-48 bg-slate-800 rounded-[2.5rem] 
+skeleton"></div><div class="h-48 bg-slate-800 rounded-[2.5rem] skeleton"></div></div>';
+  
+                  const res = await authFetch('/api/agenda');
+                  if (!res) return;
+                  const data = await res.json();
+                  
+                  // On-the-fly virtual projection based on operations
+                  const virtualAgendas = [];
+                  allClientes.forEach(c => {
+                      if (c.operaciones && c.operaciones.length > 0) {
+                          c.operaciones.forEach((op, opIdx) => {
+                              // Solo incluir operaciones que no estén cerradas/pagadas y tengan fecha de vencimiento
+                              if (!['Pagado', 'Cancelado', 'Cerrado'].includes(op.estado) && op.fechaVencimiento) {
+                                  virtualAgendas.push({
+                                      _id: 'virtual_' + c._id + '_' + opIdx,
+                                      titulo: `${c.nombre} - ${op.tipo} (#${opIdx + 1})`,
+                                      fechaVencimiento: op.fechaVencimiento,
+                                      tipo: 'Cobro Virtual',
+                                      clienteId: c,
+                                      categoria: op.tipo,
+                                      telefono: c.telefono,
+                                      saldo: op.saldoPendiente,
+                                      montoCuota: (op.montoDevolver || op.precioVenta || op.honorarios || 0) / 
+(op.cuotasTotales || 1)
+                                  });
+                              }
+                          });
+                      }
+                  });
+  
+                  allRecordatorios = [...(data.recordatorios || []), ...virtualAgendas];
+                  allRecordatorios = allRecordatorios.map(r => ({
+                      ...r,
+                      fecha: r.fecha || r.fechaVencimiento
+                  }));
+                  allRecordatorios.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+  
+                  renderAgenda(allRecordatorios);
+                  renderCalendar(); 
+              } catch (err) { console.error(err); }
+          }
+  
+          function renderAgenda(recs) {
+              updateInicioMini(recs);
+              const container = document.getElementById('agendaItemsContainer');
+              if (container) {
+                  container.innerHTML = '';
+                  
+                  const tz = 'America/Argentina/Buenos_Aires';
+                  const hoyDate = new Date();
+                  const hoyStr = hoyDate.toLocaleDateString('en-CA', { timeZone: tz });
+                  
+                  // Fecha límite: Hoy + 7 días (al final del día)
+                  const limiteDate = new Date();
+                  limiteDate.setDate(limiteDate.getDate() + 7);
+                  limiteDate.setHours(23, 59, 59, 999);
+  
+                  // Filtrar por relevancia: Solo próximos 7 días (sin incluir hoy ni atrasados)
+                  const recsFiltrados = recs.filter(r => {
+                      const fechaR = new Date(r.fecha);
+                      const rStr = fechaR.toLocaleDateString('en-CA', { timeZone: tz });
+                      
+                      // Solo fechas estrictamente posteriores a hoy y dentro de la ventana de 7 días
+                      return rStr > hoyStr && fechaR <= limiteDate;
+                  });
+  
+                  // Ordenar cronológicamente (más cercano primero)
+                  recsFiltrados.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+  
+                  if (recsFiltrados.length === 0) {
+                      container.innerHTML = `
+                          <div class="col-span-full py-20 flex flex-col items-center justify-center bg-white/5 border 
+border-dashed border-slate-700 rounded-[2.5rem] space-y-4">
+                              <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center 
+text-slate-500">
+                                  <i data-lucide="calendar-check" class="w-6 h-6"></i>
+                              </div>
+                              <p class="text-slate-400 font-bold text-sm uppercase tracking-widest text-center 
+px-6">No hay vencimientos cercanos para esta semana</p>
+                          </div>`;
+                      lucide.createIcons();
+                      return;
+                  }
+  
+                  recsFiltrados.forEach(rawItem => {
+                      const item = { ...rawItem, titulo: escapeHTML(rawItem.titulo) };
+                      if (item.clienteId) {
+                          item.clienteId = { ...item.clienteId, nombre: escapeHTML(item.clienteId.nombre), telefono: 
+escapeHTML(item.clienteId.telefono) };
+                      }
+  
+                      const date = new Date(item.fecha);
+                      const div = document.createElement('div');
+                      
+                      const isAuto = item.tipo === 'Cobro Virtual';
+                      const colorStyle = isAuto ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-violet-50 
+text-violet-600 border-violet-100';
+                      const titleColor = isAuto ? 'text-emerald-700' : 'text-slate-800';
+                      const cardStyle = isAuto ? 'border-emerald-200' : 'border-slate-100';
+                      
+                      let iconMark = '';
+                      if (isAuto) {
+                          iconMark = item.clienteId?.categoria === 'Préstamos' ? '💰 ' : '🔌 ';
+                      } else {
+                          iconMark = '<i data-lucide="zap" class="w-3 h-3 text-violet-400 mr-2 shrink-0"></i>';
+                      }
+                      
+                      div.className = `bg-white p-6 rounded-[2.5rem] border ${cardStyle} shadow-sm flex flex-col 
+justify-between hover:shadow-xl transition-all`;
+                      
+                      const trashBtn = isAuto ? '' : `<button onclick="borrarRecordatorio('${item._id}')" 
+class="text-red-400 hover:text-red-600 transition-colors p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
+  
+                      div.innerHTML = `
+                          <div class="flex justify-between items-start mb-4">
+                              <div class="flex-1 min-w-0">
+                                  <h5 class="text-xs font-black uppercase mb-1 ${titleColor} flex items-center 
+cursor-pointer hover:text-blue-400 transition-colors" onclick="${item.clienteId ? 
+`irACliente('${item.clienteId._id}')` : ''}">
+                                      ${iconMark}${item.titulo}${item.clienteId?.nombre ? ' - ' + 
+item.clienteId.nombre : ''}
+                                  </h5>
+                                  <p class="text-[10px] font-bold text-slate-400 capitalize flex items-center">
+                                      <i data-lucide="user" class="w-3 h-3 mr-1"></i> ${item.clienteId?.nombre || 
+'TRAMITE PERSONAL'}
+                                  </p>
+                              </div>
+                              <button onclick="borrarRecordatorio('${item._id}')" class="text-rose-500/50 
+hover:text-rose-600 transition-colors p-2 hover:bg-rose-500/5 rounded-xl shrink-0">
+                                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                              </button>
+                          </div>
+                          <div class="flex items-center justify-between mt-auto">
+                              <span class="text-[9px] font-black px-2 py-1 ${colorStyle} rounded-lg border">
+                                  ${date.toLocaleDateString('es-AR', { timeZone: 'UTC' })}
+                              </span>
+                              ${item.clienteId ? `
+                                  <a href="${generarLinkWhatsApp(item.clienteId.telefono)}" target="_blank" 
+class="text-emerald-500 hover:text-emerald-600 transition-colors">
+                                      <i data-lucide="message-circle" class="w-5 h-5"></i>
+                                  </a>
+                              ` : ''}
+                          </div>
+                      `;
+                      container.appendChild(div);
+                  });
+              }
+              lucide.createIcons();
+          }
+  
+  
+          async function borrarPago(clienteId, pagoId, prestamoId = 'legacy') {
+              if (!confirm('�️ ¿Seguro quieres eliminar este pago? Eso recalculará el saldo restante y las 
+ganancias.')) return;
+              try {
+                  const res = await authFetch(`/api/clientes/${clienteId}/pago/${pagoId}`, {
+                      method: 'DELETE',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ prestamoId })
+                  });
+                  if (!res) return;
+                  const data = await res.json();
+                  if (data.ok) {
+                      await refrescarTodo();
+                      showToast('Éxito', 'Pago eliminado correctamente', 'emerald');
+                  } else {
+                      showToast('Error', data.msg || 'No se pudo eliminar', 'rose');
+                  }
+              } catch (err) {
+                  console.error(err);
+                  showToast('Error', 'Fallo de conexión al eliminar pago.', 'rose');
+              }
+          }
+  
+          async function borrarRecordatorio(id) {
+              if (!confirm('⚠️ ¿Seguro quieres borrar este recordatorio?')) return;
+              try {
+                  const res = await authFetch(`/api/agenda/${id}`, {
+                      method: 'DELETE'
+                  });
+                  if (!res) return;
+                  if (res.ok) {
+                      await refrescarTodo();
+                      showToast('Éxito', 'Recordatorio eliminado', 'emerald');
+                  } else {
+                      showToast('Error', 'Ocurrió un error al borrar el recordatorio.', 'rose');
+                  }
+              } catch (err) { 
+                  console.error(err);
+                  showToast('Error', 'Fallo de conexión al eliminar recordatorio.', 'rose');
+              }
+          }
+  
+          function renderCalendar() {
+              const container = document.getElementById('agenda-calendar-container');
+              if (!container) return;
+  
+              const year = calendarView.getFullYear();
+              const month = calendarView.getMonth();
+              const monthName = new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(calendarView);
+  
+              container.innerHTML = `
+                  <div class="bg-slate-900 p-6 rounded-[2.5rem] border border-white/5 shadow-2xl">
+                      <div class="flex justify-between items-center mb-6">
+                          <h4 class="text-lg font-black text-white capitalize">${monthName} ${year}</h4>
+                          <div class="flex gap-1">
+                              <button onclick="changeMonth(-1)" class="p-1.5 hover:bg-white/5 rounded-xl 
+transition-all text-slate-500 hover:text-white"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                              <button onclick="changeMonth(1)" class="p-1.5 hover:bg-white/5 rounded-xl transition-all 
+text-slate-500 hover:text-white"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                          </div>
+                      </div>
+                      <div class="grid grid-cols-7 gap-1 mb-2 text-center border-b border-white/5 pb-2">
+                          ${['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'].map(d => `<span class="text-[9px] 
+font-black text-slate-600 uppercase">${d}</span>`).join('')}
+                      </div>
+                      <div class="grid grid-cols-7 gap-1" id="calendarDays"></div>
+                  </div>
+              `;
+  
+              const daysContainer = document.getElementById('calendarDays');
+              const firstDay = new Date(year, month, 1).getDay();
+              const daysInMonth = new Date(year, month + 1, 0).getDate();
+              let startOffset = firstDay === 0 ? 6 : firstDay - 1;
+  
+              for (let i = 0; i < startOffset; i++) {
+                  daysContainer.innerHTML += `<div class="aspect-square"></div>`;
+              }
+  
+              for (let day = 1; day <= daysInMonth; day++) {
+                  const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                  const actsDay = allRecordatorios.filter(r => r.fecha.startsWith(dateStr));
+                  const hasEvents = actsDay.length > 0;
+                  const virtuals = actsDay.filter(r => r.tipo === 'Cobro Virtual');
+                  const hasManual = actsDay.some(r => r.tipo !== 'Cobro Virtual');
+                  
+                  const isToday = new Date().toLocaleDateString('en-CA') === dateStr;
+  
+                  const dayEl = document.createElement('button');
+                  dayEl.onclick = () => {
+                      if (hasEvents) verDetalleDia(dateStr);
+                      else openAgendaModalWithDate(dateStr);
+                  };
+  
+                  dayEl.className = `aspect-square rounded-xl flex flex-col items-center justify-center relative 
+transition-all group 
+                      ${isToday ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20 z-10 scale-105' : 
+'bg-slate-800/40 text-slate-300 border border-white/5'}
+                      ${hasEvents ? 'hover:bg-violet-500/20 hover:border-violet-500/40 cursor-pointer shadow-sm' : 
+'hover:bg-white/5 cursor-pointer'}`;
+                  
+                  let iconsHtml = '';
+                  if (hasManual) iconsHtml += `<span class="w-1 h-1 bg-violet-400 rounded-full"></span>`;
+                  if (virtuals.length > 0) iconsHtml += `<span class="text-[8px] opacity-80">💰</span>`;
+  
+                  dayEl.innerHTML = `
+                      <span class="text-[10px] font-bold">${day}</span>
+                      <div class="flex space-x-0.5 absolute bottom-1">${iconsHtml}</div>
+                  `;
+                  daysContainer.appendChild(dayEl);
+              }
+              lucide.createIcons();
+          }
+  
+          async function verDetalleDia(dateStr) {
+              const tz = 'America/Argentina/Buenos_Aires';
+              const fDisplay = new Date(dateStr + 'T00:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 
+'numeric', month: 'long' });
+              
+              document.getElementById('modalDayTitle').textContent = fDisplay;
+              const container = document.getElementById('dayDetailsList');
+              container.innerHTML = '<div class="p-10 text-center animate-pulse text-slate-500 text-xs">Cargando 
+trámites...</div>';
+              
+              document.getElementById('modalDayDetails').classList.remove('hidden');
+  
+              const actsDay = allRecordatorios.filter(r => r.fecha.startsWith(dateStr)).sort((a,b) => (a.tipo === 
+'personal' ? -1 : 1));
+              
+              let html = '';
+              actsDay.forEach(item => {
+                  const tituloSafe = escapeHTML(item.titulo);
+                  const nombreSafe = escapeHTML(item.clienteId?.nombre);
+                  
+                  const isCobro = item.tipo === 'Cobro Virtual';
+                  const icon = isCobro ? (item.categoria === 'Préstamos' ? '💰' : '🔌') : '⚡';
+                  const color = isCobro ? 'text-emerald-400 bg-emerald-500/10' : 'text-violet-400 bg-violet-500/10';
+                  
+                  html += `
+                      <div class="flex items-center space-x-4 p-4 bg-white/5 rounded-2xl border border-white/5 
+hover:bg-white/10 transition-all group">
+                          <div class="w-10 h-10 ${color} rounded-xl flex items-center justify-center border 
+border-white/5 shrink-0 text-lg">
+                              ${icon}
+                          </div>
+                          <div class="flex-1 min-w-0">
+                              <h5 class="text-xs font-black text-white truncate uppercase tracking-wider">
+                                  ${tituloSafe}${nombreSafe ? ' - ' + nombreSafe : ''}
+                              </h5>
+                              <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">
+                                  ${isCobro ? `Cobro: ${formatCurrency(item.montoCuota || 0)}` : 'Trámite Personal'}
+                              </p>
+                          </div>
+                          <div class="flex items-center gap-1">
+                              ${item.clienteId?._id ? `
+                                  <button onclick="irACliente('${item.clienteId._id}')" class="p-2 text-slate-400 
+hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all" title="Ver ficha">
+                                      <i data-lucide="eye" class="w-4 h-4"></i>
+                                  </button>
+                                  <button onclick="window.open('https://wa.me/${(item.telefono || '').replace(/\D/g, 
+'')}', '_blank')" class="p-2 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all" 
+title="WhatsApp">
+                                      <i data-lucide="message-square" class="w-4 h-4"></i>
+                                  </button>
+                              ` : ''}
+                              <button onclick="borrarRecordatorioDesdeModal('${item._id}', '${dateStr}')" class="p-2 
+text-rose-500/50 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all" title="Eliminar">
+                                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                              </button>
+                          </div>
+                      </div>
+                  `;
+              });
+  
+              container.innerHTML = html || '<p class="text-center text-slate-500 text-xs py-10">No hay trámites para 
+este d�a.</p>';
+              lucide.createIcons();
+          }
+  
+          async function borrarRecordatorioDesdeModal(id, dateStr) {
+              if(!confirm('¿Eliminar este trámite?')) return;
+              try {
+                  const res = await authFetch(`/api/agenda/${id}`, { method: 'DELETE' });
+                  if (!res) return;
+                  const data = await res.json();
+                  if(data.ok) {
+                      allRecordatorios = allRecordatorios.filter(r => r._id !== id);
+                      verDetalleDia(dateStr);
+                      renderCalendar();
+                      updateInicioMini(allRecordatorios);
+                  }
+              } catch(e) { console.error(e); }
+          }
+  
+          function closeDayDetailsModal() {
+              document.getElementById('modalDayDetails').classList.add('hidden');
+          }
+  
+          function openAgendaModalWithDate(dateStr) {
+              openAgendaModal(null, null);
+              document.getElementById('agenda-fecha').value = dateStr;
+          }
+  
+          function changeMonth(delta) {
+              calendarView.setMonth(calendarView.getMonth() + delta);
+              renderCalendar();
+          }
+  
+          function updateInicioMini(recs) {
+              cargarMetricas();
+              const tz = 'America/Argentina/Buenos_Aires';
+              const hoyStr = new Date().toLocaleDateString('en-CA', { timeZone: tz });
+              
+              const mananaDate = new Date();
+              mananaDate.setDate(mananaDate.getDate() + 1);
+              const mananaStr = mananaDate.toLocaleDateString('en-CA', { timeZone: tz });
+              
+              const hoyDate = new Date();
+  
+              // Helper para evitar "Date Invalid" limpiando el string antes de sumarle T00:00:00
+              const parseLocal = (d) => {
+                  if (!d) return new Date();
+                  const clean = d.includes('T') ? d.split('T')[0] : d;
+                  return new Date(clean + 'T00:00:00');
+              };
+  
+              // 1. Agenda y Cobros (SOLO HOY) - Prioridad Alta
+              const recsClientesHoy = recs.filter(r => {
+                  const rStr = parseLocal(r.fecha).toLocaleDateString('en-CA', { timeZone: tz });
+                  return r.tipo !== 'personal' && rStr === hoyStr;
+              });
+  
+              // 2. Trámites Personales (TODOS, como antes) - Abajo
+              const recsPersonales = recs.filter(r => r.tipo === 'personal').sort((a,b) => parseLocal(a.fecha) - 
+parseLocal(b.fecha));
+  
+              // 3. Morosos (>= 10 días de atraso)
+              const recsMorosos = recs.filter(r => {
+                  if (r.tipo !== 'Cobro Virtual') return false;
+                  const fechaR = parseLocal(r.fecha);
+                  const diffTime = hoyDate.getTime() - fechaR.getTime();
+                  const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
+                  return diffDays >= 10;
+              });
+  
+              const wrapper = document.getElementById('mini-agenda-wrapper');
+              if (wrapper) {
+                  let html = '';
+  
+                  const renderItem = (item) => {
+                      let icon = '⚡';
+                      let categoryText = item.categoria || 'Agenda';
+                      const fechaR = parseLocal(item.fecha);
+                      const rStr = fechaR.toLocaleDateString('en-CA', { timeZone: tz });
+                      const fDisplay = fechaR.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
+                      
+                      const isAtrasado = rStr < hoyStr;
+                      
+                      let dateLabel = `<span class="text-[9px] font-black text-slate-400 bg-white/5 px-2 py-0.5 
+rounded-lg border border-white/5">📅 ${fDisplay}</span>`;
+                      if (rStr === hoyStr) dateLabel = `<span class="text-[9px] font-black text-emerald-400 
+bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">📅 HOY</span>`;
+                      else if (rStr === mananaStr) dateLabel = `<span class="text-[9px] font-black text-blue-400 
+bg-blue-500/10 px-2 py-0.5 rounded-lg border border-blue-500/20">📅 MAÑANA</span>`;
+  
+                      if (item.tipo === 'Cobro Virtual') {
+                          icon = item.categoria === 'Préstamos' ? '💰' : '🔌';
+                      }
+  
+                      return `
+                          <div class="flex items-center space-x-3 md:space-x-4 w-full p-3 md:p-4 bg-slate-800/40 
+rounded-2xl border border-white/5 hover:bg-slate-800 transition-all group">
+                              <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center border 
+border-white/10 shrink-0">
+                                  <span class="text-lg">${icon}</span>
+                              </div>
+                              <div class="flex-1 min-w-0">
+                                  <div class="flex items-center gap-2">
+                                      <h5 class="text-xs font-black truncate text-white hover:text-emerald-400 
+transition-colors uppercase tracking-wider cursor-pointer" onclick="${item.clienteId ? 
+`irACliente('${item.clienteId._id}')` : ''}">
+                                          ${item.titulo}${item.clienteId?.nombre ? ' - ' + item.clienteId.nombre : ''}
+                                      </h5>
+                                      ${isAtrasado ? `<span class="bg-amber-500/10 text-amber-500 text-[8px] 
+font-black px-1.5 py-0.5 rounded-md border border-amber-500/20 animate-pulse">Atrasado</span>` : ''}
+                                  </div>
+                                  <div class="flex items-center gap-2 mt-1">
+                                      ${dateLabel}
+                                      <p class="text-[8px] text-slate-500 font-bold tracking-widest truncate 
+uppercase">Asunto: ${item.clienteId?.nombre ? item.categoria : 'PERSO'}</p>
+                                  </div>
+                              </div>
+                              <div class="flex items-center gap-1">
+                                  ${item.clienteId?._id ? `
+                                      <button onclick="irACliente('${item.clienteId._id}')" class="p-2 text-slate-500 
+hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all" title="Ver ficha">
+                                          <i data-lucide="eye" class="w-4 h-4"></i>
+                                      </button>
+                                  ` : ''}
+                                  <button onclick="borrarRecordatorio('${item._id}')" class="p-2 text-rose-500/50 
+hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all" title="Completar/Borrar">
+                                      <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                  </button>
+                              </div>
+                          </div>
+                      `;
+                  };
+  
+                  // --- SECCIÓN 1: TAREAS CON CLIENTES (HOY) ---
+                  if (recsClientesHoy.length > 0) {
+                      html += `
+                          <div class="p-6 space-y-3">
+                              <h4 class="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-3 flex 
+items-center gap-2 px-1">
+                                  <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full 
+shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                                  Tareas con Clientes (Hoy)
+                              </h4>
+                              ${recsClientesHoy.map(r => renderItem(r)).join('')}
+                          </div>
+                      `;
+                  }
+  
+                  // Fallback si no hay nada PARA HOY (Clientes)
+                  if (recsClientesHoy.length === 0) {
+                      html += `
+                          <div class="p-12 flex flex-col items-center justify-center space-y-4 opacity-60 border-b 
+border-white/5">
+                              <div class="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center border 
+border-white/5 text-slate-500">
+                                  <i data-lucide="sparkles" class="w-8 h-8 text-amber-400/50 animate-pulse"></i>
+                              </div>
+                              <p class="text-[10px] font-black uppercase tracking-[0.4em] text-center w-full 
+text-slate-500">Sin tareas con clientes para hoy</p>
+                          </div>
+                      `;
+                  }
+  
+                  // --- SECCIÓN 2: TRÁMITES PERSONALES ACORDEÓN (TODOS) ---
+                  if (recsPersonales.length > 0) {
+                      html += `
+                          <div class="bg-slate-950/20 border-t border-white/5">
+                              <button onclick="togglePersonalesDashboard()" class="w-full p-6 flex items-center 
+justify-between group transition-all hover:bg-white/5 text-slate-400">
+                                  <div class="flex items-center space-x-3">
+                                      <div class="w-1.5 h-1.5 rounded-full bg-violet-600 
+shadow-[0_0_10px_rgba(139,92,246,0.5)]"></div>
+                                      <span class="text-[10px] font-black uppercase tracking-[0.2em] 
+group-hover:text-violet-400 transition-colors">Mis Trámites Personales (${recsPersonales.length})</span>
+                                  </div>
+                                  <div class="w-6 h-6 rounded-lg bg-violet-500/10 text-violet-500 flex items-center 
+justify-center group-hover:scale-110 transition-transform">
+                                      <i data-lucide="${personalesExpanded ? 'minus' : 'plus'}" class="w-4 h-4"></i>
+                                  </div>
+                              </button>
+                              ${personalesExpanded ? `<div class="px-6 pb-6 space-y-3 max-h-[300px] overflow-y-auto 
+custom-scrollbar animate-in slide-in-from-top-2 duration-300">
+                                  ${recsPersonales.map(r => renderItem(r)).join('')}
+                              </div>` : ''}
+                          </div>
+                      `;
+                  }
+  
+                  // --- SECCIÓN MOROSOS ACCORDION ---
+                  if (recsMorosos.length > 0) {
+                      let morososList = '';
+                      if (morososExpanded) {
+                          recsMorosos.forEach(m => {
+                              const msjM = `Hola ${m.clienteId.nombre}, te contactamos de Zentra CRM por la morosidad 
+cr�tica en tu cuota de ${m.categoria}. Por favor contactanos a la brevedad.`;
+                              const waLinkM = generarLinkWhatsApp(m.telefono, msjM);
+                              morososList += `
+                                  <div class="flex items-center justify-between p-3 bg-rose-500/5 hover:bg-rose-500/10 
+rounded-xl transition-all border border-rose-500/10 mb-2">
+                                      <div class="flex-1 min-w-0 cursor-pointer" onclick="window.open('${waLinkM}', 
+'_blank')">
+                                          <p class="text-xs font-bold text-rose-300 truncate tracking-tight 
+uppercase">${m.clienteId.nombre}</p>
+                                          <p class="text-[8px] text-rose-500/60 font-black uppercase 
+tracking-widest">Moroso (+30d): ${m.categoria}</p>
+                                      </div>
+                                      <button onclick="irACliente('${m.clienteId._id}')" class="p-2 text-rose-500/50 
+hover:text-rose-400 hover:bg-rose-400/10 rounded-lg transition-all" title="Ver ficha">
+                                          <i data-lucide="eye" class="w-4 h-4"></i>
+                                      </button>
+                                  </div>
+                              `;
+                          });
+                      }
+  
+                      html += `
+                          <div class="border-t border-white/5 bg-slate-950/30">
+                              <button onclick="toggleMorososDashboard()" class="w-full p-5 flex items-center 
+justify-between group transition-all hover:bg-white/5">
+                                  <div class="flex items-center space-x-3">
+                                      <div class="w-2 h-2 rounded-full bg-rose-600 
+shadow-[0_0_10px_rgba(225,29,72,0.5)]"></div>
+                                      <span class="text-[10px] font-black text-rose-500 uppercase 
+tracking-[0.2em]">Morosos (+10 d�as) (${recsMorosos.length})</span>
+                                  </div>
+                                  <div class="w-6 h-6 rounded-lg bg-rose-500/10 text-rose-500 flex items-center 
+justify-center group-hover:scale-110 transition-transform">
+                                      <i data-lucide="${morososExpanded ? 'minus' : 'plus'}" class="w-4 h-4"></i>
+                                  </div>
+                              </button>
+                              ${morososExpanded ? `<div class="px-5 pb-5 max-h-[200px] overflow-y-auto 
+custom-scrollbar animate-in slide-in-from-top-2 duration-300">${morososList}</div>` : ''}
+                          </div>
+                      `;
+                  }
+  
+                  wrapper.innerHTML = html;
+                  lucide.createIcons();
+              }
+          }
+  
+          function toggleMorososDashboard() {
+              morososExpanded = !morososExpanded;
+              fetchAgenda();
+          }
+  
+          function togglePersonalesDashboard() {
+              personalesExpanded = !personalesExpanded;
+              fetchAgenda();
+          }
+  
+          function irACliente(id) {
+              switchTab('clientes');
+              // Intentar abrir el detalle si ya está cargado
+              setTimeout(() => {
+                  const target = document.getElementById(`detail-${id}`);
+                  if (target) {
+                      toggleClienteDetalle(id);
+                      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  } else {
+                      // Si no está, lo buscamos limpiando filtros
+                      document.getElementById('buscarCliente').value = id; // El buscador acepta IDs parciales por 
+defecto
+                      filtrarClientes();
+                      setTimeout(() => toggleClienteDetalle(id), 500);
+                  }
+              }, 300);
+          }
+  
+          function openAgendaModal(id, nombre) {
+              const sc = document.getElementById('clientSelectContainer');
+              const hc = document.getElementById('honorariosContainer');
+              const hidden = document.getElementById('agenda-clienteId');
+              
+              if (id) { 
+                  hidden.value = id; 
+                  sc.classList.add('hidden'); 
+                  document.getElementById('modalClientName').textContent = `Cliente: ${nombre}`; 
+                  hc.classList.remove('hidden');
+              } else { 
+                  hidden.value = ''; 
+                  sc.classList.remove('hidden'); 
+                  populateClients(); 
+                  document.getElementById('modalClientName').textContent = 'Seleccionar Cliente'; 
+                  // Por defecto al abrir vacío, el select suele estar en "Personal" (primer ítem)
+                  toggleAgendaFields();
+              }
+              document.getElementById('modalAgenda').classList.remove('hidden');
+          }
+  
+          // Nueva función dinámica solicitada por Jony
+          function toggleAgendaFields() {
+              const selectValue = document.getElementById('agenda-client-select').value;
+              const hc = document.getElementById('honorariosContainer');
+              if (selectValue === 'personal') {
+                  hc.classList.add('hidden');
+              } else {
+                  hc.classList.remove('hidden');
+              }
+          }
+  
+          function populateClients() {
+              const s = document.getElementById('agenda-client-select');
+              s.innerHTML = '<option value="personal">➕ Trámite Personal (Sin Cliente)</option>';
+              // Listener para ocultar honorarios
+              s.onchange = toggleAgendaFields;
+  
+              allClientes.forEach(c => { 
+                  const o = document.createElement('option'); 
+                  o.value = c._id; 
+                  o.textContent = `👤 ${c.nombre}`; 
+                  s.appendChild(o); 
+              });
+          }
+  
+          document.getElementById('agendaForm').addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              const rawData = Object.fromEntries(formData);
+              
+              // Construir payload limpio
+              const payload = {
+                  titulo: rawData.titulo,
+                  fecha: rawData.fecha, // Jony: Cambiado de fechaVencimiento a fecha
+                  tipo: 'Trámite',
+                  honorarios: 0,
+                  clienteId: null
+              };
+  
+              const selectEl = document.getElementById('agenda-client-select');
+              const isPersonal = selectEl.value === 'personal' && !rawData.clienteId;
+  
+              if (isPersonal) {
+                  payload.tipo = 'personal';
+                  // Jony: No incluir clienteId si es personal
+                  delete payload.clienteId;
+                  payload.honorarios = 0;
+              } else {
+                  // Es cliente: incluir clienteId obligatoriamente
+                  payload.clienteId = rawData.clienteId || rawData.clienteIdSelect;
+                  payload.tipo = 'Trámite';
+                  const honorariosInput = document.getElementById('agenda-honorarios');
+                  if (honorariosInput && honorariosInput.offsetParent !== null) {
+                      payload.honorarios = unmaskCurrency(honorariosInput.value);
+                  }
+              }
+              
+              try {
+                  const res = await authFetch('/api/agenda', {
+                      method: 'POST', 
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(payload)
+                  });
+                  if (!res) return;
+                  if (res.ok) {
+                      closeAgendaModal(); 
+                      await refrescarTodo();
+                      showToast('Agendado', 'Vencimiento guardado correctamente', 'emerald');
+                      e.target.reset();
+                  } else {
+                      const err = await res.json();
+                      showToast('Error', err.msg || 'Error al guardar recordatorio', 'rose');
+                  }
+              } catch (err) {
+                  console.error(err);
+                  showToast('Error', 'Fallo de conexión al guardar.', 'rose');
+              }
+          });
+  
+          // --- UTILS ---
+          function maskInputCurrency(e) {
+              let raw = e.target.value.replace(/\D/g, '');
+              if (!raw) { e.target.value = ''; return; }
+              e.target.value = new Intl.NumberFormat('es-AR').format(parseInt(raw, 10));
+          }
+  
+          function unmaskCurrency(str) {
+              if (!str) return 0;
+              return parseFloat(str.toString().replace(/\./g, ''));
+          }
+  
+          function showToast(title, msg, color='blue') {
+              const t = document.getElementById('toast');
+              if(!t) return;
+              t.innerHTML = `<span class="text-${color}-400 mr-2 uppercase tracking-widest">${title}:</span> ${msg}`;
+              t.classList.remove('hidden');
+              setTimeout(() => t.classList.add('hidden'), 4000);
+          }
+  
+          function mostrarPaso(stepId, categoriaValor = null) {
+              // Setear la categoría en el input oculto si se provee
+              if (categoriaValor) {
+                  document.getElementById('categoriaSelect').value = categoriaValor;
+              }
+  
+              // Ocultar todos los pasos y deshabilitar sus inputs para evitar conflictos al enviar FormData
+              document.getElementById('step-selector').classList.add('hidden');
+              document.querySelectorAll('.wizard-step').forEach(el => {
+                  el.classList.add('hidden');
+                  el.querySelectorAll('input, select').forEach(input => input.disabled = true);
+              });
+  
+              // Mostrar el paso solicitado
+              const targetStep = document.getElementById(stepId);
+              if (targetStep) {
+                  targetStep.classList.remove('hidden');
+                  // Habilitar solo los inputs del paso activo
+                  targetStep.querySelectorAll('input, select').forEach(input => input.disabled = false);
+              }
+          }
+  
+          function toggleForm() { 
+              const formContainer = document.getElementById('formContainer');
+              formContainer.classList.toggle('hidden'); 
+              
+              if (!formContainer.classList.contains('hidden')) {
+                  editingClientId = null;
+                  document.getElementById('clienteForm').reset();
+                  
+                  // Reiniciar al selector
+                  mostrarPaso('step-selector');
+                  
+                  // Limpiar bordes de validación
+                  document.querySelectorAll('#clienteForm input').forEach(i => i.style.borderColor = '');
+                  
+                  // Default fechaIngreso = hoy para todos los campos de fechaIngreso
+                  const hoy = new Date().toISOString().split('T')[0];
+                  document.querySelectorAll('[name="fechaIngreso"]').forEach(i => i.value = hoy);
+                  
+                  document.getElementById('formTitle').innerHTML = '<i data-lucide="user-plus" class="w-6 h-6 mr-3 
+text-orange-500"></i>Ingresar Datos del Cliente';
+                  
+                  // Resetear botones a Crear
+                  document.querySelectorAll('#clienteForm button[type="submit"]').forEach(btn => {
+                      const txt = btn.textContent;
+                      if (txt.includes('Cambios')) {
+                          btn.textContent = txt.replace('Guardar Cambios', btn.dataset.original || 'Guardar');
+                      } else {
+                          btn.dataset.original = txt; // Guardar texto original (Guardar Trámite, etc.)
+                      }
+                  });
+                  
+                  lucide.createIcons();
+              }
+          }
+          function closeAgendaModal() { document.getElementById('modalAgenda').classList.add('hidden'); }
+          
+          window.abrirModalEliminar = function(id) {
+              document.getElementById('eliminarClienteId').value = id;
+              document.getElementById('modalEliminar').classList.remove('hidden');
+              if (window.lucide) lucide.createIcons();
+          };
+  
+          window.cerrarModalEliminar = function() {
+              document.getElementById('modalEliminar').classList.add('hidden');
+          };
+  
+          window.ejecutarEliminacion = async function() {
+              const id = document.getElementById('eliminarClienteId').value;
+              try {
+                  const res = await authFetch(`/api/clientes/${id}`, { method: 'DELETE' });
+                  if (!res) return;
+                  const data = await res.json();
+                  if(data.ok) {
+                      cerrarModalEliminar();
+                      await refrescarTodo(); // Incluye fetchClientes y métricas
+                      showToast('Éxito', 'Cliente eliminado permanentemente', 'emerald');
+                  } else {
+                      showToast('Error', data.msg || 'No se pudo eliminar', 'rose');
+                  }
+              } catch(e) {
+                  console.error(e);
+                  showToast('Error', 'Fallo de conexión al eliminar.', 'rose');
+              }
+          };
+  
+          window.eliminarOperacion = async function(clienteId, operacionId) {
+              if (!confirm('¿Seguro que querés eliminar este servicio? Esto borrará su deuda y su historial de 
+pagos. No se puede deshacer.')) return;
+              try {
+                  const res = await authFetch(`/api/clientes/${clienteId}/operaciones/${operacionId}`, { method: 
+'DELETE' });
+                  if (!res) return;
+                  const data = await res.json();
+                  if (data.ok) {
+                      showToast('Eliminado', 'Servicio eliminado correctamente', 'emerald');
+                      refrescarTodo();
+                  } else {
+                      showToast('Error', data.msg || 'No se pudo eliminar', 'rose');
+                  }
+              } catch(e) { 
+                  console.error(e); 
+                  showToast('Error', 'Fallo de conexión al eliminar', 'rose');
+              }
+          };
+  
+          window.abrirModalVencimiento = function(clienteId, operacionId, fechaActual) {
+              document.getElementById('vencimientoClienteId').value = clienteId;
+              document.getElementById('vencimientoOperacionId').value = operacionId;
+              
+              // Pre-cargar la fecha actual o la de hoy
+              const hoy = new Date().toISOString().split('T')[0];
+              document.getElementById('inputNuevaFecha').value = fechaActual ? fechaActual.split('T')[0] : hoy;
+              
+              document.getElementById('modalVencimiento').classList.remove('hidden');
+          };
+  
+          window.cerrarModalVencimiento = function() {
+              document.getElementById('modalVencimiento').classList.add('hidden');
+          };
+  
+          window.confirmarVencimiento = async function() {
+              const clienteId = document.getElementById('vencimientoClienteId').value;
+              const operacionId = document.getElementById('vencimientoOperacionId').value;
+              const nuevaFecha = document.getElementById('inputNuevaFecha').value;
+  
+              if (!nuevaFecha) {
+                  showToast('Error', 'Por favor, selecciona una fecha válida.', 'rose');
+                  return;
+              }
+  
+              try {
+                  const opcionesFetch = {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ nuevaFecha })
+                  };
+                  
+                  const res = await authFetch(`/api/clientes/${clienteId}/operaciones/${operacionId}/vencimiento`, 
+opcionesFetch);
+                  if (!res) return;
+                  const data = await res.json();
+                  
+                  if (!res.ok) throw new Error(data.msg || data.message || `Error HTTP ${res.status}`);
+                  
+                  cerrarModalVencimiento();
+                  showToast('Éxito', 'Fecha actualizada correctamente', 'emerald');
+                  
+                  if (typeof fetchClientes === 'function') await fetchClientes();
+                  else refrescarTodo();
+                  
+              } catch (error) {
+                  console.error(error);
+                  showToast('Error', error.message || 'Fallo de conexión.', 'rose');
+              }
+          };
+  
+          function updateDate() { 
+              const d = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }); 
+              const dShort = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+              
+              if(document.getElementById('currentDateDesktop')) 
+document.getElementById('currentDateDesktop').textContent = d; 
+              if(document.getElementById('currentDateMobile')) 
+document.getElementById('currentDateMobile').textContent = dShort; 
+          }
+          function logout() {
+              if (!confirm('¿Cerrar sesión?')) return;
+              // Borramos solo las claves de sesión, nunca la versión de la app
+              localStorage.removeItem('jony_token');
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              window.location.href = '/login.html';
+          }
+  
+          async function descargarExcel() {
+              try {
+                  console.log('🚀 Iniciando Generación de Backup en Caliente...');
+                  showToast('Preparando Backup', 'Obteniendo datos frescos de MongoDB...', 'blue');
+                  
+                  const res = await authFetch('/api/clientes');
+                  if (!res) throw new Error('Sesión expirada');
+                  
+                  if (!res.ok) throw new Error('Error al obtener datos frescos del servidor');
+                  
+                  const data = await res.json();
+                  const clientes = data.clientes || [];
+                  
+                  // Verificación solicitada por Jony
+                  console.log('📊 Cantidad de clientes en backup:', clientes.length);
+                  
+                  if (clientes.length === 0) {
+                      showToast('Info', 'No hay clientes para exportar', 'blue');
+                      return;
+                  }
+  
+                  // Procesar datos para Excel
+                  const dataParaExcel = clientes.map(c => {
+                      const totalAdeudado = Number(c.montoDevolver) || Number(c.precioVenta) || 0;
+                      const pagado = Number(c.montoPagado) || 0;
+                      return {
+                          'Nombre': c.nombre || '',
+                          'WhatsApp': c.telefono || '',
+                          'Categoría': c.categoria || 'Trámites',
+                          'Trámite Específico': c.tramite || 'N/A',
+                          'Monto Original': Number(c.montoPrestado) || Number(c.costoCompra) || 0,
+                          'Total a Devolver': totalAdeudado,
+                          'Saldo Pendiente': Math.max(0, totalAdeudado - pagado),
+                          'Monto Pagado': pagado,
+                          'Estado': c.estado || 'Activo',
+                          'Próximo Cobro': c.proximoCobro ? new Date(c.proximoCobro).toLocaleDateString('es-AR', { 
+timeZone: 'UTC' }) : 'N/A',
+                          'Fecha de Alta': c.createdAt ? new Date(c.createdAt).toLocaleDateString('es-AR', { timeZone: 
+'UTC' }) : 'N/A'
+                      };
+                  });
+  
+                  // Crear libro y hoja con SheetJS
+                  const worksheet = XLSX.utils.json_to_sheet(dataParaExcel);
+                  const workbook = XLSX.utils.book_new();
+                  XLSX.utils.book_append_sheet(workbook, worksheet, "Clientes Zentra");
+  
+                  // Generar nombre dinámico
+                  const now = new Date();
+                  const dStr = now.toLocaleDateString('es-AR').replace(/\//g, '-');
+                  const tStr = now.getHours().toString().padStart(2, '0') + '-' + 
+now.getMinutes().toString().padStart(2, '0');
+                  const fileName = `backup_zentra_${dStr}_${tStr}.xlsx`;
+  
+                  // Descargar
+                  XLSX.writeFile(workbook, fileName);
+  
+                  showToast('¡Éxito!', 'Backup sincronizado descargado.', 'emerald');
+              } catch (err) {
+                  console.error('❌ Error en backup:', err);
+                  showToast('Error', 'Fallo al generar el backup.', 'rose');
+              }
+          }
+          
+          // --- WHATSAPP TEMPLATES ---
+          async function fetchTemplates() {
+              try {
+                  console.log('Cargando plantillas...');
+                  const res = await authFetch('/api/templates');
+                  if (!res) return;
+                  const data = await res.json();
+                  if (data.ok) {
+                      allTemplates = data.templates || [];
+                      console.log('Plantillas cargadas:', allTemplates.length);
+                      renderTemplates();
+                      // Siempre re-renderizar clientes por si ya estaban en pantalla
+                      renderClientes();
+                  }
+              } catch (e) { console.error('Error fetching templates', e); }
+          }
+  
+          function renderTemplates() {
+              const container = document.getElementById('templatesContainer');
+              if(!container) return;
+              container.innerHTML = '';
+              if (allTemplates.length === 0) {
+                  container.innerHTML = '<p class="text-slate-400 font-bold text-sm col-span-2">No hay plantillas 
+creadas. Creá la primera arriba.</p>';
+              } else {
+                  allTemplates.forEach(rawT => {
+                      const t = { ...rawT, titulo: escapeHTML(rawT.titulo), cuerpo: escapeHTML(rawT.cuerpo) };
+                      container.innerHTML += `
+                      <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col 
+justify-between group hover:border-emerald-500 transition-all">
+                          <div>
+                              <h5 class="font-black text-slate-800 text-sm mb-2">${t.titulo}</h5>
+                              <p class="text-xs text-slate-500 mb-4 whitespace-pre-wrap">${t.cuerpo}</p>
+                          </div>
+                          <div class="flex gap-2 justify-end border-t border-slate-100 pt-3 mt-auto">
+                              <button onclick="editTemplate('${t._id}')" class="text-blue-500 hover:bg-blue-50 px-3 
+py-1 rounded text-[10px] uppercase font-black tracking-widest transition-colors"><i data-lucide="edit-3" class="w-4 
+h-4 inline-block mr-1"></i>Editar</button>
+                              <button onclick="deleteTemplate('${t._id}')" class="text-rose-500 hover:bg-rose-50 px-3 
+py-1 rounded text-[10px] uppercase font-black tracking-widest transition-colors"><i data-lucide="trash" class="w-4 h-4 
+inline-block mr-1"></i>Borrar</button>
+                          </div>
+                      </div>`;
+                  });
+              }
+              lucide.createIcons();
+          }
+  
+          document.getElementById('templateForm')?.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const id = document.getElementById('formTemplateId').value;
+              const titulo = document.getElementById('tplTitulo').value;
+              const cuerpo = document.getElementById('tplCuerpo').value;
+              
+              const payload = { titulo, cuerpo };
+              const method = id ? 'PUT' : 'POST';
+              const url = id ? `/api/templates/${id}` : `/api/templates`;
+              
+              try {
+                  const res = await authFetch(url, {
+                      method,
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(payload)
+                  });
+                  if (!res) return;
+                  const data = await res.json();
+                  if (data.ok) {
+                      resetTemplateForm();
+                      await fetchTemplates();
+                      showToast('Plantilla Guardada', 'Se guardó correctamente.', 'emerald');
+                  } else {
+                      alert('Error: ' + data.message);
+                  }
+              } catch(e) {
+                  console.error(e);
+              }
+          });
+  
+          function resetTemplateForm() {
+              document.getElementById('formTemplateId').value = '';
+              document.getElementById('tplTitulo').value = '';
+              document.getElementById('tplCuerpo').value = '';
+          }
+  
+          function editTemplate(id) {
+              const t = allTemplates.find(x => x._id === id);
+              if(t) {
+                  document.getElementById('formTemplateId').value = t._id;
+                  document.getElementById('tplTitulo').value = t.titulo;
+                  document.getElementById('tplCuerpo').value = t.cuerpo;
+                  document.getElementById('tplTitulo').focus();
+              }
+          }
+          
+          async function deleteTemplate(id) {
+              if(!confirm('¿Borrar esta plantilla?')) return;
+              try {
+                  const res = await authFetch(`/api/templates/${id}`, { method: 'DELETE' });
+                  if (!res) return;
+                  const data = await res.json();
+                  if(data.ok) await fetchTemplates();
+              } catch(e) { console.error(e); }
+          }
+  
+          function insertTplTag(tag) {
+              const ta = document.getElementById('tplCuerpo');
+              const pos = ta.selectionStart;
+              const text = ta.value;
+              ta.value = text.substring(0, pos) + tag + text.substring(pos);
+              ta.focus();
+              ta.selectionEnd = pos + tag.length;
+          }
+  
+          function sendTemplateWA(selectEl, clienteId) {
+              const templateId = selectEl.value;
+              if(!templateId) return;
+              
+              const c = allClientes.find(x => x._id === clienteId);
+              if(!c) return selectEl.value = '';
+              
+              if(!c.telefono) {
+                  alert("El cliente no tiene teléfono asignado.");
+                  return selectEl.value = '';
+              }
+  
+              const t = allTemplates.find(x => x._id === templateId);
+              if(!t) return selectEl.value = '';
+              
+              let txt = t.cuerpo;
+              // Variables
+              txt = txt.replace(/{{nombre}}/g, c.nombre || '');
+              txt = txt.replace(/{{tramite}}/g, c.subTipoTramite || c.tramite || c.categoria || '');
+              
+              let saldoRestante = (c.montoDevolver || c.precioVenta || c.honorarios || 0) - (c.montoPagado || 0);
+              const saldoStr = saldoRestante > 0 ? Number(saldoRestante || 0).toLocaleString('es-AR', 
+{minimumFractionDigits:0, maximumFractionDigits:0}) : '0';
+              txt = txt.replace(/{{monto}}/g, saldoStr);
+              
+              let proxCobroStr = '-';
+              if(c.proximoCobro) {
+                  proxCobroStr = new Date(c.proximoCobro).toLocaleDateString('es-AR', { timeZone: 
+'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', year: 'numeric' });
+              }
+              txt = txt.replace(/{{vencimiento}}/g, proxCobroStr);
+              
+              let num = c.telefono.replace(/\\D/g, '');
+              const url = `https://wa.me/${num}?text=${encodeURIComponent(txt)}`;
+              window.open(url, '_blank');
+              
+              selectEl.value = ''; // reset selection
+          }
+  
+          // Registro de Service Worker — auto-update silencioso
+          // El SW hace skipWaiting() automáticamente, controllerchange recarga la página
+          if ('serviceWorker' in navigator) {
+              window.addEventListener('load', () => {
+                  navigator.serviceWorker.register(`/sw.js?v=${APP_VERSION}`).then(reg => {
+                      // Si ya hay un SW esperando, forzar activación inmediata
+                      if (reg.waiting) {
+                          reg.waiting.postMessage('SKIP_WAITING');
+                      }
+  
+                      // Detectar cuando se instala un nuevo SW
+                      reg.addEventListener('updatefound', () => {
+                          const newWorker = reg.installing;
+                          newWorker.addEventListener('statechange', () => {
+                              // El SW ya llama skipWaiting() solo — no mostramos banner
+                              // El controllerchange a continuación dispara el reload automático
+                              console.log('Zentra SW: nuevo worker instalado, estado:', newWorker.state);
+                          });
+                      });
+                  });
+              });
+  
+              // Recargar la página automáticamente cuando el nuevo SW tome el control
+              let refreshing = false;
+              navigator.serviceWorker.addEventListener('controllerchange', () => {
+                  if (!refreshing) {
+                      refreshing = true;
+                      window.location.reload();
+                  }
+              });
+          }
+  
+          // ====================================================
+          // SISTEMA DE VERSIONES: Chequeo contra el servidor
+          // ====================================================
+          async function checkVersion() {
+              try {
+                  const res = await fetch('/api/version');
+                  if (!res.ok) return;
+                  const data = await res.json();
+                  // .trim() evita que espacios en blanco activen la actualización por error
+                  const serverVersion = (data.version || '').trim();
+                  const localVersion = (localStorage.getItem('zentra_app_version') || '').trim();
+  
+                  if (localVersion !== serverVersion) {
+                      console.log(`Zentra: Nueva versión detectada (local: "${localVersion}" → servidor: 
+"${serverVersion}"). Actualizando...`);
+                      // Guardar versión nueva Y recargar automáticamente sin mostrar banner
+                      // Esto garantiza que mobile siempre esté sincronizado sin intervención del usuario
+                      localStorage.setItem('zentra_app_version', serverVersion);
+                      // Pequeño delay para que el setItem se persista antes del reload
+                      setTimeout(() => window.location.reload(true), 300);
+                  }
+              } catch (e) {
+                  console.warn('No se pudo verificar la versión del servidor:', e);
+              }
+          }
+  
+          // showVersionBanner ya no se usa para auto-update, se mantiene por compatibilidad
+          function showVersionBanner(serverVersion) {
+              const banner = document.getElementById('version-update-banner');
+              if (!banner) return;
+              banner.classList.add('show');
+  
+              document.getElementById('version-update-btn').onclick = async () => {
+                  try {
+                      localStorage.setItem('zentra_app_version', serverVersion);
+                      // Sincronización Post-Actualización: Esperamos 800ms antes del reload
+                      await new Promise(r => setTimeout(r, 800));
+                      banner.style.opacity = '0';
+                      banner.style.pointerEvents = 'none';
+                      banner.classList.remove('show');
+                      window.location.reload(true);
+                  } catch (e) {
+                      console.error('Error guardando versión:', e);
+                      window.location.reload(true);
+                  }
+              };
+  
+              document.getElementById('version-dismiss-btn').onclick = () => {
+                  banner.classList.remove('show');
+              };
+          }
+  
+          // Ejecutar el chequeo de versión al cargar la página
+          window.addEventListener('load', () => {
+              setTimeout(checkVersion, 2000); // 2s de delay para esperar que Render despierte
+          });
+
+  
+      <!-- ===================================================
+           BANNER DE ACTUALIZACIÓN DE VERSIÓN (Chequeo API)
+           =================================================== -->
+      <style>
+          #version-update-banner {
+              display: none; /* Oculto por defecto - nunca visible sin clase .show */
+              position: fixed;
+              top: -120px;
+              left: 50%;
+              transform: translateX(-50%);
+              z-index: 99999;
+              width: 92%;
+              max-width: 480px;
+              transition: top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+          }
+          #version-update-banner.show {
+              display: block;
+              top: 16px;
+          }
+          html.dark #version-update-banner .banner-inner {
+              background: linear-gradient(135deg, #0a0f1c 0%, #0f172a 100%);
+              border: 1px solid rgba(0, 174, 239, 0.4);
+              box-shadow: 0 0 30px rgba(0, 174, 239, 0.2), 0 10px 40px rgba(0, 0, 0, 0.6);
+          }
+          html.dark #version-update-banner .banner-title {
+              color: #00AEEF;
+              text-shadow: 0 0 10px rgba(0, 174, 239, 0.6);
+          }
+          html.dark #version-update-banner .banner-subtitle {
+              color: #94a3b8;
+          }
+          html.dark #version-update-banner .btn-update {
+              background: linear-gradient(90deg, #00AEEF, #0077B6);
+              box-shadow: 0 0 15px rgba(0, 174, 239, 0.4);
+              color: #fff;
+          }
+          html.dark #version-update-banner .btn-update:hover {
+              box-shadow: 0 0 25px rgba(0, 174, 239, 0.7);
+              transform: scale(1.03);
+          }
+          html.dark #version-update-banner .btn-dismiss {
+              color: #475569;
+          }
+          html.dark #version-update-banner .btn-dismiss:hover {
+              color: #94a3b8;
+          }
+          html.light #version-update-banner .banner-inner {
+              background: #FFFFFF;
+              border: 1px solid #E1E8ED;
+              box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+          }
+          html.light #version-update-banner .banner-title {
+              color: #00AEEF;
+          }
+          html.light #version-update-banner .banner-subtitle {
+              color: #555555;
+          }
+          html.light #version-update-banner .btn-update {
+              background: #00AEEF;
+              color: #fff;
+          }
+          html.light #version-update-banner .btn-update:hover {
+              background: #0077B6;
+              transform: scale(1.02);
+          }
+          html.light #version-update-banner .btn-dismiss {
+              color: #888888;
+          }
+          html.light #version-update-banner .btn-dismiss:hover {
+              color: #555555;
+          }
+          .btn-update, .btn-dismiss {
+              transition: all 0.2s ease;
+              cursor: pointer;
+              border: none;
+              outline: none;
+          }
+      </style>
+      <div id="version-update-banner">
+          <div class="banner-inner" style="border-radius: 16px; padding: 16px 20px; display: flex; align-items: 
+center; gap: 16px;">
+              <!-- Icono -->
+              <div style="flex-shrink:0; width:40px; height:40px; border-radius:12px; background:rgba(0,174,239,0.15); 
+display:flex; align-items:center; justify-content:center;">
+                  <i data-lucide="zap" style="width:20px; height:20px; color:#00AEEF;"></i>
+              </div>
+              <!-- Texto -->
+              <div style="flex:1; min-width:0;">
+                  <p class="banner-title" style="font-family: var(--font-heading, 'Inter'); font-size:13px; 
+font-weight:900; text-transform:uppercase; letter-spacing:0.05em; margin:0;">&#9889; ¡Nueva versión de Zentra!</p>
+                  <p class="banner-subtitle" style="font-size:11px; margin:2px 0 0; opacity:0.85;">Hay mejoras 
+disponibles. Actualizate para verlas.</p>
+              </div>
+              <!-- Botones -->
+              <div style="display:flex; gap:8px; flex-shrink:0; align-items:center;">
+                  <button id="version-update-btn" class="btn-update" style="padding:8px 16px; border-radius:10px; 
+font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:0.08em;">
+                      Actualizar
+                  </button>
+                  <button id="version-dismiss-btn" class="btn-dismiss" style="padding:8px; border-radius:10px; 
+background:transparent; font-size:18px; line-height:1;">
+                      &times;
+                  </button>
+              </div>
+          </div>
+      </div>
+  
+      <!-- Banner de Actualización PWA (Service Worker) -->
+      <div id="update-banner">
+          <div class="flex-1">
+              <p class="text-sm font-bold">Nueva versión disponible</p>
+              <p class="text-[10px] opacity-70">Actualizá para ver los últimos cambios.</p>
+          </div>
+          <button id="update-btn">Actualizar ahora</button>
+      </div>
+      <!-- Modal Reprogramar Vencimiento -->
+      <div id="modalVencimiento" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center 
+z-50">
+          <div class="bg-white dark:bg-slate-800 rounded-lg p-6 w-11/12 md:w-1/3 shadow-xl">
+              <h2 class="text-xl font-bold mb-4 text-slate-800 dark:text-white">Reprogramar Vencimiento</h2>
+              <label class="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2">Nueva Fecha:</label>
+              <input type="date" id="inputNuevaFecha" class="w-full border border-slate-300 dark:border-slate-600 
+dark:bg-slate-700 dark:text-white p-2 rounded mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              
+              <!-- Inputs ocultos para mantener los IDs -->
+              <input type="hidden" id="vencimientoClienteId">
+              <input type="hidden" id="vencimientoOperacionId">
+              
+              <div class="flex justify-end space-x-3">
+                  <button onclick="cerrarModalVencimiento()" class="bg-slate-400 hover:bg-slate-500 text-white 
+font-bold py-2 px-4 rounded">Cancelar</button>
+                  <button onclick="confirmarVencimiento()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold 
+py-2 px-4 rounded">Guardar</button>
+              </div>
+          </div>
+      </div>
+  
+      <!-- Modal Eliminación Estándar (v3.2.1) -->
+      <div id="modalEliminar" class="hidden fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center 
+z-[200]">
+          <div class="bg-slate-900 border-t-4 border-rose-600 rounded-2xl p-8 w-11/12 md:w-1/3 shadow-2xl">
+              <div class="flex items-center mb-6">
+                  <div class="bg-rose-900/30 p-3 rounded-2xl mr-4">
+                      <i data-lucide="alert-triangle" class="text-rose-500 w-6 h-6"></i>
+                  </div>
+                  <h2 class="text-xl font-black text-white uppercase tracking-tight">¿Confirmar eliminación?</h2>
+              </div>
+              <p class="text-slate-400 mb-8 text-xs font-bold uppercase tracking-widest leading-relaxed">Esta acción 
+es irreversible. Se borrarán todos los datos del cliente y su historial de operaciones permanentemente.</p>
+              
+              <input type="hidden" id="eliminarClienteId">
+              
+              <div class="flex justify-end gap-3">
+                  <button onclick="cerrarModalEliminar()" class="bg-slate-800 hover:bg-slate-700 text-slate-400 px-6 
+py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Cancelar</button>
+                  <button onclick="ejecutarEliminacion()" class="bg-rose-600 hover:bg-rose-700 text-white font-black 
+px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg 
+shadow-rose-500/20">Eliminar Permanentemente</button>
+              </div>
+          </div>
+      </div>
+  </body>
+  </html>
+
+
