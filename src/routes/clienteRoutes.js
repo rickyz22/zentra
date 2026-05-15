@@ -13,6 +13,7 @@ router.get('/', clienteController.obtenerClientes);
 router.put('/:id', clienteController.actualizarCliente);
 router.delete('/:id', clienteController.eliminarCliente);
 router.post('/:id/operaciones', clienteController.agregarOperacion);
+router.put('/:id/operaciones/:operacionId', clienteController.actualizarOperacion);
 router.delete('/:id/operaciones/:operacionId', clienteController.eliminarOperacion);
 router.patch('/:id/operaciones/:operacionId/vencimiento', clienteController.reprogramarVencimiento);
 

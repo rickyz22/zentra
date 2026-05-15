@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.8.1-LAYOUT-FIX'; // v3.8.1-LAYOUT-FIX
+const CACHE_NAME = 'zentra-v3.9.0-EDIT-MODE'; // v3.9.0-EDIT-MODE
 const ASSETS = [
   '/',
   '/index.html',

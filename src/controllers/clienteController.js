@@ -497,3 +497,47 @@ exports.reprogramarVencimiento = async (req, res) => {
         res.status(500).json({ ok: false, msg: `Error de servidor: ${error.message}` });
     }
 };
+
+// Actualizar una operación específica (Fullstack Senior v3.9.0)
+exports.actualizarOperacion = async (req, res) => {
+    try {
+        const { id, operacionId } = req.params;
+        const { producto, monto, moneda } = req.body;
+
+        const cliente = await Cliente.findById(id);
+        if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
+
+        const op = cliente.operaciones.id(operacionId);
+        if (!op) return res.status(404).json({ ok: false, msg: 'Operación no encontrada' });
+
+        // Actualizar campos permitidos
+        if (producto !== undefined) op.producto = producto;
+        if (moneda !== undefined) op.moneda = moneda;
+        
+        if (monto !== undefined) {
+            const nuevoMonto = Math.round(Number(monto));
+            // Actualizar el campo de monto correspondiente según el tipo
+            if (op.tipo === 'Préstamos') op.montoDevolver = nuevoMonto;
+            else if (op.tipo === 'Electrodomésticos') op.precioVenta = nuevoMonto;
+            else if (op.tipo === 'Trámites') op.honorarios = nuevoMonto;
+            
+            // Recalcular saldo pendiente: Nuevo Monto - Total Pagado
+            const totalPagado = op.historialPagos.reduce((sum, pago) => sum + (pago.monto || 0), 0);
+            op.saldoPendiente = Math.max(0, nuevoMonto - totalPagado);
+
+            // Si el saldo es 0, marcar como pagado
+            if (op.saldoPendiente === 0 && nuevoMonto > 0) {
+                op.estado = 'Pagado';
+            } else if (op.saldoPendiente > 0) {
+                op.estado = 'Activo';
+            }
+        }
+
+        await cliente.save();
+        res.status(200).json({ ok: true, msg: 'Operación actualizada correctamente', cliente });
+    } catch (error) {
+        console.error('❌ ERROR ACTUALIZAR OPERACIÓN:', error);
+        res.status(500).json({ ok: false, msg: 'Error al actualizar la operación', error: error.message });
+    }
+};
+
