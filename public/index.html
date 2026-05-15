@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.9.6'; 
-        const CACHE_NAME = 'zentra-v3.9.6-STABILITY-FIX'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.9.7'; 
+        const CACHE_NAME = 'zentra-v3.9.7-UI-POLISH'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -2684,7 +2684,7 @@
                                             <a href="${waLink}" target="_blank" class="opacity-0 group-hover/wa:opacity-100 text-emerald-500 hover:text-emerald-600 p-0.5 flex items-center justify-center rounded hover:bg-emerald-100 transition-all border border-emerald-200 shadow-sm">
                                                 <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
                                             </a>
-                                            <button onclick="borrarPago('${c._id}', '${p._id}', '${op._id}'); event.stopPropagation();" class="opacity-0 group-hover/wa:opacity-100 text-rose-500 hover:text-rose-600 p-0.5 flex items-center justify-center rounded hover:bg-rose-100 transition-all border border-rose-200 shadow-sm">
+                                            <button onclick="abrirModalBorrarPago('${c._id}', '${p._id}', '${op._id}'); event.stopPropagation();" class="opacity-0 group-hover/wa:opacity-100 text-rose-500 hover:text-rose-600 p-0.5 flex items-center justify-center rounded hover:bg-rose-100 transition-all border border-rose-200 shadow-sm">
                                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                             </button>
                                         </div>
@@ -3546,8 +3546,28 @@
         }
 
 
+        window.abrirModalBorrarPago = function(clienteId, pagoId, operacionId) {
+            document.getElementById('borrarPagoClienteId').value = clienteId;
+            document.getElementById('borrarPagoId').value = pagoId;
+            document.getElementById('borrarPagoOperacionId').value = operacionId;
+            document.getElementById('modalConfirmarBorradoPago').classList.remove('hidden');
+        };
+
+        window.cerrarModalBorrarPago = function() {
+            document.getElementById('modalConfirmarBorradoPago').classList.add('hidden');
+        };
+
+        window.ejecutarBorradoPago = async function() {
+            const clienteId = document.getElementById('borrarPagoClienteId').value;
+            const pagoId = document.getElementById('borrarPagoId').value;
+            const operacionId = document.getElementById('borrarPagoOperacionId').value;
+            
+            cerrarModalBorrarPago();
+            await borrarPago(clienteId, pagoId, operacionId);
+        };
+
         async function borrarPago(clienteId, pagoId, prestamoId = 'legacy') {
-            if (!confirm('⚠️ ¿Seguro quieres eliminar este pago? Eso recalculará el saldo restante y las ganancias.')) return;
+
             try {
                 const res = await authFetch(`/api/clientes/${clienteId}/pago/${pagoId}`, {
                     method: 'DELETE',
@@ -4827,6 +4847,24 @@
             <div class="flex gap-4 mt-8">
                 <button onclick="cerrarModalEditarOperacion()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-400 font-black py-4 rounded-2xl text-[11px] uppercase tracking-widest transition-all">Cancelar</button>
                 <button onclick="guardarEdicionOperacion()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl text-[11px] uppercase tracking-widest transition-all shadow-lg shadow-blue-500/20">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmar Borrado Pago (v3.9.7) -->
+    <div id="modalConfirmarBorradoPago" class="hidden fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[250]">
+        <div class="bg-slate-900 border border-white/10 p-8 rounded-3xl w-full max-w-sm mx-4 shadow-2xl text-center">
+            <i class="fas fa-exclamation-triangle text-red-500 text-5xl mb-4"></i>
+            <h3 class="text-xl font-black text-white uppercase tracking-widest mb-2">¿Borrar este pago?</h3>
+            <p class="text-slate-400 text-sm mb-8">Esta acción no se puede deshacer y afectará el saldo del cliente.</p>
+            
+            <input type="hidden" id="borrarPagoClienteId">
+            <input type="hidden" id="borrarPagoId">
+            <input type="hidden" id="borrarPagoOperacionId">
+
+            <div class="flex gap-4">
+                <button onclick="cerrarModalBorrarPago()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-400 font-black py-4 rounded-2xl text-[11px] uppercase tracking-widest transition-all">Cancelar</button>
+                <button onclick="ejecutarBorradoPago()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-black py-4 rounded-2xl text-[11px] uppercase tracking-widest transition-all shadow-lg shadow-red-500/20">Eliminar Pago</button>
             </div>
         </div>
     </div>

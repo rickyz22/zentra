@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.9.6-STABILITY-FIX'; // v3.9.6-STABILITY-FIX
+const CACHE_NAME = 'zentra-v3.9.7-UI-POLISH'; // v3.9.7-UI-POLISH
 const ASSETS = [
   '/',
   '/index.html',
