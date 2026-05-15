@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.7.0-INTERNAL-CALC'; // v3.7.0-INTERNAL-CALC
+const CACHE_NAME = 'zentra-v3.8.0-DUAL-MODE'; // v3.8.0-DUAL-MODE
 const ASSETS = [
   '/',
   '/index.html',

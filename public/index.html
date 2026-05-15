@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.7.0'; 
-        const CACHE_NAME = 'zentra-v3.7.0-INTERNAL-CALC'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.8.0'; 
+        const CACHE_NAME = 'zentra-v3.8.0-DUAL-MODE'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1521,17 +1521,38 @@
                 </div>
                 
                 <div class="p-8 space-y-6">
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-3 px-1">Monto Base a Simular ($)</label>
-                        <div class="relative">
-                            <span class="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-600">$</span>
-                            <input type="text" id="calc-interna-monto" inputmode="numeric" oninput="maskInputCurrency(event); calcularCuotasZentra()" placeholder="0" 
-                                class="w-full pl-12 pr-6 py-6 bg-slate-950 border border-white/5 rounded-3xl text-3xl font-black text-blue-400 outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-800 shadow-inner">
+                    <!-- Selector de Modo Dual (v3.8.0) -->
+                    <div class="flex p-1.5 bg-slate-950 rounded-2xl border border-white/5">
+                        <button onclick="setCalcModo('prestamos')" id="btn-calc-prestamos" class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all bg-blue-600 text-white shadow-lg shadow-blue-500/20">
+                            Préstamos
+                        </button>
+                        <button onclick="setCalcModo('electro')" id="btn-calc-electro" class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all text-slate-500 hover:text-slate-300">
+                            Electro
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-3 px-1">Monto Base ($)</label>
+                            <div class="relative">
+                                <span class="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-600">$</span>
+                                <input type="text" id="calc-interna-monto" inputmode="numeric" oninput="maskInputCurrency(event); calcularCuotasZentra()" placeholder="0" 
+                                    class="w-full pl-12 pr-6 py-5 bg-slate-950 border border-white/5 rounded-3xl text-2xl font-black text-blue-400 outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-800">
+                            </div>
+                        </div>
+
+                        <div id="wrapper-interes-electro" class="hidden animate-in fade-in slide-in-from-right-4 duration-300">
+                            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-3 px-1">Interés Total (%)</label>
+                            <div class="relative">
+                                <span class="absolute right-6 top-1/2 -translate-y-1/2 text-xl font-black text-slate-600">%</span>
+                                <input type="number" id="calc-interna-interes" oninput="calcularCuotasZentra()" placeholder="0" 
+                                    class="w-full px-6 py-5 bg-slate-950 border border-white/5 rounded-3xl text-2xl font-black text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-800">
+                            </div>
                         </div>
                     </div>
 
                     <div class="space-y-4">
-                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Resultados de Simulación (Tasas Zentra)</p>
+                        <p id="label-calc-resultados" class="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Resultados de Simulación (Tasas Zentra)</p>
                         <div id="calc-interna-resultados" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
                             <!-- Dinámico -->
                             <div class="col-span-full py-10 text-center text-slate-600 font-bold uppercase text-xs">Ingresá un monto para ver las cuotas</div>
@@ -4487,8 +4508,9 @@
             setTimeout(checkVersion, 2000); // 2s de delay para esperar que Render despierte
         });
 
-        // --- CALCULADORA INTERNA v3.7.0 ---
+        // --- CALCULADORA INTERNA v3.8.0 (MODO DUAL) ---
         const TASAS_ZENTRA = { 1: 50, 2: 90, 3: 140, 4: 180, 5: 225, 6: 250, 7: 300, 8: 340, 9: 380, 10: 410, 11: 430, 12: 450 };
+        let calcModoActual = 'prestamos'; // 'prestamos' o 'electro'
 
         function abrirCalculadoraModal() {
             document.getElementById('modalCalculadoraInterna').classList.remove('hidden');
@@ -4499,11 +4521,36 @@
             document.getElementById('modalCalculadoraInterna').classList.add('hidden');
         }
 
+        function setCalcModo(modo) {
+            calcModoActual = modo;
+            const btnP = document.getElementById('btn-calc-prestamos');
+            const btnE = document.getElementById('btn-calc-electro');
+            const wrapperInteres = document.getElementById('wrapper-interes-electro');
+            const labelResultados = document.getElementById('label-calc-resultados');
+
+            if (modo === 'prestamos') {
+                btnP.className = 'flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all bg-blue-600 text-white shadow-lg shadow-blue-500/20';
+                btnE.className = 'flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all text-slate-500 hover:text-slate-300';
+                wrapperInteres.classList.add('hidden');
+                labelResultados.innerText = 'Resultados de Simulación (Tasas Zentra)';
+            } else {
+                btnE.className = 'flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all bg-emerald-500 text-white shadow-lg shadow-emerald-500/20';
+                btnP.className = 'flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all text-slate-500 hover:text-slate-300';
+                wrapperInteres.classList.remove('hidden');
+                labelResultados.innerText = 'Simulación Electro (Interés Libre)';
+                document.getElementById('calc-interna-interes').focus();
+            }
+            calcularCuotasZentra();
+        }
+
         function calcularCuotasZentra() {
-            const input = document.getElementById('calc-interna-monto');
+            const inputMonto = document.getElementById('calc-interna-monto');
+            const inputInteres = document.getElementById('calc-interna-interes');
             const container = document.getElementById('calc-interna-resultados');
-            const montoStr = input.value.replace(/\D/g, '');
+            
+            const montoStr = inputMonto.value.replace(/\D/g, '');
             const monto = parseFloat(montoStr) || 0;
+            const interes = parseFloat(inputInteres.value) || 0;
 
             if (monto <= 0) {
                 container.innerHTML = '<div class="col-span-full py-10 text-center text-slate-600 font-bold uppercase text-xs">Ingresá un monto para ver las cuotas</div>';
@@ -4512,14 +4559,22 @@
 
             let html = '';
             for (let n = 1; n <= 12; n++) {
-                const tasa = TASAS_ZENTRA[n];
-                const total = monto + (monto * tasa / 100);
+                let total = 0;
+                if (calcModoActual === 'prestamos') {
+                    const tasa = TASAS_ZENTRA[n];
+                    total = monto + (monto * tasa / 100);
+                } else {
+                    total = monto + (monto * interes / 100);
+                }
+                
                 const cuota = total / n;
+                const accentColor = calcModoActual === 'prestamos' ? 'group-hover:text-blue-400' : 'group-hover:text-emerald-400';
+                const borderColor = calcModoActual === 'prestamos' ? 'hover:border-blue-500/50' : 'hover:border-emerald-500/50';
 
                 html += `
-                    <div class="bg-slate-950 border border-white/5 p-4 rounded-2xl hover:border-blue-500/50 transition-all group">
+                    <div class="bg-slate-950 border border-white/5 p-4 rounded-2xl ${borderColor} transition-all group">
                         <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">${n} ${n === 1 ? 'CUOTA' : 'CUOTAS'}</p>
-                        <p class="text-lg font-black text-white group-hover:text-blue-400 transition-colors">$ ${cuota.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
+                        <p class="text-lg font-black text-white ${accentColor} transition-colors">$ ${cuota.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
                         <p class="text-[9px] font-bold text-slate-600 uppercase mt-1">Total: $ ${total.toLocaleString('es-AR')}</p>
                     </div>
                 `;
