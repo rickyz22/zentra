@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.6.1-CANVAS-FIX'; // v3.6.1-CANVAS-UPGRADE
+const CACHE_NAME = 'zentra-v3.6.2-RESPONSIVE'; // v3.6.2-UI-FIX
 const ASSETS = [
   '/',
   '/index.html',
