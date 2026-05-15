@@ -14,13 +14,16 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.5.3'; 
-        const CACHE_NAME = 'zentra-v3.5.3-PRODUCT-ID'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.6.0'; 
+        const CACHE_NAME = 'zentra-v3.6.0-WHATSAPP'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <!-- Librerías de Exportación -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <!-- Anti-flash: aplicar tema ANTES de renderizar para evitar parpadeo -->
     <script>
         (function() {
@@ -1651,49 +1654,58 @@
         <!-- MODAL COMPROBANTE (TICKET DIGITAL) -->
         <div id="modalComprobante" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
             <div class="bg-slate-900 w-full max-w-sm rounded-[2rem] p-8 border border-white/10 shadow-2xl overflow-hidden relative">
-                <!-- Decoración Ticket superior -->
-                <div class="absolute -top-4 -left-4 w-8 h-8 bg-black/80 rounded-full"></div>
-                <div class="absolute -top-4 -right-4 w-8 h-8 bg-black/80 rounded-full"></div>
                 
-                <div class="text-center mb-6 pb-6 border-b border-dashed border-white/20">
-                    <h3 class="text-xl font-black text-white tracking-widest uppercase mb-1">ZENTRA</h3>
-                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]">Comprobante de Pago</p>
-                    <p id="comp-cliente" class="text-sm font-black text-emerald-400 mt-4 leading-tight"></p>
-                    <p id="comp-categoria" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1"></p>
-                </div>
+                <!-- Botón de Compartir WhatsApp -->
+                <button onclick="compartirTicketWhatsApp()" class="absolute top-6 right-6 z-10 bg-green-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.4)] hover:scale-110 transition-transform hover:bg-green-400">
+                    <i class="fab fa-whatsapp text-xl"></i>
+                </button>
 
-                <!-- Sección de Resumen (Privacidad) -->
-                <div class="mb-6 p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 space-y-2">
-                    <div class="flex justify-between items-center">
-                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Operación</span>
-                        <span id="comp-total-operacion" class="text-xs font-black text-slate-200"></span>
+                <!-- Contenedor a exportar -->
+                <div id="ticket-content" class="bg-slate-900 relative">
+                    <!-- Decoración Ticket superior -->
+                    <div class="absolute -top-4 -left-4 w-8 h-8 bg-black/80 rounded-full"></div>
+                    <div class="absolute -top-4 -right-4 w-8 h-8 bg-black/80 rounded-full"></div>
+                    
+                    <div class="text-center mb-6 pb-6 border-b border-dashed border-white/20 pt-2">
+                        <h3 class="text-xl font-black text-white tracking-widest uppercase mb-1">ZENTRA</h3>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]">Comprobante de Pago</p>
+                        <p id="comp-cliente" class="text-sm font-black text-emerald-400 mt-4 leading-tight"></p>
+                        <p id="comp-categoria" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1"></p>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Monto Abonado</span>
-                        <span id="comp-monto-abonado" class="text-xs font-black text-emerald-400"></span>
-                    </div>
-                    <div class="flex justify-between items-center pt-2 border-t border-slate-700/50">
-                        <span class="text-[10px] font-black text-rose-400 uppercase tracking-widest">Restante</span>
-                        <span id="comp-saldo-pendiente" class="text-sm font-black text-rose-500"></span>
-                    </div>
-                </div>
 
-                <div class="w-full mb-6">
-                    <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Historial Escalonado</p>
-                    <div class="max-h-48 overflow-y-auto custom-scrollbar pr-2">
-                        <table class="w-full">
-                            <tbody id="comp-historial">
-                                <!-- Filas dinámicas -->
-                            </tbody>
-                        </table>
+                    <!-- Sección de Resumen (Privacidad) -->
+                    <div class="mb-6 p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Operación</span>
+                            <span id="comp-total-operacion" class="text-xs font-black text-slate-200"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Monto Abonado</span>
+                            <span id="comp-monto-abonado" class="text-xs font-black text-emerald-400"></span>
+                        </div>
+                        <div class="flex justify-between items-center pt-2 border-t border-slate-700/50">
+                            <span class="text-[10px] font-black text-rose-400 uppercase tracking-widest">Restante</span>
+                            <span id="comp-saldo-pendiente" class="text-sm font-black text-rose-500"></span>
+                        </div>
                     </div>
-                </div>
-                
-                <!-- Decoración Ticket inferior -->
-                <div class="absolute -bottom-4 -left-4 w-8 h-8 bg-black/80 rounded-full"></div>
-                <div class="absolute -bottom-4 -right-4 w-8 h-8 bg-black/80 rounded-full"></div>
 
-                <button onclick="cerrarComprobanteModal()" class="w-full py-4 bg-slate-800 text-white font-black rounded-xl hover:bg-slate-700 transition-all uppercase tracking-widest text-xs border border-white/5">CERRAR TICKET</button>
+                    <div class="w-full mb-6">
+                        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Historial Escalonado</p>
+                        <div class="max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                            <table class="w-full">
+                                <tbody id="comp-historial">
+                                    <!-- Filas dinámicas -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Decoración Ticket inferior -->
+                    <div class="absolute -bottom-4 -left-4 w-8 h-8 bg-black/80 rounded-full"></div>
+                    <div class="absolute -bottom-4 -right-4 w-8 h-8 bg-black/80 rounded-full"></div>
+                </div> <!-- fin ticket-content -->
+
+                <button onclick="cerrarComprobanteModal()" class="w-full mt-4 py-4 bg-slate-800 text-white font-black rounded-xl hover:bg-slate-700 transition-all uppercase tracking-widest text-xs border border-white/5">CERRAR TICKET</button>
             </div>
         </div>
 
@@ -2908,6 +2920,55 @@
             document.getElementById('comp-saldo-pendiente').textContent = formatCurrency(saldoPendiente, op.moneda);
             
             modal.classList.remove('hidden');
+        }
+
+        async function compartirTicketWhatsApp() {
+            const ticketElement = document.getElementById('ticket-content');
+            if (!ticketElement) return;
+
+            showToast('Generando comprobante...', 'Por favor espera unos segundos...', 'emerald');
+
+            try {
+                // Generar canvas
+                const canvas = await html2canvas(ticketElement, {
+                    backgroundColor: '#0f172a', // Color slate-900 para que coincida con el fondo
+                    scale: 2, // Mayor calidad
+                    logging: false
+                });
+
+                // Convertir a blob
+                canvas.toBlob(async (blob) => {
+                    if (!blob) {
+                        showToast('Error', 'No se pudo generar la imagen del ticket', 'rose');
+                        return;
+                    }
+
+                    const file = new File([blob], 'comprobante_zentra.png', { type: 'image/png' });
+
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: 'Comprobante de Pago',
+                                text: 'Adjunto tu comprobante de pago.'
+                            });
+                        } catch (error) {
+                            console.error('Error compartiendo:', error);
+                        }
+                    } else {
+                        // Fallback: descargar
+                        const link = document.createElement('a');
+                        link.download = 'comprobante_zentra.png';
+                        link.href = canvas.toDataURL();
+                        link.click();
+                        showToast('Descargado', 'El ticket fue guardado como imagen.', 'blue');
+                    }
+                }, 'image/png');
+
+            } catch (error) {
+                console.error('Error generando canvas:', error);
+                showToast('Error', 'Hubo un problema al crear el comprobante.', 'rose');
+            }
         }
 
         function prepararEdicion(id) {

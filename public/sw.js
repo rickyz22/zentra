@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.5.3-PRODUCT-ID'; // v3.5.3-PRODUCT-UPGRADE
+const CACHE_NAME = 'zentra-v3.6.0-WHATSAPP'; // v3.6.0-WHATSAPP-UPGRADE
 const ASSETS = [
   '/',
   '/index.html',
