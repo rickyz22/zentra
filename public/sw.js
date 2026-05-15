@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.5.1-PRIVACY-FIX'; // v3.5.1-PRIVACY-UPGRADE
+const CACHE_NAME = 'zentra-v3.5.2-PRIVACY-FIX'; // v3.5.2-PRIVACY-UPGRADE
 const ASSETS = [
   '/',
   '/index.html',
