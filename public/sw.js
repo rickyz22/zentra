@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.9.13-DASHBOARD-CONSTRAIN'; // v3.9.13-DASHBOARD-CONSTRAIN
+const CACHE_NAME = 'zentra-v3.9.14-FULL-WIDTH'; // v3.9.14-FULL-WIDTH
 const ASSETS = [
   '/',
   '/index.html',
