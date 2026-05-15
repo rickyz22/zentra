@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.9.11-SIDEBAR-ALIGN'; // v3.9.11-SIDEBAR-ALIGN
+const CACHE_NAME = 'zentra-v3.9.10-CHASSIS-GOLD'; // v3.9.10-CHASSIS-GOLD
 const ASSETS = [
   '/',
   '/index.html',
