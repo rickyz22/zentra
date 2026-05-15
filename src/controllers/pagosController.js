@@ -22,18 +22,27 @@ exports.registrarPago = async (req, res) => {
         }
         const sym = moneda === 'USD' ? 'U$S' : '$';
 
-        const nuevoPago = {
-            monto: Number(monto),
-            metodo: metodo || 'Efectivo',
-            fecha: fechaEfectiva,
-            nota: conRecargo === true || conRecargo === 'true'
-                ? `Pago con recargo por mora del 15% (${sym}${Number(monto).toLocaleString('es-AR')}) vía ${metodo || 'Efectivo'}`
-                : `Pago de ${sym}${Number(monto).toLocaleString('es-AR')} vía ${metodo || 'Efectivo'}`
-        };
+        const horaBsAs = new Date().toLocaleTimeString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit' }) + 'hs';
+        const fechaBsAs = new Date().toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
 
         if (operacionId && operacionId !== 'legacy') {
             const operacion = cliente.operaciones.id(operacionId);
             if (!operacion) return res.status(404).json({ ok: false, msg: 'Operación no encontrada' });
+
+            const cuotaNro = operacion.historialPagos.length + 1;
+
+            const nuevoPago = {
+                monto: Number(monto),
+                metodo: metodo || 'Efectivo',
+                fecha: fechaEfectiva,
+                nota: conRecargo === true || conRecargo === 'true'
+                    ? `Pago con recargo por mora del 15% (${sym}${Number(monto).toLocaleString('es-AR')}) vía ${metodo || 'Efectivo'}`
+                    : `Pago de ${sym}${Number(monto).toLocaleString('es-AR')} vía ${metodo || 'Efectivo'}`,
+                cuotaNro: cuotaNro,
+                hora: horaBsAs,
+                fechaStr: fechaBsAs,
+                moneda: moneda
+            };
 
             operacion.historialPagos.push(nuevoPago);
             const totalPagado = operacion.historialPagos.reduce((total, p) => total + p.monto, 0);
@@ -59,6 +68,20 @@ exports.registrarPago = async (req, res) => {
             cliente.markModified('operaciones');
         } else {
             // Lógica legacy
+            const cuotaNro = cliente.historialPagos.length + 1;
+            const nuevoPago = {
+                monto: Number(monto),
+                metodo: metodo || 'Efectivo',
+                fecha: fechaEfectiva,
+                nota: conRecargo === true || conRecargo === 'true'
+                    ? `Pago con recargo por mora del 15% (${sym}${Number(monto).toLocaleString('es-AR')}) vía ${metodo || 'Efectivo'}`
+                    : `Pago de ${sym}${Number(monto).toLocaleString('es-AR')} vía ${metodo || 'Efectivo'}`,
+                cuotaNro: cuotaNro,
+                hora: horaBsAs,
+                fechaStr: fechaBsAs,
+                moneda: moneda
+            };
+
             cliente.historialPagos.push(nuevoPago);
             cliente.montoPagado = cliente.historialPagos.reduce((total, p) => total + p.monto, 0);
 

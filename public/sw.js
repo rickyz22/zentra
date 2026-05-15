@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.4.3-CONSOLIDATED'; // v3.4.3-CONSOLIDATED-UPGRADE
+const CACHE_NAME = 'zentra-v3.5.0-TICKET'; // v3.5.0-TICKET-UPGRADE
 const ASSETS = [
   '/',
   '/index.html',

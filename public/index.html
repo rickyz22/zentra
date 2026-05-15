@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.4.3'; 
-        const CACHE_NAME = 'zentra-v3.4.3-CONSOLIDATED'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.5.0'; 
+        const CACHE_NAME = 'zentra-v3.5.0-TICKET'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1648,6 +1648,44 @@
         </div>
 
 
+        <!-- MODAL COMPROBANTE (TICKET DIGITAL) -->
+        <div id="modalComprobante" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+            <div class="bg-slate-900 w-full max-w-sm rounded-[2rem] p-8 border border-white/10 shadow-2xl overflow-hidden relative">
+                <!-- Decoración Ticket superior -->
+                <div class="absolute -top-4 -left-4 w-8 h-8 bg-black/80 rounded-full"></div>
+                <div class="absolute -top-4 -right-4 w-8 h-8 bg-black/80 rounded-full"></div>
+                
+                <div class="text-center mb-6 pb-6 border-b border-dashed border-white/20">
+                    <h3 class="text-xl font-black text-white tracking-widest uppercase mb-1">ZENTRA</h3>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]">Comprobante de Pago</p>
+                    <p id="comp-cliente" class="text-sm font-black text-emerald-400 mt-4 leading-tight"></p>
+                    <p id="comp-categoria" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1"></p>
+                </div>
+
+                <div class="w-full mb-6">
+                    <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Historial Escalonado</p>
+                    <div class="max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                        <table class="w-full">
+                            <tbody id="comp-historial">
+                                <!-- Filas dinámicas -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-dashed border-white/20 flex justify-between items-end">
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Pagado</p>
+                    <p id="comp-total" class="text-xl font-black text-white"></p>
+                </div>
+                
+                <!-- Decoración Ticket inferior -->
+                <div class="absolute -bottom-4 -left-4 w-8 h-8 bg-black/80 rounded-full"></div>
+                <div class="absolute -bottom-4 -right-4 w-8 h-8 bg-black/80 rounded-full"></div>
+
+                <button onclick="cerrarComprobanteModal()" class="w-full mt-8 py-4 bg-slate-800 text-white font-black rounded-xl hover:bg-slate-700 transition-all uppercase tracking-widest text-xs border border-white/5">CERRAR TICKET</button>
+            </div>
+        </div>
+
         <!-- NOTIFICACIÓN -->
         <div id="toast" class="hidden fixed bottom-24 right-6 bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl z-[100] font-bold text-sm"></div>
 
@@ -1686,7 +1724,7 @@
     </main>
 
     <script>
-        console.log('%c Zentra v3.4.3: Saldo Consolidado UI %c', 'background: #10b981; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
+        console.log('%c Zentra v3.5.0: Comprobante de Pago Escalonado %c', 'background: #10b981; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;', '');
         let allClientes = [];
         let allRecordatorios = [];
         let editingClientId = null;
@@ -2698,6 +2736,23 @@
                     `;
                 }
 
+                let comprobantesHtml = '';
+                if (c.operaciones && c.operaciones.length > 0) {
+                    const ops = c.operaciones.filter(op => op._id !== 'legacy' && (op.tipo === 'Electrodomésticos' || op.tipo === 'Préstamos'));
+                    if (ops.length > 0) {
+                        comprobantesHtml += `<div class="mt-4 flex flex-col gap-2">`;
+                        ops.forEach((op) => {
+                            const btnLabel = op.tipo === 'Electrodomésticos' ? '📄 Comprobante Electro' : '📄 Comprobante Préstamo';
+                            comprobantesHtml += `
+                                <button onclick="abrirComprobanteModal('${c._id}', '${op._id}')" class="w-full py-2 bg-slate-800 text-white rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-700 hover:bg-slate-700 transition-all flex items-center justify-center gap-2">
+                                    ${btnLabel}
+                                </button>
+                            `;
+                        });
+                        comprobantesHtml += `</div>`;
+                    }
+                }
+
                 row.innerHTML = `
                     <div onclick="toggleClienteDetalle('${c._id}')" class="flex flex-col md:grid md:grid-cols-12 gap-4 px-5 py-4 md:px-8 cursor-pointer items-start md:items-center" style="transition: background 0.15s; border-radius: inherit;" onmouseenter="this.style.background='rgba(255,255,255,0.04)'" onmouseleave="this.style.background=''">
                         <!-- Info Principal con Restauración Flexbox -->
@@ -2748,6 +2803,7 @@
                                     </select>
                                 </div>
                                 ${saldoConsolidadoHtml}
+                                ${comprobantesHtml}
                             </div>
                             <div class="col-span-2 md:border-l border-slate-100 md:pl-8 flex flex-col justify-between">
                                 <div>
@@ -2786,6 +2842,54 @@
                 const legajoInput = document.getElementById('fLegajoToyota');
                 if (legajoInput) legajoInput.value = '';
             }
+        }
+
+        function cerrarComprobanteModal() {
+            const m = document.getElementById('modalComprobante');
+            if (m) m.classList.add('hidden');
+        }
+
+        function abrirComprobanteModal(clienteId, opId) {
+            const cliente = allClientes.find(c => c._id === clienteId);
+            if (!cliente) return;
+            const op = cliente.operaciones.find(o => o._id === opId);
+            if (!op) return;
+
+            const modal = document.getElementById('modalComprobante');
+            if (!modal) return;
+
+            document.getElementById('comp-cliente').textContent = cliente.nombre;
+            document.getElementById('comp-categoria').textContent = op.tipo || 'Servicio';
+            
+            const tbody = document.getElementById('comp-historial');
+            tbody.innerHTML = '';
+            
+            const pagos = op.historialPagos || [];
+            if (pagos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-xs text-slate-400 font-bold uppercase tracking-widest">Sin pagos registrados</td></tr>';
+            } else {
+                const reversos = [...pagos].sort((a,b) => new Date(a.fecha) - new Date(b.fecha)); // cronológico
+                reversos.forEach((p, idx) => {
+                    const cuotaNro = p.cuotaNro || (idx + 1);
+                    const monto = formatCurrency(p.monto, p.moneda || op.moneda);
+                    const fecha = p.fechaStr || new Date(p.fecha).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
+                    const hora = p.hora || '--:--hs';
+                    
+                    tbody.innerHTML += \`
+                        <tr class="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
+                            <td class="py-3 px-2 text-xs font-bold text-slate-300">Cuota \${cuotaNro}/\${op.cuotasTotales || 1}</td>
+                            <td class="py-3 px-2 text-xs font-black text-emerald-400 text-right">\${monto}</td>
+                            <td class="py-3 px-2 text-[10px] font-bold text-slate-400 text-center">\${fecha}</td>
+                            <td class="py-3 px-2 text-[10px] font-bold text-slate-500 text-center">\${hora}</td>
+                        </tr>
+                    \`;
+                });
+            }
+
+            const pagado = pagos.reduce((s, p) => s + p.monto, 0);
+            document.getElementById('comp-total').textContent = formatCurrency(pagado, op.moneda);
+            
+            modal.classList.remove('hidden');
         }
 
         function prepararEdicion(id) {

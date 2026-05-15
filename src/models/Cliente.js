@@ -80,7 +80,11 @@ const clienteSchema = new mongoose.Schema({
         monto: { type: Number, required: true },
         fecha: { type: Date, default: Date.now },
         metodo: String,
-        nota: String
+        nota: String,
+        cuotaNro: Number,
+        hora: String,
+        fechaStr: String,
+        moneda: String
     }],
     operaciones: [{
         tipo: { type: String, enum: ['Préstamos', 'Trámites', 'Electrodomésticos'], required: true },
@@ -102,7 +106,11 @@ const clienteSchema = new mongoose.Schema({
             monto: { type: Number, required: true },
             fecha: { type: Date, default: Date.now },
             metodo: String,
-            nota: String
+            nota: String,
+            cuotaNro: Number,
+            hora: String,
+            fechaStr: String,
+            moneda: String
         }],
         fechaVencimiento: { type: Date }
     }],
