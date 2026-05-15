@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.9.11-FIX-ICONS'; // v3.9.11-FIX-ICONS
+const CACHE_NAME = 'zentra-v3.9.12-DASHBOARD-ONLY-FIX'; // v3.9.12-DASHBOARD-ONLY-FIX
 const ASSETS = [
   '/',
   '/index.html',
