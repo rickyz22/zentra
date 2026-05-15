@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.9.15'; 
-        const CACHE_NAME = 'zentra-v3.9.15-UNIVERSAL-FILTER'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.9.16'; 
+        const CACHE_NAME = 'zentra-v3.9.16-STRICT-CONTROL'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -2424,18 +2424,19 @@
 
         function isMoroso(c) {
             const hoy = new Date();
+            hoy.setHours(0,0,0,0);
             
-            // 1. Verificación por Operaciones (v3.9.15 - Unificado)
+            // 1. Verificación por Operaciones (v3.9.16 - Control Estricto)
             if (c.operaciones && c.operaciones.length > 0) {
                 const opsActivas = c.operaciones.filter(o => 
                     !['Cerrado', 'Cancelado', 'Pagado'].includes(o.estado) && o.fechaVencimiento
                 );
                 
                 for (const op of opsActivas) {
-                    const fechaVenc = new Date(op.fechaVencimiento);
-                    const diffTime = hoy.getTime() - fechaVenc.getTime();
-                    const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
-                    if (diffDays >= 10) return true;
+                    const vto = new Date(op.fechaVencimiento);
+                    vto.setHours(0,0,0,0);
+                    // Regla de Jony: Si hoy > vencimiento, ya es moroso
+                    if (hoy > vto) return true;
                 }
             }
             
@@ -2444,11 +2445,9 @@
             if (c.categoria !== 'Préstamos' && c.categoria !== 'Electrodomésticos') return false;
             if (!c.proximoCobro) return false;
             
-            const fechaCobro = new Date(c.proximoCobro);
-            const diffTime = hoy.getTime() - fechaCobro.getTime();
-            const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
-            
-            return diffDays >= 10; // Moroso a partir de los 10 días de atraso
+            const vtoLegacy = new Date(c.proximoCobro);
+            vtoLegacy.setHours(0,0,0,0);
+            return hoy > vtoLegacy; 
         }
 
         function setFiltroCategoria(cat) {

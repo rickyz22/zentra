@@ -156,6 +156,19 @@ exports.eliminarPago = async (req, res) => {
                 // Si al borrar un pago vuelve a tener deuda, reactivar
                 if (operacion.saldoPendiente > 0) {
                     operacion.estado = 'Activo';
+                    
+                    // --- Recalcular Fecha de Vencimiento (v3.9.16) ---
+                    if (operacion.historialPagos.length > 0) {
+                        // Último pago restante
+                        const ultPago = [...operacion.historialPagos].sort((a,b) => new Date(b.fecha) - new Date(a.fecha))[0];
+                        const nuevaFecha = new Date(ultPago.fecha);
+                        operacion.fechaVencimiento = new Date(nuevaFecha.setDate(nuevaFecha.getDate() + 30));
+                    } else {
+                        // Sin pagos: Fecha Inicio + 30 días
+                        const inicio = operacion.fechaAlta || new Date();
+                        const nuevaFecha = new Date(inicio);
+                        operacion.fechaVencimiento = new Date(nuevaFecha.setDate(nuevaFecha.getDate() + 30));
+                    }
                 }
                 cliente.markModified('operaciones');
             }
@@ -165,6 +178,17 @@ exports.eliminarPago = async (req, res) => {
             const montoTotal = cliente.montoDevolver || cliente.precioVenta || cliente.honorarios || 0;
             if (cliente.montoPagado < montoTotal) {
                 cliente.estado = 'Activo';
+                
+                // --- Recalcular Fecha Legacy (v3.9.16) ---
+                if (cliente.historialPagos.length > 0) {
+                    const ultPago = [...cliente.historialPagos].sort((a,b) => new Date(b.fecha) - new Date(a.fecha))[0];
+                    const nuevaFecha = new Date(ultPago.fecha);
+                    cliente.proximoCobro = new Date(nuevaFecha.setDate(nuevaFecha.getDate() + 30));
+                } else {
+                    const inicio = cliente.fechaIngreso || new Date();
+                    const nuevaFecha = new Date(inicio);
+                    cliente.proximoCobro = new Date(nuevaFecha.setDate(nuevaFecha.getDate() + 30));
+                }
             }
             cliente.markModified('historialPagos');
         }
