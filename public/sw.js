@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.17.6-EDIT-START-DATE'; // v3.17.6-EDIT-START-DATE
+const CACHE_NAME = 'zentra-v3.17.7-FORCE-REFRESH'; // v3.17.7-FORCE-REFRESH
 const ASSETS = [
   '/',
   '/index.html',
