@@ -207,15 +207,9 @@ exports.crearCliente = async (req, res) => {
 // Traer clientes con PAGINACIÓN (Audit v2)
 exports.obtenerClientes = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        const skip = (page - 1) * limit;
-
-        // Optimización: Excluir historialPagos del listado general
-        const clientesRaw = await Cliente.find()
-            .sort({ fecha: -1 })
-            .skip(skip)
-            .limit(limit);
+        // PROHIBIDO limitar datos a nivel global v3.16.0
+        // Se carga el 100% para integridad de métricas y filtros
+        const clientesRaw = await Cliente.find().sort({ fecha: -1 });
 
         const clientes = clientesRaw.map(c => {
             const cliente = c.toObject();
@@ -255,14 +249,10 @@ exports.obtenerClientes = async (req, res) => {
             return cliente;
         });
 
-        const total = await Cliente.countDocuments();
-
         res.status(200).json({
             ok: true,
             count: clientes.length,
-            total,
-            currentPage: page,
-            totalPages: Math.ceil(total / limit),
+            total: clientes.length,
             clientes
         });
     } catch (error) {

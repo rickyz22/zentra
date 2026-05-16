@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.15.1'; 
-        const CACHE_NAME = 'zentra-v3.15.1-ID-DOCS'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.16.0'; 
+        const CACHE_NAME = 'zentra-v3.16.0-DATA-RECOVERY'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1834,11 +1834,10 @@
         let allTemplates = [];
         let filtroCategoriaActual = 'Todos';
         
-        // --- VARIABLES DE PAGINACIÓN (Audit v2) ---
-        let currentPage = 1;
-        let totalPages = 1;
-        let isLoadingMore = false;
-        let hasMore = true;
+        // --- VARIABLES DE RENDERIZADO (v3.16.0 Data Recovery) ---
+        let limiteClientesVisibles = 20;
+        let currentFilteredRecs = []; // Store the filtered set for 'Show More' functionality
+        let isFetchingClientes = false; // Prevents parallel fetches
 
         // --- FUNCIONES UTILITARIAS ---
         function escapeHTML(str) {
@@ -1975,7 +1974,7 @@
                 if (!token) return false;
                 
                 // Usar un endpoint protegido para verificar que el token sea válido
-                const res = await fetch('/api/clientes?page=1&limit=1', {
+                const res = await fetch('/api/clientes', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
@@ -2364,54 +2363,44 @@
         }
 
         // --- CLIENTS ---
-        async function fetchClientes(isInitial = true) {
-            if (isLoadingMore || (!hasMore && !isInitial)) return;
+        async function fetchClientes() {
+            if (isFetchingClientes) return;
             
             const tableBody = document.getElementById('clientesTableBody');
-            if (isInitial) {
-                currentPage = 1;
-                allClientes = [];
-                hasMore = true;
-                // SKELETON LOADER inicial
-                if (tableBody) {
-                    tableBody.innerHTML = Array(5).fill(0).map(() => `
-                        <tr class="animate-pulse">
-                            <td class="px-8 py-6"><div class="h-4 bg-slate-800 rounded w-3/4 skeleton"></div></td>
-                            <td class="px-8 py-6"><div class="h-4 bg-slate-800 rounded w-1/2 skeleton"></div></td>
-                            <td class="px-8 py-6"><div class="h-4 bg-slate-800 rounded w-1/2 skeleton"></div></td>
-                            <td class="px-8 py-6"><div class="h-4 bg-slate-800 rounded w-1/4 skeleton"></div></td>
-                        </tr>
-                    `).join('');
-                }
+            // SKELETON LOADER inicial
+            if (tableBody) {
+                tableBody.innerHTML = Array(5).fill(0).map(() => `
+                    <tr class="animate-pulse">
+                        <td class="px-8 py-6"><div class="h-4 bg-slate-800 rounded w-3/4 skeleton"></div></td>
+                        <td class="px-8 py-6"><div class="h-4 bg-slate-800 rounded w-1/2 skeleton"></div></td>
+                        <td class="px-8 py-6"><div class="h-4 bg-slate-800 rounded w-1/2 skeleton"></div></td>
+                        <td class="px-8 py-6"><div class="h-4 bg-slate-800 rounded w-1/4 skeleton"></div></td>
+                    </tr>
+                `).join('');
             }
 
-            isLoadingMore = true;
+            isFetchingClientes = true;
             try {
-                const res = await authFetch(`/api/clientes?page=${currentPage}&limit=20`);
-                if (!res) return; // authFetch ya manejó 401
+                // CARGA GLOBAL (v3.16.0 Data Recovery): Sin límites para integridad de métricas
+                const res = await authFetch('/api/clientes');
+                if (!res) return;
                 const data = await res.json();
                 
                 if (data.ok) {
-                    const nuevosClientes = data.clientes || [];
-                    if (isInitial) {
-                        allClientes = nuevosClientes;
-                    } else {
-                        allClientes = [...allClientes, ...nuevosClientes];
-                    }
+                    allClientes = data.clientes || [];
+                    console.log(`📊 Integridad de Datos: ${allClientes.length} clientes cargados.`);
                     
-                    totalPages = data.totalPages;
-                    hasMore = currentPage < totalPages;
-                    currentPage++;
-
-                    document.getElementById('metric-clientes').textContent = data.total || allClientes.length;
-                    actualizarContadoresCategorias(data.total);
-                    renderClientes();
+                    // Actualizar contadores del Dashboard
+                    const mClie = document.getElementById('metric-clientes');
+                    if (mClie) mClie.textContent = allClientes.length;
+                    
+                    filtrarClientes(); // Inicializa el renderizado UI con límite de 20
                 }
-            } catch (err) { 
-                console.error(err);
-                if (isInitial && tableBody) tableBody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-rose-400 font-bold">Error al cargar clientes</td></tr>';
+            } catch (err) {
+                console.error('Error al cargar clientes:', err);
+                showToast('Error', 'No se pudieron cargar los datos', 'rose');
             } finally {
-                isLoadingMore = false;
+                isFetchingClientes = false;
             }
         }
 
@@ -2524,14 +2513,9 @@
             
             // Si no hay query, mostrar todos según filtros de pestaña
             if (!query) {
-                let allItems = [...allClientes];
-                if (filtroCategoriaActual !== 'Todos') {
-                    allItems = allItems.filter(c => (c.categoria || 'Trámites') === filtroCategoriaActual);
-                }
-                if (filtroSoloMorosos) {
-                    allItems = allItems.filter(c => isMoroso(c));
-                }
-                return renderClientes(allItems);
+                currentFilteredRecs = allItems;
+                limiteClientesVisibles = 20; // Reiniciar límite al filtrar
+                return renderClientes(currentFilteredRecs);
             }
             
             let filtered = allClientes.filter(c => {
@@ -2565,13 +2549,9 @@
             });
             
             // Filtros de pestaña aplicados sobre el resultado
-            if (filtroCategoriaActual !== 'Todos') {
-                filtered = filtered.filter(c => (c.categoria || 'Trámites') === filtroCategoriaActual);
-            }
-            if (filtroSoloMorosos) {
-                filtered = filtered.filter(c => isMoroso(c));
-            }
-            renderClientes(filtered);
+            currentFilteredRecs = filtered;
+            limiteClientesVisibles = 20; // Reiniciar límite al filtrar
+            renderClientes(currentFilteredRecs);
         }
 
         function toggleClienteDetalle(id) {
@@ -2598,7 +2578,10 @@
                 return;
             }
 
-            recs.forEach((rawC, idx) => {
+            // UI PAGINACIÓN: Solo limitamos el dibujo, no la lógica global
+            const recsParaDibujar = recs.slice(0, limiteClientesVisibles);
+
+            recsParaDibujar.forEach((rawC, idx) => {
                 const c = { 
                     ...rawC, 
                     nombre: escapeHTML(rawC.nombre), 
@@ -2976,10 +2959,33 @@
                         </div>
                     </div>
                 `;
-                container.appendChild(row);
+            container.appendChild(row);
             });
+
+            // Botón elegante "Mostrar más" (Audit v3.16.0)
+            if (recs.length > limiteClientesVisibles) {
+                const btnCont = document.createElement('div');
+                btnCont.className = 'py-10 flex flex-col items-center justify-center space-y-3';
+                btnCont.innerHTML = `
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Viendo ${limiteClientesVisibles} de ${recs.length} clientes</p>
+                    <button onclick="mostrarMasClientes()" class="px-8 py-4 bg-white/5 border border-white/10 hover:border-blue-500/50 hover:bg-blue-500/5 text-blue-400 font-black rounded-2xl transition-all uppercase tracking-[0.2em] text-[10px] shadow-xl group">
+                        <span class="flex items-center gap-2">
+                             Mostrar más clientes <i data-lucide="chevron-down" class="w-4 h-4 group-hover:translate-y-0.5 transition-transform"></i>
+                        </span>
+                    </button>
+                `;
+                container.appendChild(btnCont);
+            }
+
             syncPrivacyUI();
             lucide.createIcons();
+        }
+
+        function mostrarMasClientes() {
+            limiteClientesVisibles += 20;
+            renderClientes(currentFilteredRecs);
+            // Pequeño scroll suave hacia abajo para indicar nueva carga
+            window.scrollBy({ top: 150, behavior: 'smooth' });
         }
 
 
