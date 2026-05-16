@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.17.8-DATE-INHERITANCE'; // v3.17.8-DATE-INHERITANCE
+const CACHE_NAME = 'zentra-v3.17.9-AGENDA-TOTAL'; // v3.17.9-AGENDA-TOTAL
 const ASSETS = [
   '/',
   '/index.html',
