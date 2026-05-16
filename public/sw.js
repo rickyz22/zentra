@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.16.1-HOTFIX-SCOPE'; // v3.16.1-HOTFIX-SCOPE
+const CACHE_NAME = 'zentra-v3.16.2-TAB-COUNTERS'; // v3.16.2-TAB-COUNTERS
 const ASSETS = [
   '/',
   '/index.html',
