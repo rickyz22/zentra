@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.17.0-SERVICE-DATES-FIX'; // v3.17.0-SERVICE-DATES-FIX
+const CACHE_NAME = 'zentra-v3.17.1-DYNAMIC-DELAY'; // v3.17.1-DYNAMIC-DELAY
 const ASSETS = [
   '/',
   '/index.html',
