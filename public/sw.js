@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.17.2-EYE-FIX'; // v3.17.2-EYE-FIX
+const CACHE_NAME = 'zentra-v3.17.3-SEARCH-ID-FIX'; // v3.17.3-SEARCH-ID-FIX
 const ASSETS = [
   '/',
   '/index.html',

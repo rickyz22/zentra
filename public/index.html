@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.17.2'; 
-        const CACHE_NAME = 'zentra-v3.17.2-EYE-FIX'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.17.3'; 
+        const CACHE_NAME = 'zentra-v3.17.3-SEARCH-ID-FIX'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -2559,7 +2559,8 @@
                             telefono.replace(/\s+/g, '').includes(queryNumeric)) return true;
                     }
 
-                    return nombre.includes(query) || 
+                    return (c._id || '').toLowerCase().includes(query) ||
+                           nombre.includes(query) || 
                            apellido.includes(query) ||
                            empresa.includes(query) || 
                            dni.includes(query) || 
@@ -4123,6 +4124,10 @@
 
         function irACliente(id) {
             switchTab('clientes');
+            
+            // v3.17.3: Limpiar filtros primero para asegurar que el cliente sea encontrable
+            setFiltroCategoria('Todos');
+
             // Intentar abrir el detalle si ya está cargado
             setTimeout(() => {
                 const target = document.getElementById(`detail-${id}`);
@@ -4130,13 +4135,12 @@
                     toggleClienteDetalle(id);
                     target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 } else {
-                    // Si no está, lo buscamos limpiando filtros
+                    // Si no está visible (ej: por límite de 20), lo buscamos por ID
                     const inputBusqueda = document.getElementById('searchInput');
                     if (inputBusqueda) {
-                        inputBusqueda.value = id; // El buscador acepta IDs parciales por defecto
+                        inputBusqueda.value = id; 
                         filtrarClientes();
                         
-                        // v3.17.2: Delay para asegurar renderizado tras filtrar
                         setTimeout(() => {
                             if (typeof toggleClienteDetalle === 'function') {
                                 toggleClienteDetalle(id);
