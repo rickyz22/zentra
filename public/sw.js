@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.16.2-TAB-COUNTERS'; // v3.16.2-TAB-COUNTERS
+const CACHE_NAME = 'zentra-v3.17.0-SERVICE-DATES-FIX'; // v3.17.0-SERVICE-DATES-FIX
 const ASSETS = [
   '/',
   '/index.html',

@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.16.2'; 
-        const CACHE_NAME = 'zentra-v3.16.2-TAB-COUNTERS'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.17.0'; 
+        const CACHE_NAME = 'zentra-v3.17.0-SERVICE-DATES-FIX'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1712,9 +1712,15 @@
                         <input type="number" name="cuotasTotales" id="no-cuotasTotales" placeholder="Ej: 1" value="1" min="1" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
 
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">Primer Vencimiento (Opcional)</label>
-                        <input type="date" name="fechaVencimiento" id="no-fechaVencimiento" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">Fecha de Ingreso</label>
+                            <input type="date" name="fechaIngreso" id="no-fechaIngreso" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">1° Vencimiento (Opcional)</label>
+                            <input type="date" name="fechaVencimiento" id="no-fechaVencimiento" class="w-full p-4 bg-slate-950 border border-white/5 rounded-2xl text-sm font-bold text-white outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
                     </div>
 
                     <div class="flex gap-4 pt-4">
@@ -3416,6 +3422,11 @@
             document.getElementById('no-clienteId').value = id;
             document.getElementById('modalNuevaOperacionName').textContent = `Cliente: ${nombre}`;
             document.getElementById('nuevaOperacionForm').reset();
+            
+            // v3.17.0: Fecha de ingreso por defecto (hoy)
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('no-fechaIngreso').value = hoy;
+
             toggleNuevaOperacionCampos();
             document.getElementById('modalNuevaOperacion').classList.remove('hidden');
         }
@@ -3439,6 +3450,7 @@
                 subTipoTramite: document.getElementById('no-subTipoTramite').value,
                 honorarios: unmaskCurrency(document.getElementById('no-honorarios').value),
                 cuotasTotales: document.getElementById('no-cuotasTotales').value,
+                fechaIngreso: document.getElementById('no-fechaIngreso').value, // v3.17.0
                 fechaVencimiento: document.getElementById('no-fechaVencimiento').value,
                 moneda: document.getElementById('no-moneda').value || 'ARS'
             };
