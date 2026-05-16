@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.17.7-FORCE-REFRESH'; // v3.17.7-FORCE-REFRESH
+const CACHE_NAME = 'zentra-v3.17.8-DATE-INHERITANCE'; // v3.17.8-DATE-INHERITANCE
 const ASSETS = [
   '/',
   '/index.html',

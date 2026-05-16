@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.17.7'; 
-        const CACHE_NAME = 'zentra-v3.17.7-FORCE-REFRESH'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.17.8'; 
+        const CACHE_NAME = 'zentra-v3.17.8-DATE-INHERITANCE'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -2722,8 +2722,8 @@
                         const cuotasTotales = op.cuotasTotales || op.cuotas || 1;
                         const valorCuota = cuotasTotales > 0 ? (montoD / cuotasTotales) : 0;
                         const fechaVenc = op.fechaVencimiento ? new Date(op.fechaVencimiento).toLocaleDateString('es-AR', { timeZone: 'UTC' }) : 'N/A';
-                        // v3.17.5: Fallback a createdAt o '-' si no hay fechaIngreso
-                        const rawInc = op.fechaIngreso || op.createdAt;
+                        // v3.17.8: Prioridad: fecha de operación > fecha de ingreso cliente > creación
+                        const rawInc = op.fechaIngreso || c.fechaIngreso || op.createdAt;
                         const fechaInc = rawInc ? new Date(rawInc).toLocaleDateString('es-AR', { timeZone: 'UTC' }) : '-';
                         
                         let itemsHtml = '<p class="text-[10px] text-slate-400 italic mt-2">Sin pagos registrados</p>';
