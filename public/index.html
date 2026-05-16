@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.16.0'; 
-        const CACHE_NAME = 'zentra-v3.16.0-DATA-RECOVERY'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.16.1'; 
+        const CACHE_NAME = 'zentra-v3.16.1-HOTFIX-SCOPE'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -2508,49 +2508,51 @@
         function filtrarClientes() {
             const queryRaw = document.getElementById('searchInput').value.toLowerCase();
             const query = queryRaw.trim();
-            // Para búsqueda numérica: limpiar TODOS los espacios (Jony pega números con espacios)
             const queryNumeric = queryRaw.replace(/\s+/g, ''); 
             
-            // Si no hay query, mostrar todos según filtros de pestaña
-            if (!query) {
-                currentFilteredRecs = allItems;
-                limiteClientesVisibles = 20; // Reiniciar límite al filtrar
-                return renderClientes(currentFilteredRecs);
-            }
-            
-            let filtered = allClientes.filter(c => {
-                // Normalización de campos para búsqueda flexible
-                const nombre = (c.nombre || '').toLowerCase();
-                const apellido = (c.apellido || '').toLowerCase(); // Soportar campo apellido si existe
-                const empresa = (c.empresa || '').toLowerCase();
-                const dni = String(c.dni || '').toLowerCase();
-                const telefono = String(c.telefono || '').toLowerCase();
-                const categoria = (c.categoria || '').toLowerCase();
-                const subTipo = (c.subTipoTramite || '').toLowerCase();
-                const tramite = (c.tramite || '').toLowerCase();
-                const producto = (c.producto || '').toLowerCase();
-                
-                // Prioridad Numérica Fluida (DNI o Teléfono sin espacios)
-                if (/^\d+$/.test(queryNumeric) && queryNumeric.length > 2) {
-                    if (dni.replace(/\s+/g, '').includes(queryNumeric) || 
-                        telefono.replace(/\s+/g, '').includes(queryNumeric)) return true;
-                }
+            let filtered = [...allClientes];
 
-                // Búsqueda General (Includes)
-                return nombre.includes(query) || 
-                       apellido.includes(query) ||
-                       empresa.includes(query) || 
-                       dni.includes(query) || 
-                       telefono.includes(query) ||
-                       categoria.includes(query) ||
-                       subTipo.includes(query) ||
-                       tramite.includes(query) ||
-                       producto.includes(query);
-            });
-            
-            // Filtros de pestaña aplicados sobre el resultado
+            // 1. Aplicar Búsqueda (si existe)
+            if (query) {
+                filtered = filtered.filter(c => {
+                    const nombre = (c.nombre || '').toLowerCase();
+                    const apellido = (c.apellido || '').toLowerCase();
+                    const empresa = (c.empresa || '').toLowerCase();
+                    const dni = String(c.dni || '').toLowerCase();
+                    const telefono = String(c.telefono || '').toLowerCase();
+                    const categoria = (c.categoria || '').toLowerCase();
+                    const subTipo = (c.subTipoTramite || '').toLowerCase();
+                    const tramite = (c.tramite || '').toLowerCase();
+                    const producto = (c.producto || '').toLowerCase();
+                    
+                    if (/^\d+$/.test(queryNumeric) && queryNumeric.length > 2) {
+                        if (dni.replace(/\s+/g, '').includes(queryNumeric) || 
+                            telefono.replace(/\s+/g, '').includes(queryNumeric)) return true;
+                    }
+
+                    return nombre.includes(query) || 
+                           apellido.includes(query) ||
+                           empresa.includes(query) || 
+                           dni.includes(query) || 
+                           telefono.includes(query) ||
+                           categoria.includes(query) ||
+                           subTipo.includes(query) ||
+                           tramite.includes(query) ||
+                           producto.includes(query);
+                });
+            }
+
+            // 2. Aplicar Filtros de Pestaña (Pills / Morosos)
+            if (filtroCategoriaActual !== 'Todos') {
+                filtered = filtered.filter(c => (c.categoria || 'Trámites') === filtroCategoriaActual);
+            }
+            if (filtroSoloMorosos) {
+                filtered = filtered.filter(c => isMoroso(c));
+            }
+
+            // 3. Sincronizar con Renderizador UI
             currentFilteredRecs = filtered;
-            limiteClientesVisibles = 20; // Reiniciar límite al filtrar
+            limiteClientesVisibles = 20; 
             renderClientes(currentFilteredRecs);
         }
 

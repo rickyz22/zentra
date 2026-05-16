@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.16.0-DATA-RECOVERY'; // v3.16.0-DATA-RECOVERY
+const CACHE_NAME = 'zentra-v3.16.1-HOTFIX-SCOPE'; // v3.16.1-HOTFIX-SCOPE
 const ASSETS = [
   '/',
   '/index.html',
