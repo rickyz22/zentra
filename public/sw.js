@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.17.1-DYNAMIC-DELAY'; // v3.17.1-DYNAMIC-DELAY
+const CACHE_NAME = 'zentra-v3.17.2-EYE-FIX'; // v3.17.2-EYE-FIX
 const ASSETS = [
   '/',
   '/index.html',

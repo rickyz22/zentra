@@ -14,8 +14,8 @@
         // VERSIÓN DE LA APLICACIÓN (Cache Busting)
         // Debe coincidir con APP_VERSION en src/index.js
         // ¡CAMBIAR AQUÍ PARA FORZAR RECARGA EN CLIENTES!
-        const APP_VERSION = '3.17.1'; 
-        const CACHE_NAME = 'zentra-v3.17.1-DYNAMIC-DELAY'; // Incrementar esto junto con APP_VERSION   // ==========================================
+        const APP_VERSION = '3.17.2'; 
+        const CACHE_NAME = 'zentra-v3.17.2-EYE-FIX'; // Incrementar esto junto con APP_VERSION   // ==========================================
     </script>
     <title>Zentra CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -4131,9 +4131,18 @@
                     target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 } else {
                     // Si no está, lo buscamos limpiando filtros
-                    document.getElementById('buscarCliente').value = id; // El buscador acepta IDs parciales por defecto
-                    filtrarClientes();
-                    setTimeout(() => toggleClienteDetalle(id), 500);
+                    const inputBusqueda = document.getElementById('searchInput');
+                    if (inputBusqueda) {
+                        inputBusqueda.value = id; // El buscador acepta IDs parciales por defecto
+                        filtrarClientes();
+                        
+                        // v3.17.2: Delay para asegurar renderizado tras filtrar
+                        setTimeout(() => {
+                            if (typeof toggleClienteDetalle === 'function') {
+                                toggleClienteDetalle(id);
+                            }
+                        }, 500);
+                    }
                 }
             }, 300);
         }
