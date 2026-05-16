@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.17.3-SEARCH-ID-FIX'; // v3.17.3-SEARCH-ID-FIX
+const CACHE_NAME = 'zentra-v3.17.4-LOAN-DATES'; // v3.17.4-LOAN-DATES
 const ASSETS = [
   '/',
   '/index.html',
