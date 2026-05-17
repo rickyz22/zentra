@@ -7,6 +7,15 @@ exports.registrarPago = async (req, res) => {
         const { id } = req.params;
         const { monto, metodo, fechaPago, operacionId, conRecargo } = req.body;
         
+        // Sprint-1 Security: Validación estricta de monto
+        const montoNumerico = Number(monto);
+        if (!montoNumerico || montoNumerico <= 0 || !Number.isFinite(montoNumerico)) {
+            return res.status(400).json({ ok: false, msg: 'El monto debe ser un número positivo válido' });
+        }
+        if (montoNumerico > 999999999) {
+            return res.status(400).json({ ok: false, msg: 'El monto excede el límite permitido' });
+        }
+
         const cliente = await Cliente.findById(id);
         if (!cliente) return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
 
