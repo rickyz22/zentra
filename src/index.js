@@ -139,3 +139,21 @@ app.listen(PORT, () => {
     console.log('📡 Middlewares JSON y URLENCODED: OK');
     console.log('-------------------------------------------');
 });
+
+// --- Render Keep-Alive (Self-Ping) ---
+// Evita el spin-down del plan gratuito haciendo ping cada 14 minutos (840,000 ms)
+const https = require('https');
+setInterval(() => {
+    try {
+        https.get('https://zentra-jony.onrender.com/api/version', (res) => {
+            if (res.statusCode === 200) {
+                console.log('💓 Self-Ping OK: Render Keep-Alive activo');
+            }
+        }).on('error', (err) => {
+            // Log silencioso, no crashea la app
+            console.log('⚠️ Ping error:', err.message);
+        });
+    } catch (error) {
+        console.log('⚠️ Ping catch error:', error.message);
+    }
+}, 840000);
