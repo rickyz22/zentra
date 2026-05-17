@@ -1043,13 +1043,13 @@
                     <div class="bg-gradient-to-br from-slate-800 to-slate-950 p-5 md:p-8 rounded-[2.5rem] border border-white/5 transition-all hover:border-white/20">
                         <div class="w-10 h-10 md:w-12 md:h-12 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mb-4 md:mb-6 border border-white/5"><i data-lucide="file-text" class="w-5 h-5 md:w-6 md:h-6"></i></div>
                         <h3 id="num-tramites" class="text-2xl md:text-4xl font-black text-white">0</h3>
-                        <p class="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Trámites Mes</p>
+                        <p class="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Cobros del Mes</p>
                     </div>
                     <!-- Tarjeta: Pendientes -->
                     <div class="bg-gradient-to-br from-slate-800 to-slate-950 p-5 md:p-8 rounded-[2.5rem] border border-white/5 transition-all hover:border-white/20">
                         <div class="w-10 h-10 md:w-12 md:h-12 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mb-4 md:mb-6 border border-white/5"><i data-lucide="clock" class="w-5 h-5 md:w-6 md:h-6"></i></div>
                         <h3 id="num-pendientes" class="text-2xl md:text-4xl font-black text-white">0</h3>
-                        <p class="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pendientes</p>
+                        <p class="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Atrasados (Mes)</p>
                     </div>
                     <!-- Tarjeta: Recaudación Hoy -->
                     <div onclick="switchTab('metricas')" class="metrics-grid-item cursor-pointer bg-gradient-to-br from-slate-900 to-slate-950 p-5 md:p-8 rounded-[2.5rem] border border-white/5 transition-all hover:border-emerald-500/30">
@@ -2422,6 +2422,7 @@
                     if (mClie) mClie.textContent = allClientes.length;
                     
                     actualizarContadoresCategorias();
+                    actualizarCardsDashboard();
                     filtrarClientes(); // Inicializa el renderizado UI con límite de 20
                 }
             } catch (err) {
@@ -2482,6 +2483,46 @@
             const vtoLegacy = new Date(c.proximoCobro);
             vtoLegacy.setHours(0,0,0,0);
             return hoy > vtoLegacy; 
+        }
+
+        function actualizarCardsDashboard() {
+            if (!allClientes) return;
+            const hoyStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
+            const hoy = new Date(hoyStr + 'T00:00:00');
+            const currentMonth = hoy.getMonth();
+            const currentYear = hoy.getFullYear();
+
+            let cobrosMes = 0;
+            let atrasadosMes = 0;
+
+            allClientes.forEach(c => {
+                const ops = (c.operaciones && c.operaciones.length > 0) ? c.operaciones : [{
+                    tipo: c.categoria, estado: c.estado, fechaVencimiento: c.proximoCobro
+                }];
+
+                ops.forEach(op => {
+                    if (['Préstamos', 'Electrodomésticos'].includes(op.tipo) && !['Cerrado', 'Pagado', 'Cancelado'].includes(op.estado)) {
+                        if (op.fechaVencimiento) {
+                            const vtoStr = new Date(op.fechaVencimiento).toLocaleDateString('en-CA', { timeZone: 'UTC' });
+                            const vto = new Date(vtoStr + 'T00:00:00');
+                            
+                            if (vto.getMonth() === currentMonth && vto.getFullYear() === currentYear) {
+                                cobrosMes++;
+                                if (vto < hoy) atrasadosMes++;
+                            }
+                        }
+                    }
+                });
+            });
+
+            const numT = document.getElementById('num-tramites');
+            if (numT) numT.textContent = cobrosMes;
+
+            const numP = document.getElementById('num-pendientes');
+            if (numP) {
+                numP.textContent = atrasadosMes;
+                numP.className = atrasadosMes > 0 ? 'text-2xl md:text-4xl font-black text-rose-500' : 'text-2xl md:text-4xl font-black text-white';
+            }
         }
 
         function actualizarContadoresCategorias() {
