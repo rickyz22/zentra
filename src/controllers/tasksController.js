@@ -2,11 +2,12 @@ const Cliente = require('../models/Cliente');
 
 exports.updateDebts = async (req, res) => {
     try {
-        // Validación simple de clave secreta (opcional pero recomendada)
+        // Validación estricta de clave secreta (Sprint-0 Security Audit)
         const secretHeader = req.headers['x-cron-secret'];
-        const validSecret = process.env.CRON_SECRET || 'Zentra2026CronJob';
+        const validSecret = process.env.CRON_SECRET;
         
-        if (secretHeader !== validSecret) {
+        // Sin fallback: Si CRON_SECRET no está configurado, rechazar siempre
+        if (!validSecret || secretHeader !== validSecret) {
             console.warn('⚠️ Intento de ejecución de Cron Job no autorizado');
             return res.status(403).json({ ok: false, msg: 'No autorizado' });
         }

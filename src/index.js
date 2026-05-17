@@ -3,7 +3,7 @@ require('dotenv').config();
 // VERSIÓN CANÓNICA DEL SERVIDOR
 // Actualizá este número con cada deploy
 // ==========================================
-const APP_VERSION = '3.8.1';
+const APP_VERSION = '3.17.9';
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -22,7 +22,21 @@ const PORT = process.env.PORT || 3000;
 // Middlewares de Parseo (¡CRÍTICO PARA LOGIN!)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+// CORS restrictivo (Sprint-0 Security Audit)
+const corsOptions = {
+    origin: function (origin, callback) {
+        const allowed = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(',').map(s => s.trim());
+        // Permitir requests sin origin (mobile apps, curl, Postman) + orígenes en whitelist
+        if (!origin || allowed.includes(origin)) {
+            callback(null, true);
+        } else {
+            console.warn(`⚠️ CORS bloqueado para origen: ${origin}`);
+            callback(new Error('Origen no permitido por CORS'));
+        }
+    },
+    credentials: true
+};
+app.use(cors(corsOptions));
 
 // Middleware de Cache-Control para forzar actualizaciones (Cache Busting)
 app.use((req, res, next) => {
@@ -97,8 +111,7 @@ async function seedUser() {
 
 // Ruta pública de versión (sin auth, para chequeo de caché en el frontend)
 app.get('/api/version', (req, res) => {
-    const CACHE_NAME = 'zentra-v3.3.0'; // Incrementar esto junto con APP_VERSION
-    res.json({ version: APP_VERSION, cache: CACHE_NAME, ok: true });
+    res.json({ version: APP_VERSION, ok: true });
 });
 
 // Rutas de la API (prefijo /api)

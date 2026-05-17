@@ -264,18 +264,39 @@ exports.obtenerClientes = async (req, res) => {
     }
 };
 
-// Actualizar datos del cliente
+// Actualizar datos del cliente (Sprint-0 Security Audit: Whitelist estricta)
 exports.actualizarCliente = async (req, res) => {
     try {
         const id = req.params.id;
         const data = req.body;
 
-        // Redondeo preventivo
-        if (data.montoPrestado) data.montoPrestado = Math.round(data.montoPrestado);
-        if (data.montoDevolver) data.montoDevolver = Math.round(data.montoDevolver);
-        if (data.honorarios) data.honorarios = Math.round(data.honorarios);
+        // ✅ WHITELIST: Solo campos que el formulario del frontend envía legítimamente
+        const camposPermitidos = [
+            'nombre', 'telefono', 'dni', 'direccion', 'garante',
+            'empresa', 'legajoToyota', 'notas', 'promesaPago',
+            'categoria', 'moneda', 'subTipoTramite', 'tramite',
+            'producto', 'fechaIngreso', 'fechaVencimiento',
+            // Campos financieros (se redondean abajo)
+            'montoPrestado', 'montoDevolver', 'honorarios',
+            'costoCompra', 'precioVenta', 'cuotasTotales', 'pagoInicial'
+        ];
+        
+        const dataSanitizada = {};
+        camposPermitidos.forEach(campo => {
+            if (data[campo] !== undefined) dataSanitizada[campo] = data[campo];
+        });
 
-        const clienteActualizado = await Cliente.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+        // Redondeo preventivo de campos numéricos
+        ['montoPrestado', 'montoDevolver', 'honorarios', 'costoCompra', 'precioVenta', 'pagoInicial'].forEach(campo => {
+            if (dataSanitizada[campo] !== undefined) {
+                dataSanitizada[campo] = Math.round(Number(dataSanitizada[campo]) || 0);
+            }
+        });
+        if (dataSanitizada.cuotasTotales !== undefined) {
+            dataSanitizada.cuotasTotales = parseInt(dataSanitizada.cuotasTotales) || 1;
+        }
+
+        const clienteActualizado = await Cliente.findByIdAndUpdate(id, dataSanitizada, { new: true, runValidators: true });
         
         if (!clienteActualizado) {
             return res.status(404).json({ ok: false, msg: 'Cliente no encontrado' });
