@@ -62,6 +62,13 @@
                     Entrar al Sistema
                     <i data-lucide="chevron-right" class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"></i>
                 </button>
+
+                <div class="mt-6 text-center">
+                    <button type="button" onclick="openChangePasswordModal()" class="text-slate-500 hover:text-white transition-colors text-[10px] font-black uppercase tracking-[0.1em] flex items-center justify-center gap-2 w-full mx-auto">
+                        <i data-lucide="shield" class="w-4 h-4"></i>
+                        Seguridad / Cambiar Contraseña
+                    </button>
+                </div>
             </form>
         </div>
 
@@ -70,12 +77,90 @@
         </p>
     </div>
 
+    <!-- Modal Cambiar Contraseña -->
+    <div id="changePasswordModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/80 backdrop-blur-sm p-4">
+        <div class="bg-slate-900 border border-white/10 p-8 rounded-[2rem] shadow-2xl w-full max-w-md relative animate-in fade-in zoom-in-95 duration-300">
+            <button onclick="closeChangePasswordModal()" class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+
+            <div class="flex flex-col items-center gap-3 mb-8">
+                <div class="w-12 h-12 bg-blue-500/10 border border-blue-500/20 rounded-full flex items-center justify-center text-blue-500 mb-2">
+                    <i data-lucide="shield-alert" class="w-6 h-6"></i>
+                </div>
+                <h2 class="text-2xl font-black text-white text-center">Cambiar Contraseña</h2>
+                <p class="text-slate-400 text-xs text-center leading-relaxed">
+                    Al cambiar tu contraseña, <strong class="text-white">se cerrarán todas las sesiones activas</strong> con la antigua clave por seguridad.
+                </p>
+            </div>
+
+            <form id="changePasswordForm" class="space-y-6">
+                <!-- Username (necesario para verificar) -->
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] pl-1">Usuario</label>
+                    <div class="relative group">
+                        <i data-lucide="user" class="absolute left-4 top-4 w-5 h-5 text-slate-600 group-focus-within:text-blue-500 transition-colors"></i>
+                        <input type="text" id="cpUsername" required placeholder="Tu usuario actual" 
+                            class="w-full bg-slate-950/50 border border-white/5 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-slate-700 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all text-sm">
+                    </div>
+                </div>
+
+                <!-- Step 1: Old Password -->
+                <div class="space-y-2" id="step1Group">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] pl-1">Contraseña Actual</label>
+                    <div class="relative group">
+                        <i data-lucide="lock" class="absolute left-4 top-4 w-5 h-5 text-slate-600 group-focus-within:text-blue-500 transition-colors"></i>
+                        <input type="password" id="cpOldPassword" required placeholder="••••••••" 
+                            class="w-full bg-slate-950/50 border border-white/5 rounded-xl py-3 pl-12 pr-12 text-white placeholder:text-slate-700 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all text-sm">
+                        <button type="button" onclick="togglePasswordVisibility('cpOldPassword', 'eyeCpOld')" class="absolute right-4 top-4 text-slate-600 hover:text-slate-400 transition-colors outline-none" tabindex="-1">
+                            <i data-lucide="eye" id="eyeCpOld" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: New Password -->
+                <div id="step2Group" class="hidden space-y-5">
+                    <div class="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <label class="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] pl-1">Nueva Contraseña</label>
+                        <div class="relative group">
+                            <i data-lucide="key" class="absolute left-4 top-4 w-5 h-5 text-slate-600 group-focus-within:text-blue-500 transition-colors"></i>
+                            <input type="password" id="cpNewPassword" placeholder="••••••••" 
+                                class="w-full bg-slate-950/50 border border-white/5 rounded-xl py-3 pl-12 pr-12 text-white placeholder:text-slate-700 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all text-sm">
+                            <button type="button" onclick="togglePasswordVisibility('cpNewPassword', 'eyeCpNew')" class="absolute right-4 top-4 text-slate-600 hover:text-slate-400 transition-colors outline-none" tabindex="-1">
+                                <i data-lucide="eye" id="eyeCpNew" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300 delay-75">
+                        <label class="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] pl-1">Confirmar Nueva Contraseña</label>
+                        <div class="relative group">
+                            <i data-lucide="check-circle" class="absolute left-4 top-4 w-5 h-5 text-slate-600 group-focus-within:text-blue-500 transition-colors"></i>
+                            <input type="password" id="cpConfirmPassword" placeholder="••••••••" 
+                                class="w-full bg-slate-950/50 border border-white/5 rounded-xl py-3 pl-12 pr-12 text-white placeholder:text-slate-700 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all text-sm">
+                            <button type="button" onclick="togglePasswordVisibility('cpConfirmPassword', 'eyeCpConfirm')" class="absolute right-4 top-4 text-slate-600 hover:text-slate-400 transition-colors outline-none" tabindex="-1">
+                                <i data-lucide="eye" id="eyeCpConfirm" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="cpErrorMsg" class="hidden text-rose-500 text-[10px] font-black uppercase tracking-widest bg-rose-500/5 p-3 rounded-xl border border-rose-500/20 text-center animate-in zoom-in-95"></div>
+                <div id="cpSuccessMsg" class="hidden text-emerald-500 text-[10px] font-black uppercase tracking-widest bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/20 text-center animate-in zoom-in-95"></div>
+
+                <button type="button" id="cpActionBtn" onclick="handleCpAction()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl shadow-lg shadow-blue-600/20 transition-all active:scale-[0.98] flex items-center justify-center uppercase tracking-widest text-xs mt-6">
+                    Validar Contraseña
+                </button>
+            </form>
+        </div>
+    </div>
+
     <script>
         lucide.createIcons();
 
-        function togglePassword() {
-            const input = document.getElementById('password');
-            const icon  = document.getElementById('eyeIcon');
+        function togglePasswordVisibility(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
             if (input.type === 'password') {
                 input.type = 'text';
                 icon.setAttribute('data-lucide', 'eye-off');
@@ -83,7 +168,138 @@
                 input.type = 'password';
                 icon.setAttribute('data-lucide', 'eye');
             }
-            lucide.createIcons(); // re-renderiza el ícono actualizado
+            lucide.createIcons();
+        }
+
+        function togglePassword() {
+            togglePasswordVisibility('password', 'eyeIcon');
+        }
+
+        function openChangePasswordModal() {
+            document.getElementById('changePasswordModal').classList.remove('hidden');
+            resetCpModal();
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('changePasswordModal').classList.add('hidden');
+        }
+
+        let cpStep = 1;
+
+        function resetCpModal() {
+            cpStep = 1;
+            document.getElementById('step2Group').classList.add('hidden');
+            document.getElementById('cpActionBtn').textContent = 'Validar Contraseña';
+            document.getElementById('cpActionBtn').className = 'w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl shadow-lg shadow-blue-600/20 transition-all active:scale-[0.98] flex items-center justify-center uppercase tracking-widest text-xs mt-6';
+            
+            document.getElementById('cpUsername').value = document.getElementById('username').value || '';
+            document.getElementById('cpUsername').disabled = false;
+            document.getElementById('cpOldPassword').value = '';
+            document.getElementById('cpOldPassword').disabled = false;
+            document.getElementById('cpNewPassword').value = '';
+            document.getElementById('cpConfirmPassword').value = '';
+            document.getElementById('cpErrorMsg').classList.add('hidden');
+            document.getElementById('cpSuccessMsg').classList.add('hidden');
+        }
+
+        function showCpError(msg) {
+            const errorMsg = document.getElementById('cpErrorMsg');
+            errorMsg.textContent = msg;
+            errorMsg.classList.remove('hidden');
+        }
+
+        async function handleCpAction() {
+            const username = document.getElementById('cpUsername').value.trim();
+            const oldPassword = document.getElementById('cpOldPassword').value.trim();
+            const errorMsg = document.getElementById('cpErrorMsg');
+            const successMsg = document.getElementById('cpSuccessMsg');
+            
+            errorMsg.classList.add('hidden');
+            successMsg.classList.add('hidden');
+
+            if (!username || !oldPassword) {
+                showCpError('Faltan datos de usuario y contraseña actual');
+                return;
+            }
+
+            if (cpStep === 1) {
+                const btn = document.getElementById('cpActionBtn');
+                btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin mr-2"></i> Validando...';
+                lucide.createIcons();
+                
+                try {
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password: oldPassword })
+                    });
+                    const data = await response.json();
+
+                    if (data.ok) {
+                        cpStep = 2;
+                        document.getElementById('step2Group').classList.remove('hidden');
+                        document.getElementById('cpUsername').disabled = true;
+                        document.getElementById('cpOldPassword').disabled = true;
+                        
+                        btn.innerHTML = 'Guardar Nueva Contraseña';
+                        btn.className = 'w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 rounded-xl shadow-lg shadow-emerald-600/20 transition-all active:scale-[0.98] flex items-center justify-center uppercase tracking-widest text-xs mt-6';
+                        
+                        document.getElementById('cpNewPassword').focus();
+                    } else {
+                        showCpError(data.msg || 'Contraseña actual incorrecta');
+                        btn.innerHTML = 'Validar Contraseña';
+                    }
+                } catch (error) {
+                    showCpError('Error al conectar con el servidor');
+                    btn.innerHTML = 'Validar Contraseña';
+                }
+            } else if (cpStep === 2) {
+                const newPassword = document.getElementById('cpNewPassword').value.trim();
+                const confirmPassword = document.getElementById('cpConfirmPassword').value.trim();
+
+                if (!newPassword || newPassword !== confirmPassword) {
+                    showCpError('Las contraseñas nuevas no coinciden o están vacías');
+                    return;
+                }
+                
+                if (newPassword === oldPassword) {
+                    showCpError('La nueva contraseña debe ser distinta a la actual');
+                    return;
+                }
+
+                const btn = document.getElementById('cpActionBtn');
+                btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin mr-2"></i> Guardando...';
+                lucide.createIcons();
+
+                try {
+                    const response = await fetch('/api/auth/change-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, oldPassword, newPassword })
+                    });
+                    const data = await response.json();
+
+                    if (data.ok) {
+                        successMsg.textContent = data.msg;
+                        successMsg.classList.remove('hidden');
+                        btn.classList.add('hidden');
+                        
+                        localStorage.removeItem('jony_token');
+                        localStorage.removeItem('jony_user');
+
+                        setTimeout(() => {
+                            closeChangePasswordModal();
+                            window.location.reload();
+                        }, 4000);
+                    } else {
+                        showCpError(data.msg || 'Error al cambiar la contraseña');
+                        btn.innerHTML = 'Guardar Nueva Contraseña';
+                    }
+                } catch (error) {
+                    showCpError('Error al conectar con el servidor');
+                    btn.innerHTML = 'Guardar Nueva Contraseña';
+                }
+            }
         }
 
         // Si ya tiene sesión, mandarlo al dashboard
