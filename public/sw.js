@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zentra-v3.18.1-AUDIT'; // v3.18.1-AUDIT
+const CACHE_NAME = 'zentra-v3.19.0-AUDIT'; // v3.19.0-AUDIT
 const ASSETS = [
   '/',
   '/index.html',
